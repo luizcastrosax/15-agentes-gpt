@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>15 Agentes GPT para Designers | Resultados em 30 Segundos</title>
+<style>
+:root{
+  --red:#E8344A;--red-dark:#C41E35;--red-light:#FF4D63;
+  --green:#1DB954;--green-dark:#169040;
+  --gold:#F5A623;
+  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
+  --border:#2A2A30;
+  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --radius:12px;--radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:16px;}
+img{max-width:100%;display:block;}
+
+/* ── STICKY HEADER ── */
+#sticky-bar{
+  position:fixed;top:0;left:0;right:0;z-index:999;
+  background:rgba(9,9,11,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:12px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  transform:translateY(-100%);transition:transform .3s ease;
+}
+#sticky-bar.visible{transform:translateY(0);}
+#sticky-bar .logo{font-size:14px;font-weight:700;color:var(--text2);}
+#sticky-bar .price-inline{font-size:13px;color:var(--text2);}
+#sticky-bar .price-inline strong{color:var(--green);font-size:15px;}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--red);color:#fff;font-weight:800;font-size:15px;
+  padding:14px 28px;border-radius:50px;text-decoration:none;
+  border:none;cursor:pointer;letter-spacing:.3px;
+  transition:background .2s,transform .15s,box-shadow .2s;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--red-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(232,52,74,.4);}
+.btn:active{transform:scale(.97);}
+.btn-sm{font-size:13px;padding:10px 20px;}
+.btn-green{background:var(--green);}
+.btn-green:hover{background:var(--green-dark);box-shadow:0 8px 24px rgba(29,185,84,.35);}
+.btn-outline{background:transparent;border:1.5px solid var(--red);color:var(--red);}
+.btn-outline:hover{background:var(--red);color:#fff;}
+.btn-full{width:100%;}
+
+/* ── HERO ── */
+.hero{
+  padding:100px 20px 80px;
+  text-align:center;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232,52,74,.12) 0%, transparent 70%);
+  border-bottom:1px solid var(--border);
+}
+.hero .eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(232,52,74,.12);border:1px solid rgba(232,52,74,.3);
+  color:var(--red-light);font-size:13px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;
+  padding:6px 16px;border-radius:50px;margin-bottom:28px;
+}
+.hero h1{
+  font-size:clamp(32px,6vw,64px);font-weight:900;line-height:1.08;
+  letter-spacing:-1.5px;margin-bottom:20px;
+}
+.hero h1 em{font-style:normal;color:var(--red);}
+.hero .subheadline{
+  font-size:clamp(16px,2.5vw,20px);color:var(--text2);
+  max-width:600px;margin:0 auto 40px;
+}
+.hero .social-proof-row{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  margin-bottom:36px;flex-wrap:wrap;
+}
+.hero .avatars{display:flex;}
+.hero .avatars span{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--bg4);border:2px solid var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--text2);
+  margin-left:-10px;
+}
+.hero .avatars span:first-child{margin-left:0;}
+.hero .sp-text{font-size:14px;color:var(--text2);}
+.hero .sp-text strong{color:var(--text);}
+.hero .stars{color:var(--gold);font-size:16px;letter-spacing:2px;}
+.hero-cta-area{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.hero .guarantee-note{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;}
+.hero .guarantee-note::before{content:'🔒';font-size:14px;}
+
+/* PRICE DISPLAY */
+.price-display{
+  display:flex;flex-direction:column;align-items:center;
+  gap:2px;margin-bottom:8px;
+}
+.price-display .from{
+  font-size:13px;color:var(--text3);
+  text-decoration:line-through;
+}
+.price-display .now{
+  font-size:48px;font-weight:900;color:var(--green);
+  line-height:1;letter-spacing:-2px;
+}
+.price-display .period{font-size:14px;color:var(--text2);}
+
+/* COUNTDOWN */
+.countdown-wrapper{
+  background:var(--bg3);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px 24px;
+  display:inline-flex;align-items:center;gap:12px;
+  margin-bottom:32px;font-size:14px;color:var(--text2);
+}
+.countdown-wrapper .label{font-weight:600;color:var(--text);}
+.countdown-digits{display:flex;gap:8px;}
+.cd-unit{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.cd-num{
+  background:var(--bg4);border:1px solid var(--border);
+  border-radius:8px;padding:6px 10px;
+  font-size:20px;font-weight:900;color:var(--red);
+  min-width:44px;text-align:center;font-variant-numeric:tabular-nums;
+  line-height:1;
+}
+.cd-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;}
+
+/* ── PAIN SECTION ── */
+.pain{
+  padding:80px 20px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+}
+.pain .container{max-width:780px;margin:0 auto;}
+.pain h2{font-size:clamp(24px,4vw,38px);font-weight:900;line-height:1.15;margin-bottom:36px;letter-spacing:-1px;}
+.pain h2 em{font-style:normal;color:var(--red);}
+.pain-list{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:560px){.pain-list{grid-template-columns:1fr;}}
+.pain-item{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;display:flex;gap:12px;align-items:flex-start;
+}
+.pain-item .icon{font-size:22px;flex-shrink:0;margin-top:2px;}
+.pain-item h4{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.pain-item p{font-size:13px;color:var(--text2);}
+
+/* ── SECTION SHARED ── */
+.section{padding:80px 20px;}
+.container{max-width:860px;margin:0 auto;}
+.section-label{
+  display:inline-block;font-size:12px;font-weight:700;
+  letter-spacing:2px;text-transform:uppercase;
+  color:var(--red);margin-bottom:12px;
+}
+.section-title{font-size:clamp(24px,4vw,40px);font-weight:900;line-height:1.1;letter-spacing:-1px;margin-bottom:12px;}
+.section-title em{font-style:normal;color:var(--red);}
+.section-sub{font-size:16px;color:var(--text2);margin-bottom:48px;max-width:560px;}
+.text-center{text-align:center;}
+.text-center .section-sub{margin-left:auto;margin-right:auto;}
+
+/* ── AGENTS GRID ── */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.agent-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px 18px;transition:border-color .2s,transform .2s;
+  position:relative;overflow:hidden;
+}
+.agent-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--red);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s;
+}
+.agent-card:hover{border-color:rgba(232,52,74,.4);transform:translateY(-3px);}
+.agent-card:hover::before{transform:scaleX(1);}
+.agent-card .num{
+  font-size:11px;font-weight:700;color:var(--text3);
+  letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;
+}
+.agent-card h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.agent-card p{font-size:12px;color:var(--text2);line-height:1.5;}
+
+/* ── VALUE STACK ── */
+.value-stack{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);
+  overflow:hidden;
+}
+.vs-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:1px solid var(--border);gap:12px;
+}
+.vs-row:last-of-type{border-bottom:none;}
+.vs-row .vs-left{display:flex;align-items:center;gap:12px;}
+.vs-row .vs-icon{font-size:20px;width:36px;text-align:center;}
+.vs-row .vs-text h4{font-size:14px;font-weight:700;color:var(--text);}
+.vs-row .vs-text p{font-size:12px;color:var(--text2);}
+.vs-row .vs-price{font-size:14px;font-weight:700;color:var(--text3);text-decoration:line-through;white-space:nowrap;}
+.vs-total{
+  background:rgba(29,185,84,.08);border-top:1px solid rgba(29,185,84,.2);
+  padding:20px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.vs-total .label{font-size:14px;font-weight:700;}
+.vs-total .values{text-align:right;}
+.vs-total .full-price{font-size:13px;color:var(--text3);text-decoration:line-through;}
+.vs-total .actual-price{font-size:28px;font-weight:900;color:var(--green);}
+.vs-total .economy{
+  display:inline-block;background:rgba(29,185,84,.15);color:var(--green);
+  font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;margin-top:2px;
+}
+
+/* ── TESTIMONIALS ── */
+.testimonials-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;}
+.testimonial-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);
+  padding:22px;display:flex;flex-direction:column;gap:14px;
+}
+.testimonial-card .stars{color:var(--gold);font-size:15px;letter-spacing:1px;}
+.testimonial-card blockquote{
+  font-size:14px;color:var(--text2);line-height:1.65;font-style:italic;flex:1;
+}
+.testimonial-card .author{display:flex;align-items:center;gap:10px;}
+.testimonial-card .avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--bg4);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--text2);flex-shrink:0;
+}
+.testimonial-card .author-info .name{font-size:14px;font-weight:700;color:var(--text);}
+.testimonial-card .author-info .role{font-size:12px;color:var(--text3);}
+
+/* ── NUMBERS BAR ── */
+.numbers-bar{
+  background:var(--bg3);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:50px 20px;
+}
+.numbers-bar .container{
+  display:flex;justify-content:center;gap:60px;flex-wrap:wrap;
+}
+.stat-block{text-align:center;}
+.stat-block .num{font-size:42px;font-weight:900;color:var(--text);line-height:1;letter-spacing:-2px;}
+.stat-block .num span{color:var(--red);}
+.stat-block .label{font-size:13px;color:var(--text3);margin-top:6px;text-transform:uppercase;letter-spacing:1px;}
+
+/* ── COMPARISON ── */
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:560px){.comparison{grid-template-columns:1fr;}}
+.comp-col{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.comp-col.bad{border-color:rgba(255,60,60,.25);}
+.comp-col.good{border-color:rgba(29,185,84,.25);}
+.comp-header{
+  padding:14px 18px;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+}
+.comp-col.bad .comp-header{background:rgba(255,60,60,.08);color:#FF6B6B;}
+.comp-col.good .comp-header{background:rgba(29,185,84,.08);color:var(--green);}
+.comp-item{
+  padding:12px 18px;border-bottom:1px solid var(--border);
+  font-size:13px;color:var(--text2);display:flex;align-items:flex-start;gap:10px;
+}
+.comp-item:last-child{border-bottom:none;}
+.comp-item .marker{font-size:14px;flex-shrink:0;margin-top:1px;}
+
+/* ── GUARANTEE ── */
+.guarantee-section{
+  background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  padding:70px 20px;
+}
+.guarantee-box{
+  max-width:680px;margin:0 auto;text-align:center;
+}
+.guarantee-badge{
+  width:96px;height:96px;border-radius:50%;
+  background:rgba(29,185,84,.1);border:2px solid rgba(29,185,84,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:42px;margin:0 auto 24px;
+}
+.guarantee-box h2{font-size:30px;font-weight:900;margin-bottom:14px;letter-spacing:-1px;}
+.guarantee-box h2 em{font-style:normal;color:var(--green);}
+.guarantee-box p{font-size:16px;color:var(--text2);line-height:1.7;max-width:500px;margin:0 auto;}
+
+/* ── FAQ ── */
+.faq-list{max-width:720px;margin:0 auto;}
+.faq-item{
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.faq-q{
+  width:100%;background:none;border:none;color:var(--text);
+  font-size:16px;font-weight:700;text-align:left;
+  padding:20px 0;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.faq-q .arrow{
+  color:var(--text3);font-size:20px;font-style:normal;
+  transition:transform .25s;flex-shrink:0;
+}
+.faq-item.open .faq-q .arrow{transform:rotate(45deg);color:var(--red);}
+.faq-a{
+  font-size:15px;color:var(--text2);line-height:1.7;
+  max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s;
+}
+.faq-item.open .faq-a{max-height:200px;padding-bottom:20px;}
+
+/* ── FINAL CTA ── */
+.final-cta{
+  padding:80px 20px;text-align:center;
+  background:radial-gradient(ellipse 60% 70% at 50% 100%, rgba(232,52,74,.1) 0%, transparent 70%);
+}
+.cta-box{
+  max-width:560px;margin:0 auto;
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:48px 40px;
+}
+@media(max-width:500px){.cta-box{padding:32px 24px;}}
+.cta-box .eyebrow-small{
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--red);margin-bottom:10px;
+}
+.cta-box h2{font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:24px;line-height:1.2;}
+.cta-box .includes-list{
+  text-align:left;list-style:none;margin-bottom:28px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.cta-box .includes-list li{
+  font-size:14px;color:var(--text2);display:flex;align-items:center;gap:10px;
+}
+.cta-box .includes-list li::before{
+  content:'✓';color:var(--green);font-weight:900;font-size:14px;flex-shrink:0;
+}
+.trust-row{
+  display:flex;align-items:center;justify-content:center;gap:20px;
+  margin-top:18px;flex-wrap:wrap;
+}
+.trust-item{font-size:12px;color:var(--text3);display:flex;align-items:center;gap:5px;}
+
+/* ── FOOTER ── */
+footer{
+  background:var(--bg2);border-top:1px solid var(--border);
+  padding:28px 20px;text-align:center;
+}
+footer p{font-size:12px;color:var(--text3);}
+footer a{color:var(--text3);text-decoration:none;}
+footer a:hover{color:var(--text2);}
+
+/* ── UTILS ── */
+.divider{border:none;border-top:1px solid var(--border);}
+.mt-8{margin-top:8px;} .mt-16{margin-top:16px;} .mt-24{margin-top:24px;} .mt-40{margin-top:40px;}
+.w-full{width:100%;}
+@media(max-width:640px){
+  .hero{padding:80px 20px 60px;}
+  .numbers-bar .container{gap:32px;}
+  .stat-block .num{font-size:32px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ STICKY BAR ══ -->
+<div id="sticky-bar">
+  <span class="logo">15 Agentes GPT</span>
+  <span class="price-inline">Acesso vitalício por <strong>R$ 27</strong></span>
+  <a href="https://pay.kiwify.com.br/0mcDDny?afid=MuHQmyWF" class="btn btn-sm" target="_blank">Quero Agora</a>
+</div>
+
+<!-- ══ HERO ══ -->
+<section class="hero" id="topo">
+  <div class="eyebrow">⚡ Novidade para Designers Profissionais</div>
+  <h1>Entregue em <em>30 segundos</em><br>o que levaria 2 horas</h1>
+  <p class="subheadline">15 agentes GPT treinados para fazer as tarefas mais pesadas do seu dia — sem prompt, sem esforço, com resultado profissional.</p>
+
+  <div class="social-proof-row">
+    <div class="avatars">
+      <span>MR</span><span>JP</span><span>CA</span><span>TL</span><span>+</span>
+    </div>
+    <div>
+      <div class="stars">★★★★★</div>
+      <div class="sp-text"><strong>+1.200 designers</strong> já usam os agentes</div>
+    </div>
+  </div>
+
+  <div class="countdown-wrapper">
+    <div>
+      <div class="label">⏳ Oferta expira em:</div>
+    </div>
+    <div class="countdown-digits">
+      <div class="cd-unit"><div class="cd-num" id="cd-h">02</div><div class="cd-label">horas</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-m">47</div><div class="cd-label">min</div></div>
+      <div class="cd-unit"><div class="cd-num" id="cd-s">33</div><div class="cd-label">seg</div></div>
+    </div>
+  </div>
+
+  <div class="hero-cta-area">
+    <div class="price-display">
+      <span class="from">De R$ 97,00</span>
+      <span class="now">R$ 27,00</span>
+      <span class="period">pagamento único • acesso vitalício</span>
+    </div>
+    <a href="https://pay.kiwify.com.br/0mcDDny?afid=MuHQmyWF" class="btn" target="_blank" style="font-size:18px;padding:18px 48px;">
+      QUERO MEUS 15 AGENTES →
+    </a>
+    <div class="guarantee-note">Garantia de 7 dias. Se não gostar, devolvemos tudo.</div>
+  </div>
+</section>
+
+<!-- ══ NUMBERS BAR ══ -->
+<div class="numbers-bar">
+  <div class="container">
+    <div class="stat-block">
+      <div class="num">30<span>s</span></div>
+      <div class="label">Por tarefa que antes levava horas</div>
+    </div>
+    <div class="stat-block">
+      <div class="num">15</div>
+      <div class="label">Agentes prontos para usar</div>
+    </div>
+    <div class="stat-block">
+      <div class="num">1.200<span>+</span></div>
+      <div class="label">Designers usando hoje</div>
+    </div>
+    <div class="stat-block">
+      <div class="num">7</div>
+      <div class="label">Dias de garantia total</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAIN ══ -->
+<section class="pain">
+  <div class="container">
+    <h2>Reconhece alguma<br>dessas situações?</h2>
+    <div class="pain-list">
+      <div class="pain-item">
+        <div class="icon">😩</div>
+        <div>
+          <h4>Horas no Photoshop para remover fundo</h4>
+          <p>Trabalho fino, demorado, e o cliente muda a arte na última hora.</p>
+        </div>
+      </div>
+      <div class="pain-item">
+        <div class="icon">💸</div>
+        <div>
+          <h4>Projetos que pagam pouco pelo tempo gasto</h4>
+          <p>Você cobra por projeto mas passa o dobro do tempo que calculou.</p>
+        </div>
+      </div>
+      <div class="pain-item">
+        <div class="icon">😰</div>
+        <div>
+          <h4>Clientes que exigem entrega no mesmo dia</h4>
+          <p>Prazo impossível que vira rotina e te deixa sem dormir.</p>
+        </div>
+      </div>
+      <div class="pain-item">
+        <div class="icon">🔄</div>
+        <div>
+          <h4>Revisões infinitas sem fim</h4>
+          <p>Troca de cor, corte diferente, nova versão — tudo manual, tudo lento.</p>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:40px;padding:24px;background:var(--bg4);border-radius:var(--radius);border-left:3px solid var(--red);">
+      <p style="font-size:16px;color:var(--text2);line-height:1.7;"><strong style="color:var(--text);">O problema não é você.</strong> É que designer ainda usa ferramentas manuais para tarefas que agora podem ser feitas por IA em segundos. Quem não adaptar vai ficar para trás.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SOLUTION ══ -->
+<section class="section" style="background:var(--bg2);border-bottom:1px solid var(--border);">
+  <div class="container text-center">
+    <div class="section-label">A solução</div>
+    <h2 class="section-title">Não são prompts. São <em>agentes treinados</em>.</h2>
+    <p class="section-sub">Cada agente já sabe exatamente o que fazer. Você só diz o que quer — em linguagem normal — e o resultado sai profissional.</p>
+
+    <div class="comparison">
+      <div class="comp-col bad">
+        <div class="comp-header">❌ Sem os agentes</div>
+        <div class="comp-item"><span class="marker">😓</span>Remoção de fundo: 20-40 minutos</div>
+        <div class="comp-item"><span class="marker">😓</span>Troca de cor de objeto: retrabalho manual</div>
+        <div class="comp-item"><span class="marker">😓</span>Upscale com perda de qualidade</div>
+        <div class="comp-item"><span class="marker">😓</span>Mockup: busca template, adapta, exporta</div>
+        <div class="comp-item"><span class="marker">😓</span>Criação de mascote: orçamento externo</div>
+      </div>
+      <div class="comp-col good">
+        <div class="comp-header">✅ Com os 15 agentes</div>
+        <div class="comp-item"><span class="marker">🚀</span>Remoção de fundo: 15-30 segundos</div>
+        <div class="comp-item"><span class="marker">🚀</span>Troca de cor: resultado realista em segundos</div>
+        <div class="comp-item"><span class="marker">🚀</span>Upscale perfeito, sem artefatos</div>
+        <div class="comp-item"><span class="marker">🚀</span>Mockup aplicado automaticamente</div>
+        <div class="comp-item"><span class="marker">🚀</span>Mascote 3D gerado em menos de 1 minuto</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ AGENTS ══ -->
+<section class="section">
+  <div class="container">
+    <div class="section-label">O que você leva</div>
+    <h2 class="section-title">Os <em>15 Agentes</em><br>explicados</h2>
+    <p class="section-sub">Cada agente resolve uma tarefa específica que designers fazem todos os dias.</p>
+    <div class="agents-grid">
+      <div class="agent-card"><div class="num">Agente 01</div><h3>Remoção de Objetos</h3><p>Remove pessoas ou objetos indesejados preservando iluminação e textura naturais.</p></div>
+      <div class="agent-card"><div class="num">Agente 02</div><h3>Ajuste de Iluminação</h3><p>Corrige sombras, profundidade e contraste — resultado de estúdio em qualquer foto.</p></div>
+      <div class="agent-card"><div class="num">Agente 03</div><h3>Correção de Nitidez</h3><p>Máxima nitidez em fotos desfocadas ou com baixa resolução.</p></div>
+      <div class="agent-card"><div class="num">Agente 04</div><h3>Troca de Fundo</h3><p>Substitui fundos com perspectiva e iluminação realistas. Zero retrabalho.</p></div>
+      <div class="agent-card"><div class="num">Agente 05</div><h3>Upscaling Inteligente</h3><p>Amplia imagens sem perda de qualidade para qualquer tamanho de impressão.</p></div>
+      <div class="agent-card"><div class="num">Agente 06</div><h3>Troca de Cor</h3><p>Muda a cor de qualquer objeto mantendo reflexos, sombras e realismo.</p></div>
+      <div class="agent-card"><div class="num">Agente 07</div><h3>Expansão de Imagem</h3><p>Adapta qualquer foto para diferentes formatos: stories, feed, banner.</p></div>
+      <div class="agent-card"><div class="num">Agente 08</div><h3>Mascote 3D</h3><p>Gera personagens 3D originais para branding e identidade visual.</p></div>
+      <div class="agent-card"><div class="num">Agente 09</div><h3>Composição com 2 Pessoas</h3><p>Integra duas pessoas em uma única imagem com lighting coeso.</p></div>
+      <div class="agent-card"><div class="num">Agente 10</div><h3>Aplicação de Mockup</h3><p>Aplica sua arte em camisetas, canecas, embalagens — resultado realista.</p></div>
+      <div class="agent-card"><div class="num">Agente 11</div><h3>Correção de Pele</h3><p>Tom de pele equilibrado e remoção de imperfeições com naturalidade.</p></div>
+      <div class="agent-card"><div class="num">Agente 12</div><h3>Remoção de Fundo</h3><p>Recorte milimétrico com detecção inteligente de cabelos e bordas complexas.</p></div>
+      <div class="agent-card"><div class="num">Agente 13</div><h3>Vetorização de Logo</h3><p>Converte qualquer logo para arquivo vetorial escalável e editável.</p></div>
+      <div class="agent-card"><div class="num">Agente 14</div><h3>Desfoque Profissional</h3><p>Efeito bokeh e desfoque seletivo de fundo para retratos e produtos.</p></div>
+      <div class="agent-card" style="background:rgba(232,52,74,.06);border-color:rgba(232,52,74,.3);">
+        <div class="num" style="color:var(--red);">Agente 15 — Bônus</div>
+        <h3>Surpresa 🎁</h3>
+        <p>Um agente extra que vai surpreender você. Revelado após a compra.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ VALUE STACK ══ -->
+<section class="section" style="background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label text-center">O que você leva</div>
+    <h2 class="section-title text-center">Tudo que está<br><em>incluído no acesso</em></h2>
+    <p class="section-sub text-center">Calculamos o valor justo de cada item. Veja o que você leva pelo preço de um almoço.</p>
+
+    <div class="value-stack">
+      <div class="vs-row">
+        <div class="vs-left">
+          <div class="vs-icon">🤖</div>
+          <div class="vs-text">
+            <h4>15 Agentes GPT Profissionais</h4>
+            <p>Acesso vitalício a todos os agentes, com atualizações</p>
+          </div>
+        </div>
+        <div class="vs-price">R$ 197</div>
+      </div>
+      <div class="vs-row">
+        <div class="vs-left">
+          <div class="vs-icon">📹</div>
+          <div class="vs-text">
+            <h4>Aulas Práticas de Uso com IA</h4>
+            <p>Aprenda a extrair o máximo de cada agente</p>
+          </div>
+        </div>
+        <div class="vs-price">R$ 97</div>
+      </div>
+      <div class="vs-row">
+        <div class="vs-left">
+          <div class="vs-icon">💬</div>
+          <div class="vs-text">
+            <h4>Comunidade VIP no WhatsApp</h4>
+            <p>Suporte, dúvidas e novidades direto com outros designers</p>
+          </div>
+        </div>
+        <div class="vs-price">R$ 47</div>
+      </div>
+      <div class="vs-row">
+        <div class="vs-left">
+          <div class="vs-icon">📊</div>
+          <div class="vs-text">
+            <h4>Bônus: Análise de Conversas de Venda</h4>
+            <p>Aprenda a fechar mais clientes com IA</p>
+          </div>
+        </div>
+        <div class="vs-price">R$ 67</div>
+      </div>
+      <div class="vs-row">
+        <div class="vs-left">
+          <div class="vs-icon">💰</div>
+          <div class="vs-text">
+            <h4>Bônus: Planejamento de Faturamento</h4>
+            <p>Precifique seus serviços e aumente sua receita</p>
+          </div>
+        </div>
+        <div class="vs-price">R$ 47</div>
+      </div>
+      <div class="vs-total">
+        <div class="label">Valor total do pacote</div>
+        <div class="values">
+          <div class="full-price">R$ 455,00</div>
+          <div class="actual-price">R$ 27,00</div>
+          <div class="economy">Você economiza R$ 428</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:36px;">
+      <a href="https://pay.kiwify.com.br/0mcDDny?afid=MuHQmyWF" class="btn" target="_blank" style="font-size:18px;padding:18px 48px;">
+        GARANTIR ACESSO POR R$ 27 →
+      </a>
+      <p style="font-size:13px;color:var(--text3);margin-top:12px;">⚡ Acesso imediato após o pagamento</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ TESTIMONIALS ══ -->
+<section class="section">
+  <div class="container">
+    <div class="section-label text-center">Prova social</div>
+    <h2 class="section-title text-center">Designers que já<br><em>mudaram o workflow</em></h2>
+    <div class="testimonials-grid mt-40">
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Removi o fundo de 40 fotos de produto em menos de 20 minutos. Antes isso me tomava o dia inteiro. Melhor R$ 27 que investi."</blockquote>
+        <div class="author">
+          <div class="avatar">MC</div>
+          <div class="author-info">
+            <div class="name">Mariana C.</div>
+            <div class="role">Designer freelancer, SP</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Fechei um projeto de identidade visual no mesmo dia que o cliente pediu. O agente de mascote 3D me salvou — o cliente amou."</blockquote>
+        <div class="author">
+          <div class="avatar">JP</div>
+          <div class="author-info">
+            <div class="name">João P.</div>
+            <div class="role">Designer de branding, RJ</div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <div class="stars">★★★★★</div>
+        <blockquote>"Aumentei meu faturamento em 40% porque consigo atender mais clientes com o mesmo tempo. Os agentes fazem o trabalho pesado."</blockquote>
+        <div class="author">
+          <div class="avatar">TL</div>
+          <div class="author-info">
+            <div class="name">Thais L.</div>
+            <div class="role">Social media designer, BH</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ GUARANTEE ══ -->
+<div class="guarantee-section">
+  <div class="guarantee-box">
+    <div class="guarantee-badge">🛡️</div>
+    <h2>Garantia de <em>7 dias</em><br>sem perguntas</h2>
+    <p>Acesse tudo, use todos os agentes. Se em 7 dias você não ficar satisfeito por qualquer motivo — devolvemos 100% do seu dinheiro. Sem burocracia, sem perguntas, sem julgamento.</p>
+    <p style="margin-top:16px;font-size:14px;color:var(--text3);">O risco é zero. A decisão é sua.</p>
+  </div>
+</div>
+
+<!-- ══ FAQ ══ -->
+<section class="section" style="background:var(--bg2);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="section-label text-center">FAQ</div>
+    <h2 class="section-title text-center mb-40">Perguntas <em>frequentes</em></h2>
+    <div class="faq-list mt-40">
+      <div class="faq-item open">
+        <button class="faq-q">Preciso saber usar prompts ou IA?<span class="arrow">+</span></button>
+        <div class="faq-a">Não. Os agentes já estão configurados. Você simplesmente diz o que quer fazer em linguagem normal — como falar com um assistente — e o resultado sai profissional.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Qual plataforma de IA os agentes usam?<span class="arrow">+</span></button>
+        <div class="faq-a">Os agentes rodam via ChatGPT (GPT-4). Você precisa de uma conta — o plano gratuito funciona para começar. Para volume maior, o plano Plus (US$ 20/mês) é recomendado.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">O acesso expira?<span class="arrow">+</span></button>
+        <div class="faq-a">Não. Você paga uma vez e tem acesso vitalício — incluindo todas as atualizações futuras dos agentes.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Quando recebo o acesso após a compra?<span class="arrow">+</span></button>
+        <div class="faq-a">Imediatamente. Após o pagamento aprovado, você recebe acesso à área de membros por e-mail em minutos.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">E se eu não gostar?<span class="arrow">+</span></button>
+        <div class="faq-a">Garantia total de 7 dias. Basta enviar um e-mail e devolvemos 100% do valor. Sem complicações.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FINAL CTA ══ -->
+<section class="final-cta">
+  <div class="cta-box">
+    <div class="eyebrow-small">Última chamada</div>
+    <h2>Comece a entregar projetos<br>em minutos, não em horas</h2>
+    <ul class="includes-list">
+      <li>15 Agentes GPT Profissionais — acesso vitalício</li>
+      <li>Aulas práticas de uso com IA</li>
+      <li>Comunidade VIP no WhatsApp</li>
+      <li>Bônus: análise de conversas de venda</li>
+      <li>Bônus: planejamento de faturamento</li>
+    </ul>
+    <div class="price-display" style="margin-bottom:20px;">
+      <span class="from">De R$ 97,00</span>
+      <span class="now">R$ 27,00</span>
+      <span class="period">pagamento único</span>
+    </div>
+    <a href="https://pay.kiwify.com.br/0mcDDny?afid=MuHQmyWF" class="btn btn-full" target="_blank" style="font-size:18px;padding:18px;">
+      QUERO MEUS 15 AGENTES AGORA →
+    </a>
+    <div class="trust-row">
+      <div class="trust-item">🔒 Pagamento seguro</div>
+      <div class="trust-item">⚡ Acesso imediato</div>
+      <div class="trust-item">🛡️ 7 dias de garantia</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ══ -->
+<footer>
+  <p>© 2025 Escola Designer. Todos os direitos reservados.</p>
+  <p style="margin-top:8px;">
+    <a href="#">Termos de Uso</a> &nbsp;·&nbsp;
+    <a href="#">Política de Privacidade</a> &nbsp;·&nbsp;
+    <a href="mailto:suporte@escoladesigner.com.br">Suporte</a>
+  </p>
+  <p style="margin-top:8px;">Este produto é distribuído pela plataforma Kiwify.</p>
+</footer>
+
+<script>
+// ── COUNTDOWN ──
+(function(){
+  var end = new Date();
+  end.setHours(end.getHours()+2, end.getMinutes()+47, end.getSeconds()+33);
+  function pad(n){return String(n).padStart(2,'0');}
+  function tick(){
+    var now=new Date(), diff=end-now;
+    if(diff<=0){diff=0;}
+    var h=Math.floor(diff/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    document.getElementById('cd-h').textContent=pad(h);
+    document.getElementById('cd-m').textContent=pad(m);
+    document.getElementById('cd-s').textContent=pad(s);
+  }
+  tick();
+  setInterval(tick,1000);
+})();
+
+// ── STICKY BAR ──
+(function(){
+  var bar=document.getElementById('sticky-bar');
+  var hero=document.getElementById('topo');
+  function onScroll(){
+    var heroBottom=hero.getBoundingClientRect().bottom;
+    if(heroBottom<0){bar.classList.add('visible');}
+    else{bar.classList.remove('visible');}
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+})();
+
+// ── FAQ ACCORDION ──
+document.querySelectorAll('.faq-q').forEach(function(btn){
+  btn.addEventListener('click',function(){
+    var item=this.closest('.faq-item');
+    var isOpen=item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(function(i){i.classList.remove('open');});
+    if(!isOpen){item.classList.add('open');}
+  });
+});
+</script>
+</body>
+</html>
