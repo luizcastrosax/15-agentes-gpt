@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ParkFlow · Estacionamento Autônomo com PIX (Protótipo)</title>
+<style>
+:root{
+  --red:#E8344A;--red-dark:#C41E35;--red-light:#FF4D63;
+  --green:#1DB954;--green-dark:#169040;--green-light:#3DE875;
+  --gold:#F5A623;--blue:#3B82F6;
+  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
+  --border:#2A2A30;
+  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --radius:12px;--radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;font-size:16px;min-height:100vh;}
+button{font-family:inherit;cursor:pointer;}
+.mono{font-family:'SF Mono','Consolas','Menlo',monospace;}
+
+/* ── TOP NAV ── */
+#nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(9,9,11,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;flex-wrap:wrap;gap:10px;
+}
+#nav .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:18px;letter-spacing:-.5px;}
+#nav .brand .dot{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--red),var(--gold));display:flex;align-items:center;justify-content:center;font-size:16px;}
+#nav .brand small{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
+#nav .tabs{display:flex;gap:4px;background:var(--bg3);padding:4px;border-radius:50px;}
+#nav .tabs button{
+  background:transparent;border:none;color:var(--text2);font-weight:700;font-size:13px;
+  padding:8px 18px;border-radius:50px;transition:.15s;
+}
+#nav .tabs button.active{background:var(--red);color:#fff;}
+
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px;}
+.view{display:none;}
+.view.active{display:block;animation:fade .3s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ── TOTEM ── */
+.totem-stage{
+  display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;
+}
+@media(max-width:820px){.totem-stage{grid-template-columns:1fr;}}
+
+.screen{
+  background:linear-gradient(160deg,var(--bg3),var(--bg2));
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  min-height:520px;padding:32px;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(232,52,74,.08),transparent 70%);pointer-events:none;}
+.screen-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:auto;position:relative;z-index:1;}
+.screen-head .clock{font-size:14px;color:var(--text2);}
+.screen-head .badge{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--green-light);background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);padding:4px 12px;border-radius:50px;}
+
+.stage-body{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;text-align:center;padding:20px 0;}
+
+.big-actions{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;width:100%;}
+.big-btn{
+  flex:1;min-width:180px;background:var(--bg4);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:36px 24px;color:var(--text);
+  display:flex;flex-direction:column;align-items:center;gap:14px;transition:.2s;
+}
+.big-btn:hover{transform:translateY(-4px);border-color:var(--red);box-shadow:0 12px 30px rgba(0,0,0,.4);}
+.big-btn .ic{font-size:52px;line-height:1;}
+.big-btn .t{font-size:20px;font-weight:900;}
+.big-btn .s{font-size:13px;color:var(--text2);}
+.big-btn.enter:hover{border-color:var(--green);}
+.big-btn.enter .t{color:var(--green-light);}
+.big-btn.exit .t{color:var(--red-light);}
+
+.idle-hero .logo{font-size:64px;margin-bottom:8px;}
+.idle-hero h2{font-size:26px;font-weight:900;letter-spacing:-.5px;}
+.idle-hero p{color:var(--text2);font-size:14px;max-width:340px;margin:6px auto 0;}
+
+/* ticket */
+.ticket{
+  background:#fff;color:#111;border-radius:8px;width:280px;max-width:90%;
+  padding:22px 20px;position:relative;box-shadow:0 20px 50px rgba(0,0,0,.6);
+  animation:print .7s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes print{from{transform:translateY(-40px);opacity:0;}to{transform:none;opacity:1;}}
+.ticket::before,.ticket::after{content:'';position:absolute;width:18px;height:18px;background:var(--bg3);border-radius:50%;top:50%;transform:translateY(-50%);}
+.ticket::before{left:-9px;}.ticket::after{right:-9px;}
+.ticket h3{text-align:center;font-size:15px;letter-spacing:1px;margin-bottom:2px;}
+.ticket .sub{text-align:center;font-size:10px;color:#888;text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;}
+.ticket .num{text-align:center;font-size:40px;font-weight:900;letter-spacing:2px;margin:4px 0 12px;}
+.ticket .rows{border-top:1px dashed #ccc;border-bottom:1px dashed #ccc;padding:10px 0;margin-bottom:12px;}
+.ticket .r{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
+.ticket .r span:first-child{color:#777;}
+.ticket .r span:last-child{font-weight:700;}
+.ticket .plate{text-align:center;background:#111;color:#fff;border-radius:5px;padding:6px;font-weight:900;letter-spacing:3px;font-size:18px;margin-bottom:12px;border:2px solid #444;}
+.qr{width:120px;height:120px;margin:0 auto;image-rendering:pixelated;border-radius:6px;}
+.ticket .foot{text-align:center;font-size:10px;color:#999;margin-top:12px;}
+
+/* exit / payment */
+.pay-card{width:340px;max-width:95%;display:flex;flex-direction:column;gap:16px;}
+.summary{background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;text-align:left;}
+.summary .line{display:flex;justify-content:space-between;align-items:baseline;padding:6px 0;}
+.summary .line span:first-child{color:var(--text2);font-size:13px;}
+.summary .line .v{font-weight:800;font-size:15px;}
+.summary .total{border-top:1px solid var(--border);margin-top:8px;padding-top:12px;}
+.summary .total span:first-child{font-size:14px;color:var(--text);}
+.summary .total .v{font-size:30px;color:var(--green-light);}
+
+.pix-box{background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.pix-box .pix-h{display:flex;align-items:center;gap:8px;font-weight:900;font-size:15px;}
+.pix-box .pix-h .pl{width:22px;height:22px;background:var(--green);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:900;}
+.pix-box .qr{width:150px;height:150px;background:#fff;padding:8px;}
+.pix-copia{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:11px;color:var(--text2);word-break:break-all;text-align:center;}
+
+.await{display:flex;align-items:center;justify-content:center;gap:10px;color:var(--gold);font-weight:700;font-size:14px;}
+.spinner{width:18px;height:18px;border:3px solid rgba(245,166,35,.25);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.confirmed{display:flex;flex-direction:column;align-items:center;gap:12px;animation:pop .4s cubic-bezier(.2,1.4,.4,1);}
+@keyframes pop{from{transform:scale(.6);opacity:0;}to{transform:none;opacity:1;}}
+.confirmed .check{width:88px;height:88px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;box-shadow:0 0 0 8px rgba(29,185,84,.15);}
+.confirmed h2{font-size:24px;font-weight:900;color:var(--green-light);}
+.confirmed p{color:var(--text2);font-size:14px;}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--red);color:#fff;font-weight:800;font-size:15px;padding:14px 28px;border-radius:50px;border:none;transition:.2s;}
+.btn:hover{background:var(--red-light);transform:translateY(-2px);}
+.btn:active{transform:scale(.97);}
+.btn-green{background:var(--green);}.btn-green:hover{background:var(--green-dark);}
+.btn-ghost{background:transparent;border:1.5px solid var(--border);color:var(--text2);}
+.btn-ghost:hover{background:var(--bg4);color:var(--text);transform:none;}
+.btn-sm{font-size:13px;padding:9px 18px;}
+.btn-full{width:100%;}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+
+.field{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;max-width:320px;}
+.field label{font-size:12px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.field input,.field select{background:var(--bg2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:13px 14px;font-size:16px;outline:none;transition:.15s;}
+.field input:focus,.field select:focus{border-color:var(--red);}
+.hint{font-size:12px;color:var(--text3);}
+.err{color:var(--red-light);font-size:13px;font-weight:700;}
+
+/* ── GATE / CANCELA ── */
+.side{display:flex;flex-direction:column;gap:20px;}
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;}
+.panel h4{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text3);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+.gate-view{position:relative;height:150px;background:linear-gradient(180deg,#0d0d10,#1a1a1f);border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.road{position:absolute;bottom:0;left:0;right:0;height:46px;background:#222;border-top:2px solid #333;}
+.road::before{content:'';position:absolute;top:50%;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,var(--gold) 0 16px,transparent 16px 32px);opacity:.5;}
+.gate-post{position:absolute;bottom:46px;left:26px;width:14px;height:70px;background:linear-gradient(90deg,#3a3a42,#22222a);border-radius:3px;z-index:2;}
+.gate-post::after{content:'';position:absolute;top:-6px;left:-3px;width:20px;height:10px;background:#4a4a55;border-radius:3px;}
+.gate-arm{position:absolute;bottom:106px;left:33px;width:190px;height:11px;transform-origin:left center;transform:rotate(0deg);transition:transform 1.2s cubic-bezier(.4,1.4,.5,1);z-index:3;border-radius:6px;
+  background:repeating-linear-gradient(45deg,var(--red) 0 18px,#fff 18px 36px);box-shadow:0 2px 8px rgba(0,0,0,.5);}
+.gate-view.open .gate-arm{transform:rotate(-78deg);}
+.car{position:absolute;bottom:52px;left:-90px;font-size:40px;transition:left 1.4s ease;z-index:1;}
+.gate-view.enter-car .car{left:60px;}
+.gate-view.pass-car .car{left:260px;transition:left 1.8s ease-in;}
+.gate-status{position:absolute;top:10px;right:12px;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:50px;z-index:4;}
+.gate-status.closed{background:rgba(232,52,74,.15);color:var(--red-light);border:1px solid rgba(232,52,74,.35);}
+.gate-status.open{background:rgba(29,185,84,.15);color:var(--green-light);border:1px solid rgba(29,185,84,.35);}
+
+/* camera phase 2 */
+.cam{position:relative;height:120px;background:#0a0a0c;border-radius:10px;overflow:hidden;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;}
+.cam .scan{position:absolute;left:0;right:0;height:2px;background:var(--green);box-shadow:0 0 10px var(--green);animation:scanline 2s linear infinite;opacity:.7;}
+@keyframes scanline{0%{top:0;}50%{top:100%;}100%{top:0;}}
+.cam .plate-read{background:#111;border:2px solid #444;border-radius:6px;padding:8px 16px;font-weight:900;letter-spacing:4px;font-size:22px;z-index:2;}
+.cam .cam-off{color:var(--text3);font-size:12px;}
+.cam-tag{position:absolute;top:8px;left:10px;font-size:10px;color:var(--green-light);font-weight:800;letter-spacing:1px;z-index:2;}
+.cam-tag::before{content:'●';margin-right:5px;animation:blink 1s infinite;}
+@keyframes blink{50%{opacity:.2;}}
+
+/* log */
+.log{display:flex;flex-direction:column;gap:6px;max-height:170px;overflow-y:auto;font-size:12px;}
+.log .l{display:flex;gap:8px;padding:5px 8px;background:var(--bg3);border-radius:6px;border-left:2px solid var(--border);}
+.log .l .tm{color:var(--text3);flex-shrink:0;}
+.log .l.ok{border-left-color:var(--green);}
+.log .l.pay{border-left-color:var(--gold);}
+.log .l.gate{border-left-color:var(--blue);}
+
+/* ── DASHBOARD ── */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+@media(max-width:700px){.kpis{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+.kpi .k{font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:700;}
+.kpi .v{font-size:30px;font-weight:900;margin-top:6px;letter-spacing:-1px;}
+.kpi.green .v{color:var(--green-light);}
+.kpi.red .v{color:var(--red-light);}
+.kpi.gold .v{color:var(--gold);}
+
+.table-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+.table-head h3{font-size:16px;font-weight:800;}
+table{width:100%;border-collapse:collapse;}
+th,td{text-align:left;padding:12px 20px;font-size:13px;}
+th{color:var(--text3);text-transform:uppercase;font-size:11px;letter-spacing:.5px;border-bottom:1px solid var(--border);}
+tbody tr{border-bottom:1px solid var(--bg3);}
+tbody tr:last-child{border-bottom:none;}
+td .st{font-size:11px;font-weight:800;padding:3px 10px;border-radius:50px;}
+td .st.active{background:rgba(59,130,246,.15);color:#7bb0ff;}
+td .st.paid{background:rgba(29,185,84,.15);color:var(--green-light);}
+.empty{padding:50px 20px;text-align:center;color:var(--text3);}
+.scroll-x{overflow-x:auto;}
+
+/* ── SETTINGS ── */
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.set-grid{grid-template-columns:1fr;}}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;}
+.toggle .info b{display:block;font-size:14px;}
+.toggle .info small{color:var(--text2);font-size:12px;}
+.sw{position:relative;width:48px;height:28px;flex-shrink:0;}
+.sw input{opacity:0;width:0;height:0;}
+.sw .track{position:absolute;inset:0;background:var(--bg4);border:1px solid var(--border);border-radius:50px;transition:.2s;}
+.sw .track::before{content:'';position:absolute;height:20px;width:20px;left:3px;top:3px;background:var(--text2);border-radius:50%;transition:.2s;}
+.sw input:checked+.track{background:var(--green);border-color:var(--green);}
+.sw input:checked+.track::before{transform:translateX(20px);background:#fff;}
+
+.phase-banner{background:linear-gradient(135deg,rgba(232,52,74,.1),rgba(245,166,35,.08));border:1px solid rgba(245,166,35,.25);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;font-size:13px;color:var(--text2);display:flex;gap:10px;align-items:flex-start;}
+.phase-banner b{color:var(--gold);}
+
+.section-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin:24px 0 12px;}
+
+.foot-note{text-align:center;color:var(--text3);font-size:12px;margin-top:40px;line-height:1.7;}
+.foot-note a{color:var(--red-light);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="brand"><span class="dot">🅿️</span><div>ParkFlow<br><small>Estacionamento Autônomo</small></div></div>
+  <div class="tabs">
+    <button data-tab="totem" class="active">🖥️ Totem</button>
+    <button data-tab="dash">📊 Painel</button>
+    <button data-tab="config">⚙️ Config</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- ═══════════ TOTEM ═══════════ -->
+  <section class="view active" id="view-totem">
+    <div class="totem-stage">
+      <div class="screen">
+        <div class="screen-head">
+          <span class="badge">● Online</span>
+          <span class="clock mono" id="clock">--:--:--</span>
+        </div>
+        <div class="stage-body" id="stage"><!-- dynamic --></div>
+      </div>
+
+      <div class="side">
+        <div class="panel">
+          <h4>🚧 Cancela</h4>
+          <div class="gate-view" id="gate">
+            <span class="gate-status closed" id="gateStatus">Fechada</span>
+            <div class="car">🚗</div>
+            <div class="gate-arm"></div>
+            <div class="gate-post"></div>
+            <div class="road"></div>
+          </div>
+        </div>
+        <div class="panel" id="camPanel" style="display:none;">
+          <h4>📷 Câmera OCR (Fase 2)</h4>
+          <div class="cam" id="cam"><span class="cam-off">câmera aguardando…</span></div>
+        </div>
+        <div class="panel">
+          <h4>📟 Log do Sistema</h4>
+          <div class="log" id="log"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ DASHBOARD ═══════════ -->
+  <section class="view" id="view-dash">
+    <div class="kpis">
+      <div class="kpi"><div class="k">Ocupação agora</div><div class="v" id="kOcc">0</div></div>
+      <div class="kpi green"><div class="k">Faturamento hoje</div><div class="v" id="kRev">R$ 0</div></div>
+      <div class="kpi gold"><div class="k">Ticket médio</div><div class="v" id="kAvg">R$ 0</div></div>
+      <div class="kpi"><div class="k">Total de veículos</div><div class="v" id="kTot">0</div></div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-head">
+        <h3>Movimentação</h3>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" id="exportBtn">⬇️ Exportar CSV</button>
+          <button class="btn btn-ghost btn-sm" id="resetBtn">🗑️ Limpar dados</button>
+        </div>
+      </div>
+      <div class="scroll-x">
+        <table>
+          <thead><tr><th>Ticket</th><th>Placa</th><th>Entrada</th><th>Saída</th><th>Permanência</th><th>Valor</th><th>Status</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ CONFIG ═══════════ -->
+  <section class="view" id="view-config">
+    <div class="phase-banner">💡 <div>Este é um <b>protótipo de simulação</b>. A lógica de automação (cálculo de tarifa, confirmação de pagamento e abertura da cancela) é real; o QR PIX e a câmera são simulados. A <b>Fase 2</b> ativa a leitura de placa por OCR e dispensa o ticket na saída.</div></div>
+
+    <div class="section-title">Tarifação</div>
+    <div class="set-grid">
+      <div class="field"><label>Valor por hora (R$)</label><input type="number" id="cfgRate" min="0" step="0.5" value="7.50"></div>
+      <div class="field"><label>Tolerância gratuita (min)</label><input type="number" id="cfgGrace" min="0" step="1" value="15"></div>
+      <div class="field"><label>Valor mínimo (R$)</label><input type="number" id="cfgMin" min="0" step="0.5" value="5.00"></div>
+      <div class="field"><label>Chave PIX (recebedor)</label><input type="text" id="cfgPix" value="estacionamento@parkflow.com.br"></div>
+    </div>
+
+    <div class="section-title">Fases &amp; Simulação</div>
+    <div class="set-grid">
+      <label class="toggle"><span class="info"><b>Fase 2 — OCR de placa</b><small>Lê a placa na entrada/saída e dispensa o ticket</small></span>
+        <span class="sw"><input type="checkbox" id="cfgOcr"><span class="track"></span></span></label>
+      <label class="toggle"><span class="info"><b>Confirmação PIX automática</b><small>Simula a API do banco confirmando em 2–5s</small></span>
+        <span class="sw"><input type="checkbox" id="cfgAuto" checked><span class="track"></span></span></label>
+      <label class="toggle"><span class="info"><b>Acelerar tempo (demo)</b><small>1 min real = 1 hora estacionada, p/ testar valores</small></span>
+        <span class="sw"><input type="checkbox" id="cfgFast" checked><span class="track"></span></span></label>
+    </div>
+
+    <div class="foot-note">
+      ParkFlow · protótipo de estacionamento autônomo · Fluxo: Entrada → Ticket → Saída → Cálculo → PIX → Confirmação → Cancela abre sozinha.<br>
+      Dados salvos localmente no seu navegador (localStorage). Nada é enviado para servidores.
+    </div>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+/* ─────────── STATE ─────────── */
+const LS='parkflow_v1';
+const cfgDefaults={rate:7.5,grace:15,min:5,pix:'estacionamento@parkflow.com.br',ocr:false,auto:true,fast:true};
+let db=load();
+function load(){
+  try{const d=JSON.parse(localStorage.getItem(LS));if(d&&d.records)return {records:d.records,cfg:Object.assign({},cfgDefaults,d.cfg||{}),seq:d.seq||421};}catch(e){}
+  return {records:[],cfg:Object.assign({},cfgDefaults),seq:421};
+}
+function save(){localStorage.setItem(LS,JSON.stringify(db));}
+
+/* ─────────── HELPERS ─────────── */
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const fmtTime=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+const fmtDT=d=>`${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const money=v=>'R$ '+v.toFixed(2).replace('.',',');
+const randPlate=()=>{const L='ABCDEFGHIJKLMNOPQRSTUVWXYZ',N='0123456789';const r=(s,n)=>Array.from({length:n},()=>s[Math.random()*s.length|0]).join('');return r(L,3)+r(N,1)+r(L,1)+r(N,2);};
+
+/* elapsed minutes considering "fast demo" scaling */
+function elapsedMinutes(rec){
+  const realMs=Date.now()-rec.entryTs;
+  const realMin=realMs/60000;
+  return db.cfg.fast?realMin*60:realMin; // 1 real min => 60 parked min
+}
+function calcCharge(mins){
+  const c=db.cfg;
+  if(mins<=c.grace) return 0;
+  const hours=Math.ceil(mins/60);
+  return Math.max(c.min,hours*c.rate);
+}
+function fmtDuration(mins){
+  mins=Math.max(0,Math.round(mins));
+  const h=Math.floor(mins/60),m=mins%60;
+  return h>0?`${h}h${pad(m)}min`:`${m}min`;
+}
+
+/* ─────────── QR (stylized, deterministic) ─────────── */
+function drawQR(canvas,seedStr){
+  const N=25,px=canvas.width/N,ctx=canvas.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  // seeded rng
+  let s=0;for(let i=0;i<seedStr.length;i++)s=(s*31+seedStr.charCodeAt(i))>>>0;
+  const rng=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
+  ctx.fillStyle='#000';
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(rng()>0.5)ctx.fillRect(x*px,y*px,px,px);}
+  // finder patterns
+  const finder=(ox,oy)=>{ctx.fillStyle='#fff';ctx.fillRect(ox*px,oy*px,7*px,7*px);ctx.fillStyle='#000';ctx.fillRect(ox*px,oy*px,7*px,7*px);ctx.fillStyle='#fff';ctx.fillRect((ox+1)*px,(oy+1)*px,5*px,5*px);ctx.fillStyle='#000';ctx.fillRect((ox+2)*px,(oy+2)*px,3*px,3*px);};
+  finder(0,0);finder(N-7,0);finder(0,N-7);
+}
+
+/* ─────────── LOG ─────────── */
+function logLine(msg,cls=''){
+  const el=$('#log');const now=fmtTime(new Date());
+  const d=document.createElement('div');d.className='l '+cls;
+  d.innerHTML=`<span class="tm mono">${now}</span><span>${msg}</span>`;
+  el.prepend(d);
+  while(el.children.length>40)el.removeChild(el.lastChild);
+}
+
+/* ─────────── GATE ─────────── */
+let gateBusy=false;
+function openGate(afterMsg){
+  const g=$('#gate');
+  $('#gateStatus').className='gate-status open';$('#gateStatus').textContent='Aberta';
+  g.classList.add('open');
+  logLine('🚧 Comando enviado à controladora → cancela ABRIU','gate');
+  g.classList.add('enter-car');
+  setTimeout(()=>{g.classList.remove('enter-car');g.classList.add('pass-car');},1400);
+  setTimeout(()=>{
+    g.classList.remove('open');g.classList.remove('pass-car');
+    $('#gateStatus').className='gate-status closed';$('#gateStatus').textContent='Fechada';
+    logLine('🚧 Veículo passou → cancela fechou','gate');
+    if(afterMsg)logLine(afterMsg,'ok');
+    renderIdle();
+  },3600);
+}
+
+/* ─────────── CAMERA (Phase 2) ─────────── */
+function runCamera(plate,cb){
+  $('#camPanel').style.display='';
+  const cam=$('#cam');
+  cam.innerHTML='<span class="cam-tag">REC</span><div class="scan"></div><span class="cam-off">detectando placa…</span>';
+  logLine('📷 Câmera ativada — capturando imagem','');
+  setTimeout(()=>{
+    cam.innerHTML=`<span class="cam-tag">REC</span><div class="scan"></div><div class="plate-read">${plate}</div>`;
+    logLine('📷 OCR reconheceu a placa: <b>'+plate+'</b>','ok');
+    cb&&cb();
+  },1600);
+}
+
+/* ─────────── STAGE RENDERERS ─────────── */
+const stage=()=>$('#stage');
+
+function renderIdle(){
+  $('#camPanel').style.display=db.cfg.ocr?'':'none';
+  stage().innerHTML=`
+    <div class="idle-hero">
+      <div class="logo">🅿️</div>
+      <h2>Bem-vindo ao ParkFlow</h2>
+      <p>${db.cfg.ocr?'Câmera lê sua placa automaticamente. Toque abaixo para começar.':'Retire seu ticket na entrada ou pague na saída.'}</p>
+    </div>
+    <div class="big-actions">
+      <button class="big-btn enter" id="btnEnter"><span class="ic">🎫</span><span class="t">ENTRADA</span><span class="s">Retirar ticket</span></button>
+      <button class="big-btn exit" id="btnExit"><span class="ic">💳</span><span class="t">SAÍDA</span><span class="s">Pagar &amp; sair</span></button>
+    </div>`;
+  $('#btnEnter').onclick=flowEntry;
+  $('#btnExit').onclick=flowExitStart;
+}
+
+/* ── ENTRY ── */
+function flowEntry(){
+  const plate=db.cfg.ocr?randPlate():null;
+  const doIssue=()=>issueTicket(plate);
+  if(db.cfg.ocr){
+    stage().innerHTML=`<div class="idle-hero"><div class="logo">📷</div><h2>Lendo sua placa…</h2><p>Aguarde um instante.</p></div>`;
+    runCamera(plate,doIssue);
+  }else{
+    doIssue();
+  }
+}
+function issueTicket(plate){
+  const now=new Date();
+  const rec={id:db.seq++,plate:plate,entryTs:now.getTime(),exitTs:null,charge:null,status:'active'};
+  db.records.push(rec);save();
+  const cv=document.createElement('canvas');cv.width=120;cv.height=120;drawQR(cv,'PARK'+rec.id+rec.entryTs);
+  stage().innerHTML=`
+    <div class="ticket">
+      <h3>🅿️ PARKFLOW</h3>
+      <div class="sub">Ticket de Entrada</div>
+      <div class="num mono">#${String(rec.id).padStart(4,'0')}</div>
+      ${plate?`<div class="plate">${plate}</div>`:''}
+      <div class="rows">
+        <div class="r"><span>Data</span><span>${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}</span></div>
+        <div class="r"><span>Entrada</span><span>${fmtTime(now)}</span></div>
+      </div>
+      <div class="qrslot"></div>
+      <div class="foot">Guarde este ticket · apresente na saída</div>
+    </div>
+    <button class="btn btn-green" id="proceed">Retirei o ticket → abrir cancela</button>`;
+  stage().querySelector('.qrslot').appendChild(cv);cv.className='qr';
+  logLine(`🎫 Ticket #${String(rec.id).padStart(4,'0')} emitido${plate?' · placa '+plate:''}`,'ok');
+  $('#proceed').onclick=()=>{openGate(`✅ Entrada registrada — veículo #${rec.id} no pátio`);};
+}
+
+/* ── EXIT ── */
+function flowExitStart(){
+  const active=db.records.filter(r=>r.status==='active');
+  if(db.cfg.ocr){
+    // camera identifies vehicle automatically
+    if(!active.length){return renderExitError('Nenhum veículo no pátio para cobrança.');}
+    const rec=active[active.length-1];
+    stage().innerHTML=`<div class="idle-hero"><div class="logo">📷</div><h2>Identificando veículo…</h2><p>Lendo a placa na saída.</p></div>`;
+    runCamera(rec.plate,()=>renderExitSummary(rec));
+    return;
+  }
+  // manual ticket entry
+  stage().innerHTML=`
+    <div class="pay-card">
+      <div class="field"><label>Número do ticket</label><input type="text" id="tk" class="mono" inputmode="numeric" placeholder="ex: 0421" autocomplete="off"></div>
+      <div id="tkErr"></div>
+      <button class="btn btn-full" id="lookup">Consultar</button>
+      <button class="btn btn-ghost btn-full btn-sm" id="cancel">Voltar</button>
+      ${active.length?`<div class="hint">💡 Tickets ativos: ${active.map(r=>'#'+String(r.id).padStart(4,'0')).join(', ')}</div>`:''}
+    </div>`;
+  const inp=$('#tk');inp.focus();
+  $('#lookup').onclick=()=>{
+    const id=parseInt(inp.value.replace(/\D/g,''),10);
+    const rec=db.records.find(r=>r.id===id&&r.status==='active');
+    if(!rec){$('#tkErr').innerHTML='<div class="err">Ticket não encontrado ou já pago.</div>';return;}
+    renderExitSummary(rec);
+  };
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')$('#lookup').click();});
+  $('#cancel').onclick=renderIdle;
+}
+function renderExitError(msg){
+  stage().innerHTML=`<div class="idle-hero"><div class="logo">⚠️</div><h2>Ops</h2><p>${msg}</p></div><button class="btn btn-ghost" id="bk">Voltar</button>`;
+  $('#bk').onclick=renderIdle;
+}
+function renderExitSummary(rec){
+  const mins=elapsedMinutes(rec);
+  const charge=calcCharge(mins);
+  const entry=new Date(rec.entryTs);
+  stage().innerHTML=`
+    <div class="pay-card">
+      <div class="summary">
+        ${rec.plate?`<div class="line"><span>Placa</span><span class="v mono">${rec.plate}</span></div>`:''}
+        <div class="line"><span>Ticket</span><span class="v mono">#${String(rec.id).padStart(4,'0')}</span></div>
+        <div class="line"><span>Entrada</span><span class="v">${fmtDT(entry)}</span></div>
+        <div class="line"><span>Permanência</span><span class="v">${fmtDuration(mins)}</span></div>
+        <div class="line total"><span>Total a pagar</span><span class="v">${money(charge)}</span></div>
+      </div>
+      ${charge===0
+        ? `<button class="btn btn-green btn-full" id="freeout">Dentro da tolerância — sair grátis</button>`
+        : `<button class="btn btn-full" id="topix">Pagar com PIX</button>`}
+      <button class="btn btn-ghost btn-full btn-sm" id="cancel">Cancelar</button>
+    </div>`;
+  logLine(`💳 Saída #${String(rec.id).padStart(4,'0')} · ${fmtDuration(mins)} · ${money(charge)}`,'');
+  $('#cancel').onclick=renderIdle;
+  if(charge===0){
+    $('#freeout').onclick=()=>settle(rec,0,mins,'✅ Saída gratuita (tolerância)');
+  }else{
+    $('#topix').onclick=()=>renderPix(rec,charge,mins);
+  }
+}
+function renderPix(rec,charge,mins){
+  const cv=document.createElement('canvas');cv.width=150;cv.height=150;
+  const payload=`00020126PIX${db.cfg.pix}52040000530398654${charge.toFixed(2)}`;
+  drawQR(cv,payload+rec.id);
+  stage().innerHTML=`
+    <div class="pay-card">
+      <div class="pix-box">
+        <div class="pix-h"><span class="pl">₽</span> Pague ${money(charge)} via PIX</div>
+        <div class="qrslot"></div>
+        <div class="pix-copia mono">${payload.slice(0,42)}…</div>
+        <div class="await" id="await"><span class="spinner"></span> Aguardando confirmação do banco…</div>
+      </div>
+      ${db.cfg.auto?'':'<button class="btn btn-green btn-full" id="simpay">🏦 Simular pagamento recebido</button>'}
+      <button class="btn btn-ghost btn-full btn-sm" id="cancel">Cancelar</button>
+    </div>`;
+  const slot=stage().querySelector('.qrslot');slot.appendChild(cv);cv.className='qr';cv.style.width='150px';cv.style.height='150px';
+  logLine('₽ QR PIX gerado · consultando API do banco…','pay');
+  $('#cancel').onclick=renderIdle;
+  const confirm=()=>{
+    logLine(`₽ PIX confirmado · ${money(charge)} recebido`,'pay');
+    renderConfirmed(rec,charge,mins);
+  };
+  if(db.cfg.auto){
+    const delay=2000+Math.random()*3000; // 2–5s
+    setTimeout(()=>{if(stage().querySelector('#await'))confirm();},delay);
+  }else{
+    $('#simpay').onclick=confirm;
+  }
+}
+function renderConfirmed(rec,charge,mins){
+  stage().innerHTML=`
+    <div class="confirmed">
+      <div class="check">✓</div>
+      <h2>Pagamento confirmado!</h2>
+      <p>${money(charge)} recebido via PIX · Abrindo a cancela…</p>
+    </div>`;
+  settle(rec,charge,mins,`✅ #${String(rec.id).padStart(4,'0')} pago (${money(charge)}) — liberado`);
+}
+function settle(rec,charge,mins,msg){
+  rec.status='paid';rec.exitTs=Date.now();rec.charge=charge;rec.minutes=Math.round(mins);
+  save();
+  setTimeout(()=>openGate(msg),charge===0?300:900);
+}
+
+/* ─────────── DASHBOARD ─────────── */
+function renderDash(){
+  const recs=db.records;
+  const occ=recs.filter(r=>r.status==='active').length;
+  const paid=recs.filter(r=>r.status==='paid');
+  const today=new Date().toDateString();
+  const paidToday=paid.filter(r=>new Date(r.exitTs).toDateString()===today);
+  const rev=paidToday.reduce((s,r)=>s+(r.charge||0),0);
+  const avg=paid.length?paid.reduce((s,r)=>s+(r.charge||0),0)/paid.length:0;
+  $('#kOcc').textContent=occ;
+  $('#kRev').textContent=money(rev);
+  $('#kAvg').textContent=money(avg);
+  $('#kTot').textContent=recs.length;
+  const tb=$('#rows');
+  if(!recs.length){tb.innerHTML=`<tr><td colspan="7"><div class="empty">Nenhuma movimentação ainda. Vá ao Totem e registre uma entrada. 🚗</div></td></tr>`;return;}
+  tb.innerHTML=recs.slice().reverse().map(r=>{
+    const mins=r.status==='paid'?r.minutes:elapsedMinutes(r);
+    return `<tr>
+      <td class="mono">#${String(r.id).padStart(4,'0')}</td>
+      <td class="mono">${r.plate||'—'}</td>
+      <td>${fmtDT(new Date(r.entryTs))}</td>
+      <td>${r.exitTs?fmtDT(new Date(r.exitTs)):'—'}</td>
+      <td>${fmtDuration(mins)}</td>
+      <td>${r.charge!=null?money(r.charge):'—'}</td>
+      <td>${r.status==='active'?'<span class="st active">No pátio</span>':'<span class="st paid">Pago</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+function exportCSV(){
+  const head=['ticket','placa','entrada','saida','permanencia_min','valor','status'];
+  const lines=db.records.map(r=>[
+    r.id,r.plate||'',new Date(r.entryTs).toISOString(),
+    r.exitTs?new Date(r.exitTs).toISOString():'',
+    r.status==='paid'?r.minutes:Math.round(elapsedMinutes(r)),
+    r.charge!=null?r.charge.toFixed(2):'',r.status
+  ].join(','));
+  const csv=[head.join(','),...lines].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='parkflow_movimentacao.csv';a.click();
+}
+
+/* ─────────── CONFIG ─────────── */
+function bindConfig(){
+  const map={rate:'#cfgRate',grace:'#cfgGrace',min:'#cfgMin',pix:'#cfgPix'};
+  Object.entries(map).forEach(([k,sel])=>{
+    const el=$(sel);el.value=db.cfg[k];
+    el.oninput=()=>{db.cfg[k]=(k==='pix')?el.value:parseFloat(el.value)||0;save();};
+  });
+  const toggles={ocr:'#cfgOcr',auto:'#cfgAuto',fast:'#cfgFast'};
+  Object.entries(toggles).forEach(([k,sel])=>{
+    const el=$(sel);el.checked=db.cfg[k];
+    el.onchange=()=>{db.cfg[k]=el.checked;save();if(k==='ocr')renderIdle();};
+  });
+}
+
+/* ─────────── TABS ─────────── */
+document.querySelectorAll('#nav .tabs button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#nav .tabs button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const t=b.dataset.tab;
+    $('#view-'+t).classList.add('active');
+    if(t==='dash')renderDash();
+  };
+});
+$('#exportBtn').onclick=exportCSV;
+$('#resetBtn').onclick=()=>{if(confirm('Apagar todos os registros?')){db.records=[];db.seq=421;save();renderDash();logLine('🗑️ Dados limpos','');}};
+
+/* ─────────── BOOT ─────────── */
+setInterval(()=>{$('#clock').textContent=fmtTime(new Date());},1000);
+$('#clock').textContent=fmtTime(new Date());
+bindConfig();
+renderIdle();
+logLine('⚡ Sistema iniciado · aguardando veículos','ok');
+</script>
+</body>
+</html>
