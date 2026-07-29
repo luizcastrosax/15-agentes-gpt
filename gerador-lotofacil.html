@@ -173,6 +173,10 @@ button{font-family:inherit;}
 
 footer{background:var(--bg2);border-top:1px solid var(--border);padding:26px 20px;text-align:center;margin-top:60px;}
 footer p{font-size:12px;color:var(--text3);}
+.nav{display:flex;gap:18px;justify-content:center;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg2);font-size:13px;flex-wrap:wrap;}
+.nav a{color:var(--text2);text-decoration:none;font-weight:600;}
+.nav a:hover{color:var(--green-light);}
+.nav a.active{color:var(--green);}
 
 @media(max-width:520px){
   .wrap{padding:28px 14px 60px;}
@@ -183,6 +187,12 @@ footer p{font-size:12px;color:var(--text3);}
 </style>
 </head>
 <body>
+
+<nav class="nav">
+  <a href="index.html" class="active">🎟️ Gerador</a>
+  <a href="fechamento.html">🔗 Fechamento</a>
+  <a href="backtest.html">📊 Backtest &amp; Histórico</a>
+</nav>
 
 <header class="top">
   <div class="eyebrow">🍀 Estatística avançada aplicada</div>
