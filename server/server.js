@@ -142,10 +142,11 @@ route('POST', /^\/api\/cobranca$/, async (req, res) => {
   const txid = 'PF' + crypto.randomBytes(8).toString('hex').toUpperCase();
   let pixPayload = buildPixPayload({ key: cfg.pixKey, name: cfg.pixName, city: cfg.pixCity, amount: pr.net, txid });
   const method = (b.method || 'pix');
+  let qrBase64 = null;
   // PIX real (Mercado Pago): substitui o BR Code local pela cobrança oficial do banco
   if (method === 'pix') {
     const charge = await pixProvider.createCharge({ amount: pr.net, description: 'Estacionamento ' + v.ticket, txid });
-    if (charge.provider !== 'mock' && charge.pixPayload) { pixPayload = charge.pixPayload; }
+    if (charge.provider !== 'mock' && charge.pixPayload) { pixPayload = charge.pixPayload; qrBase64 = charge.qrBase64 || null; }
     else if (charge.error) { D.logEvent('pay', `⚠️ PIX (${charge.provider}) falhou: ${charge.error}`); }
   }
   const pay = D.createPayment({ txid, vehicle_id: v.id, amount: pr.net, method, pix_payload: pixPayload, discount: pr.discount, partner: partner ? partner.name : null });
@@ -155,7 +156,7 @@ route('POST', /^\/api\/cobranca$/, async (req, res) => {
     const delay = 2000 + Math.random() * 3000;
     setTimeout(() => confirmarPagamento(txid, 'webhook-banco'), delay);
   }
-  json(res, 201, { txid, amount: pr.net, status: 'pending', method, pixPayload, ticket: v.ticket, discount: pr.discount });
+  json(res, 201, { txid, amount: pr.net, status: 'pending', method, pixPayload, qrBase64, ticket: v.ticket, discount: pr.discount });
 });
 
 // Status da cobrança (polling do cliente)
@@ -167,10 +168,13 @@ route('GET', /^\/api\/cobranca\/[^/]+$/, (req, res, url) => {
 });
 
 // Webhook do banco (em produção, chamado pelo PSP/banco)
-route('POST', /^\/api\/webhook\/pix$/, async (req, res) => {
+route('POST', /^\/api\/webhook\/pix$/, async (req, res, url) => {
   const b = await readBody(req);
-  // Provedor real (Mercado Pago): valida a notificação e descobre nosso txid pelo external_reference.
-  const wh = await pixProvider.handleWebhook(b);
+  const q = Object.fromEntries(url.searchParams.entries());
+  // Normaliza: o Mercado Pago manda ora no corpo, ora na query string.
+  const type = b.type || b.topic || q.type || q.topic;
+  const id   = (b.data && b.data.id) || b.id || q['data.id'] || q.id;
+  const wh = await pixProvider.handleWebhook({ type, id });
   let txid = b.txid;
   if (wh.provider !== 'mock') {
     if (wh.error) { D.logEvent('pay', `⚠️ Webhook (${wh.provider}) erro: ${wh.error}`); }

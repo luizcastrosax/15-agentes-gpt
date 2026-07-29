@@ -44,6 +44,7 @@ async function createCharge(o) {
         description: o.description || 'Estacionamento',
         payment_method_id: 'pix',
         external_reference: o.txid,
+        ...(process.env.PIX_WEBHOOK_URL ? { notification_url: process.env.PIX_WEBHOOK_URL } : {}),
         payer: { email: o.payerEmail || 'cliente@parkflow.com.br' },
       }),
     });
@@ -64,17 +65,19 @@ async function createCharge(o) {
 
 /**
  * Processa a notificação (webhook) do provedor e diz se o pagamento foi aprovado.
- * @param {object} body  corpo do POST enviado pelo Mercado Pago
+ * O Mercado Pago envia o aviso ora no corpo JSON ({type,data:{id}}), ora na
+ * query string (?topic=payment&id=123) — quem chama já normaliza para {type,id}.
+ * @param {{type?:string, id?:string}} n  notificação normalizada
  * @returns {Promise<{paid:boolean, providerId?:string, externalRef?:string, provider:string, error?:string}>}
  */
-async function handleWebhook(body) {
+async function handleWebhook(n) {
   if (PROVIDER !== 'mercadopago' || !MP_TOKEN) {
     // modo mock: o próprio backend simula a confirmação (ver server.js)
     return { paid: false, provider: 'mock' };
   }
   try {
-    const type = body.type || body.topic;
-    const id = (body.data && body.data.id) || body.id;
+    const type = n && n.type;
+    const id = n && n.id;
     if (type !== 'payment' || !id) return { paid: false, provider: 'mercadopago' };
     const res = await fetch(`${MP_BASE}/v1/payments/${id}`, { headers: { 'Authorization': `Bearer ${MP_TOKEN}` } });
     const pay = await res.json();
