@@ -139,6 +139,21 @@ button{font-family:inherit;}
 .summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);}
 .summary b{color:var(--text);}
 
+/* ── CONFERIDOR ── */
+.conf-summary{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px;}
+.cs{flex:1;min-width:64px;text-align:center;background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:10px 6px;}
+.cs .n{font-size:22px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:var(--text3);}
+.cs.hit-any .n{color:var(--green);}
+.cs .l{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px;}
+.conf-best{text-align:center;font-size:14px;font-weight:700;color:var(--text2);margin:8px 0 14px;}
+.conf-best b{color:var(--gold);}
+.conf-game{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:9px 0;border-top:1px solid var(--border);}
+.conf-game:first-child{border-top:none;}
+.mini-balls{display:flex;flex-wrap:wrap;gap:4px;}
+.mb{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--bg3);color:var(--text3);border:1px solid var(--border);font-variant-numeric:tabular-nums;}
+.mb.hit{background:var(--green);color:#04220f;border-color:var(--green);}
+.conf-badge{font-size:12px;font-weight:800;padding:4px 11px;border-radius:20px;white-space:nowrap;}
+
 /* ── DISCLAIMER ── */
 .disclaimer{
   margin-top:32px;background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.25);
@@ -283,6 +298,15 @@ footer p{font-size:12px;color:var(--text3);}
         <p class="hint">Cole o último resultado (15 dezenas). Normalmente 7 a 10 se repetem — elas ficam destacadas.</p>
         <input type="text" id="prev-result" placeholder="Ex: 01 02 04 05 07 09 11 13 15 18 20 21 23 24 25"
           style="width:100%;padding:12px 14px;background:var(--bg4);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-variant-numeric:tabular-nums;"/>
+      </div>
+
+      <div class="panel" style="margin-top:22px;">
+        <h2>🏆 Conferir resultado oficial <span style="font-size:11px;color:var(--text3);font-weight:600">(após o sorteio)</span></h2>
+        <p class="hint">Gere seus jogos, cole as 15 dezenas sorteadas e veja quantos pontos cada jogo fez.</p>
+        <input type="text" id="conf-result" placeholder="Ex: 01 02 03 05 06 08 10 11 14 16 18 20 22 24 25"
+          style="width:100%;padding:12px 14px;background:var(--bg4);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-variant-numeric:tabular-nums;margin-bottom:12px;"/>
+        <button class="btn" id="conf-btn">CONFERIR MEUS JOGOS</button>
+        <div id="conf-out" style="margin-top:16px;"></div>
       </div>
     </div>
   </div>
@@ -622,6 +646,55 @@ footer p{font-size:12px;color:var(--text3);}
     navigator.clipboard.writeText(txt).then(function(){flash('Jogos copiados! ✅');},
       function(){flash('Não foi possível copiar automaticamente.');});
   });
+
+  // ── Conferidor (checagem contra resultado oficial) ──
+  document.getElementById('conf-btn').addEventListener('click',conferir);
+
+  function prizeStyle(hits){
+    if(hits>=15)return 'background:rgba(245,166,35,.18);color:var(--gold)';
+    if(hits>=13)return 'background:rgba(29,185,84,.16);color:var(--green-light)';
+    if(hits>=11)return 'background:rgba(59,130,246,.16);color:#7EB0FF';
+    return 'background:var(--bg3);color:var(--text3)';
+  }
+
+  function conferir(){
+    var out=document.getElementById('conf-out');
+    if(!lastGames.length){flash('Gere seus jogos antes de conferir.');return;}
+    var raw=document.getElementById('conf-result').value;
+    var nums=(raw.match(/\d+/g)||[]).map(Number).filter(function(n){return n>=1&&n<=25;});
+    var uniq=Array.from(new Set(nums));
+    if(uniq.length!==15){flash('Informe exatamente 15 dezenas sorteadas.');return;}
+    var result=new Set(uniq);
+    var dist={11:0,12:0,13:0,14:0,15:0},best=0,premiados=0;
+
+    var rows='';
+    lastGames.forEach(function(g,i){
+      var hits=g.filter(function(n){return result.has(n);}).length;
+      best=Math.max(best,hits);
+      if(hits>=11){dist[hits]++;premiados++;}
+      var mini='<div class="mini-balls">';
+      g.forEach(function(n){
+        var hit=result.has(n);
+        mini+='<div class="mb'+(hit?' hit':'')+'">'+String(n).padStart(2,'0')+'</div>';
+      });
+      mini+='</div>';
+      rows+='<div class="conf-game">'+mini+
+        '<span class="conf-badge" style="'+prizeStyle(hits)+'">'+hits+' acertos</span></div>';
+    });
+
+    var html='<div class="conf-summary">';
+    [15,14,13,12,11].forEach(function(k){
+      html+='<div class="cs'+(dist[k]>0?' hit-any':'')+'"><div class="n">'+dist[k]+'</div><div class="l">'+k+' pts</div></div>';
+    });
+    html+='</div>';
+    html+='<div class="conf-best">Melhor jogo: <b>'+best+' acertos</b> · '+
+      premiados+' jogo(s) premiado(s) de '+lastGames.length+'</div>';
+    html+=rows;
+    if(best>=11){
+      html+='<div style="margin-top:14px;text-align:center;font-size:13px;color:var(--green-light);font-weight:700">🎉 Parabéns! Você teve jogo(s) premiado(s).</div>';
+    }
+    out.innerHTML=html;
+  }
 
   // ── Utils ──
   function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
