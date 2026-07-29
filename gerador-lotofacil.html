@@ -4,12 +4,12 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Gerador Inteligente da Lotofácil | Estratégia Estatística</title>
-<meta name="description" content="Gerador de jogos da Lotofácil com filtros estatísticos: par/ímpar, distribuição por linhas e colunas, soma, sequências e fechamentos equilibrados."/>
+<meta name="description" content="Gerador de jogos da Lotofácil com filtros estatísticos avançados: entropia, dispersão, distância entre dezenas, cobertura combinatória e exclusão de padrões raros."/>
 <style>
 :root{
   --red:#E8344A;--red-dark:#C41E35;--red-light:#FF4D63;
   --green:#1DB954;--green-dark:#169040;--green-light:#2EE066;
-  --gold:#F5A623;
+  --gold:#F5A623;--blue:#3B82F6;
   --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
   --border:#2A2A30;
   --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
@@ -35,7 +35,7 @@ button{font-family:inherit;}
 }
 .top h1{font-size:clamp(28px,5vw,52px);font-weight:900;line-height:1.08;letter-spacing:-1.5px;margin-bottom:14px;}
 .top h1 em{font-style:normal;color:var(--green);}
-.top p{font-size:clamp(15px,2.2vw,18px);color:var(--text2);max-width:620px;margin:0 auto;}
+.top p{font-size:clamp(15px,2.2vw,18px);color:var(--text2);max-width:640px;margin:0 auto;}
 
 .wrap{max-width:1040px;margin:0 auto;padding:40px 20px 80px;}
 
@@ -70,7 +70,7 @@ button{font-family:inherit;}
 .field > label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;}
 .seg{display:flex;gap:6px;flex-wrap:wrap;}
 .seg button{
-  flex:1;min-width:60px;padding:9px 8px;border:1.5px solid var(--border);background:var(--bg4);
+  flex:1;min-width:56px;padding:9px 8px;border:1.5px solid var(--border);background:var(--bg4);
   color:var(--text2);border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s;
 }
 .seg button:hover{border-color:var(--green);color:var(--text);}
@@ -79,11 +79,15 @@ button{font-family:inherit;}
 .row-num input[type=range]{flex:1;accent-color:var(--green);}
 .row-num .val{min-width:42px;text-align:center;font-weight:800;font-size:16px;color:var(--green);font-variant-numeric:tabular-nums;}
 
+.subhead{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text3);margin:22px 0 6px;padding-top:18px;border-top:1px solid var(--border);}
+.subhead:first-of-type{border-top:none;padding-top:0;}
+
 .chk{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-top:1px solid var(--border);}
-.chk:first-of-type{border-top:none;}
+.chk.first{border-top:none;}
 .chk input{width:18px;height:18px;margin-top:3px;accent-color:var(--green);flex-shrink:0;cursor:pointer;}
 .chk .txt label{font-size:14px;font-weight:600;color:var(--text);cursor:pointer;}
 .chk .txt p{font-size:12px;color:var(--text3);}
+.chk .txt .badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;background:rgba(59,130,246,.15);color:#7EB0FF;border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;text-transform:uppercase;}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -98,6 +102,17 @@ button{font-family:inherit;}
 .btn.ghost{background:transparent;border:1.5px solid var(--red);color:var(--red-light);font-size:13px;padding:9px 16px;width:auto;}
 .btn.ghost:hover{background:rgba(232,52,74,.1);box-shadow:none;transform:none;}
 
+/* ── COVERAGE ── */
+.coverage{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:16px;}
+.coverage .c-title{font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.cov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:12px;}
+.cov-item{text-align:center;}
+.cov-item .cv{font-size:24px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;}
+.cov-item .cv.blue{color:#7EB0FF;}
+.cov-item .cl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:5px;}
+.bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:10px;}
+.bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--green-light));border-radius:3px;}
+
 /* ── RESULTS ── */
 #results-panel{min-height:200px;}
 .empty{color:var(--text3);font-size:14px;text-align:center;padding:40px 10px;}
@@ -107,7 +122,7 @@ button{font-family:inherit;}
 }
 .game .g-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .game .g-title{font-size:12px;font-weight:800;color:var(--text3);letter-spacing:1px;text-transform:uppercase;}
-.game .g-meta{font-size:11px;color:var(--text3);}
+.game .g-nat{font-size:11px;font-weight:800;padding:2px 9px;border-radius:20px;}
 .balls{display:flex;flex-wrap:wrap;gap:6px;}
 .ball{
   width:34px;height:34px;border-radius:50%;background:var(--green);color:#04220f;
@@ -118,6 +133,7 @@ button{font-family:inherit;}
 .stat-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .tag{font-size:10px;font-weight:700;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 7px;}
 .tag b{color:var(--green);}
+.tag.blue b{color:#7EB0FF;}
 .res-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
 
 .summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);}
@@ -154,9 +170,9 @@ footer p{font-size:12px;color:var(--text3);}
 <body>
 
 <header class="top">
-  <div class="eyebrow">🍀 Estratégia estatística aplicada</div>
+  <div class="eyebrow">🍀 Estatística avançada aplicada</div>
   <h1>Gerador <em>Inteligente</em><br>da Lotofácil</h1>
-  <p>A Lotofácil não é adivinhação — é organização. Esta ferramenta monta jogos equilibrados usando os padrões que mais se repetem: par/ímpar, distribuição por linhas e colunas, soma, sequências e moldura.</p>
+  <p>A Lotofácil não é adivinhação — é organização. Esta ferramenta monta jogos equilibrados usando entropia, dispersão, distância entre dezenas, cobertura combinatória e exclusão automática dos padrões historicamente raros.</p>
 </header>
 
 <div class="wrap">
@@ -181,8 +197,8 @@ footer p{font-size:12px;color:var(--text3);}
       </div>
 
       <div class="panel" style="margin-top:22px;">
-        <h2>🎯 Filtros estatísticos</h2>
-        <p class="hint">Cada jogo gerado precisa passar por todos os filtros ativos.</p>
+        <h2>🎯 Filtros de equilíbrio</h2>
+        <p class="hint">Cada jogo precisa passar por todos os filtros ativos.</p>
 
         <div class="field">
           <label>Dezenas por jogo</label>
@@ -197,12 +213,13 @@ footer p{font-size:12px;color:var(--text3);}
         <div class="field">
           <label>Quantidade de jogos</label>
           <div class="row-num">
-            <input type="range" id="qty" min="1" max="20" value="6"/>
+            <input type="range" id="qty" min="1" max="30" value="6"/>
             <span class="val" id="qty-val">6</span>
           </div>
         </div>
 
-        <div class="chk">
+        <div class="subhead">Equilíbrio clássico</div>
+        <div class="chk first">
           <input type="checkbox" id="f-parimpar" checked/>
           <div class="txt"><label for="f-parimpar">Equilíbrio par / ímpar</label><p>Aceita apenas padrões 9-6 ou 8-7 (os mais frequentes).</p></div>
         </div>
@@ -212,19 +229,33 @@ footer p{font-size:12px;color:var(--text3);}
         </div>
         <div class="chk">
           <input type="checkbox" id="f-linhas" checked/>
-          <div class="txt"><label for="f-linhas">Distribuição por linhas</label><p>Evita concentração: no máx. 4 e no mín. 1 dezena por linha.</p></div>
+          <div class="txt"><label for="f-linhas">Distribuição por linhas</label><p>No máx. 4 e no mín. 1 dezena por linha.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-colunas" checked/>
           <div class="txt"><label for="f-colunas">Distribuição por colunas</label><p>Mantém equilíbrio entre as 5 colunas (máx. 4 por coluna).</p></div>
         </div>
         <div class="chk">
-          <input type="checkbox" id="f-seq" checked/>
-          <div class="txt"><label for="f-seq">Limitar sequências</label><p>Bloqueia blocos de 5 ou mais números consecutivos.</p></div>
-        </div>
-        <div class="chk">
           <input type="checkbox" id="f-moldura" checked/>
           <div class="txt"><label for="f-moldura">Moldura × miolo</label><p>Equilibra borda do volante e centro (miolo entre 4 e 8).</p></div>
+        </div>
+
+        <div class="subhead">Análise avançada</div>
+        <div class="chk first">
+          <input type="checkbox" id="f-exclusao" checked/>
+          <div class="txt"><label for="f-exclusao">Exclusão automática de padrões raros<span class="badge">Pro</span></label><p>Elimina jogos com 14+ consecutivos, ≤2 de uma paridade, dezenas em só 2 linhas ou 5+ numa coluna.</p></div>
+        </div>
+        <div class="chk">
+          <input type="checkbox" id="f-entropia" checked/>
+          <div class="txt"><label for="f-entropia">Entropia mínima (naturalidade)<span class="badge">Pro</span></label><p>Exige índice de naturalidade ≥ 55% — descarta jogos "artificiais" ou concentrados.</p></div>
+        </div>
+        <div class="chk">
+          <input type="checkbox" id="f-dispersao" checked/>
+          <div class="txt"><label for="f-dispersao">Índice de dispersão<span class="badge">Pro</span></label><p>Garante que as dezenas estejam espalhadas pelo volante, não amontoadas.</p></div>
+        </div>
+        <div class="chk">
+          <input type="checkbox" id="f-distancia" checked/>
+          <div class="txt"><label for="f-distancia">Distância entre dezenas<span class="badge">Pro</span></label><p>Limita blocos de números colados (máx. 4 consecutivos).</p></div>
         </div>
       </div>
     </div>
@@ -258,20 +289,20 @@ footer p{font-size:12px;color:var(--text3);}
 
   <!-- ══ DISCLAIMER ══ -->
   <div class="disclaimer">
-    <b>⚠️ Importante — leia com atenção:</b> nenhum gerador garante prêmio. A Lotofácil é um jogo de azar e cada combinação tem a mesma probabilidade matemática de ser sorteada. O que estes filtros fazem é montar jogos <b>equilibrados</b>, evitando padrões estruturalmente fracos (excesso de sequências, concentração numa linha, par/ímpar improvável). Isso melhora a <b>organização e a distribuição</b> das apostas — não cria certeza de resultado. Jogue com responsabilidade e defina um orçamento fixo. +18.
+    <b>⚠️ Importante — leia com atenção:</b> nenhum gerador garante prêmio. A Lotofácil é um jogo de azar e cada combinação tem exatamente a mesma probabilidade de ser sorteada. Os filtros avançados (entropia, dispersão, cobertura, exclusão) <b>reduzem o universo de apostas</b> eliminando padrões historicamente raros — mas <b>não alteram a probabilidade</b> de cada combinação que resta. O ganho é de organização e cobertura, não de sorte. Jogue com responsabilidade e defina um orçamento fixo. +18.
   </div>
 
   <!-- ══ STRATEGY NOTES ══ -->
   <div class="notes">
-    <h2>Os padrões por trás do gerador</h2>
-    <p class="sub">Baseado nos padrões estatísticos mais estáveis da Lotofácil</p>
+    <h2>A matemática por trás do gerador</h2>
+    <p class="sub">Recursos que os grandes sistemas profissionais usam</p>
     <div class="note-grid">
-      <div class="note-card"><div class="ico">⚖️</div><h4>Par / Ímpar</h4><p>Os sorteios tendem a 9-6 ou 8-7. Combinações muito desequilibradas (12-3, 11-4) são raras.</p></div>
-      <div class="note-card"><div class="ico">📊</div><h4>Soma equilibrada</h4><p>A soma das 15 dezenas costuma cair entre 170 e 220 — extremos são estatisticamente incomuns.</p></div>
-      <div class="note-card"><div class="ico">🧱</div><h4>Linhas e colunas</h4><p>Distribuir pelo volante (3-3-3-3-3 é o ideal médio) evita concentração numa região só.</p></div>
-      <div class="note-card"><div class="ico">🔗</div><h4>Sequências</h4><p>Longas sequências (6 números seguidos) quase nunca saem. O filtro limita esses blocos.</p></div>
-      <div class="note-card"><div class="ico">🖼️</div><h4>Moldura × miolo</h4><p>Equilíbrio entre a borda do volante e o centro dá jogos mais parecidos com sorteios reais.</p></div>
-      <div class="note-card"><div class="ico">♻️</div><h4>Repetição</h4><p>De 7 a 10 dezenas costumam repetir do concurso anterior — usá-las com moderação ajuda.</p></div>
+      <div class="note-card"><div class="ico">🧠</div><h4>Entropia / Naturalidade</h4><p>Mede o quão "natural" é um jogo comparado à distribuição típica dos sorteios. Jogos concentrados têm baixa entropia.</p></div>
+      <div class="note-card"><div class="ico">📐</div><h4>Distância entre dezenas</h4><p>01 02 03 04 05… é possível, mas raríssimo. O filtro controla o espaçamento entre números vizinhos.</p></div>
+      <div class="note-card"><div class="ico">🌐</div><h4>Índice de dispersão</h4><p>Quanto as dezenas estão espalhadas pelo volante — medido pelo desvio-padrão das posições.</p></div>
+      <div class="note-card"><div class="ico">🎯</div><h4>Cobertura combinatória</h4><p>A pergunta muda de "qual jogo fazer?" para "quantos cenários estou cobrindo?" — o coração dos fechamentos.</p></div>
+      <div class="note-card"><div class="ico">🚫</div><h4>Exclusão automática</h4><p>Elimina 13 pares/2 ímpares, 14 consecutivos, tudo em duas linhas ou excesso numa coluna.</p></div>
+      <div class="note-card"><div class="ico">⚖️</div><h4>Equilíbrio clássico</h4><p>Par/ímpar 9-6 ou 8-7, soma entre 170-220 e distribuição por linhas e colunas.</p></div>
     </div>
   </div>
 </div>
@@ -285,16 +316,15 @@ footer p{font-size:12px;color:var(--text3);}
   "use strict";
 
   // ── Grid geometry ──
-  // Linhas: 1-5, 6-10, 11-15, 16-20, 21-25
-  // Colunas: (n-1)%5
   var ROWS=[[1,5],[6,10],[11,15],[16,20],[21,25]];
   function rowOf(n){return Math.floor((n-1)/5);}       // 0..4
   function colOf(n){return (n-1)%5;}                    // 0..4
   var MIOLO=[7,8,9,12,13,14,17,18,19];                 // 3x3 center
+  var LOG2_5=Math.log2(5);
 
   // ── State ──
-  var selected=new Set();   // dezenas no grupo-base
-  var fixed=new Set();      // subconjunto fixo (entra em todo jogo)
+  var selected=new Set();
+  var fixed=new Set();
   var lastGames=[];
 
   // ── Build volante ──
@@ -312,10 +342,9 @@ footer p{font-size:12px;color:var(--text3);}
       if(selected.size>=20){flash('Máximo de 20 dezenas no grupo-base.');return;}
       selected.add(n);
     } else if(!fixed.has(n)){
-      fixed.add(n);           // 2nd click => fix
+      fixed.add(n);
     } else {
-      selected.delete(n);     // 3rd click => remove
-      fixed.delete(n);
+      selected.delete(n);fixed.delete(n);
     }
     render();
   }
@@ -336,17 +365,13 @@ footer p{font-size:12px;color:var(--text3);}
   });
   document.getElementById('auto-btn').addEventListener('click',function(){
     selected.clear();fixed.clear();
-    // Sugere 18 dezenas com par/ímpar e linhas equilibrados
-    var pick=suggestGroup(18);
-    pick.forEach(function(n){selected.add(n);});
+    suggestGroup(18).forEach(function(n){selected.add(n);});
     render();
     flash('Grupo de 18 dezenas sugerido. Ajuste como quiser.');
   });
 
   function suggestGroup(k){
-    // Distribui ~equilibrado por linha e garante par/ímpar razoável
-    var perRow=[4,4,4,3,3]; // soma 18
-    shuffle(perRow);
+    var perRow=[4,4,4,3,3];shuffle(perRow);
     var out=[];
     for(var r=0;r<5;r++){
       var pool=[];for(var n=ROWS[r][0];n<=ROWS[r][1];n++)pool.push(n);
@@ -376,34 +401,54 @@ footer p{font-size:12px;color:var(--text3);}
       soma:document.getElementById('f-soma').checked,
       linhas:document.getElementById('f-linhas').checked,
       colunas:document.getElementById('f-colunas').checked,
-      seq:document.getElementById('f-seq').checked,
-      moldura:document.getElementById('f-moldura').checked
+      moldura:document.getElementById('f-moldura').checked,
+      exclusao:document.getElementById('f-exclusao').checked,
+      entropia:document.getElementById('f-entropia').checked,
+      dispersao:document.getElementById('f-dispersao').checked,
+      distancia:document.getElementById('f-distancia').checked
     };
   }
 
+  // ── Metrics ──
   function stats(game){
     var odd=0,sum=0,rc=[0,0,0,0,0],cc=[0,0,0,0,0],miolo=0;
     game.forEach(function(n){
       if(n%2)odd++; sum+=n; rc[rowOf(n)]++; cc[colOf(n)]++;
       if(MIOLO.indexOf(n)>=0)miolo++;
     });
-    var maxSeq=1,cur=1,sorted=game.slice().sort(function(a,b){return a-b;});
+    var sorted=game.slice().sort(function(a,b){return a-b;});
+    var maxSeq=1,cur=1,gaps=[];
     for(var i=1;i<sorted.length;i++){
+      gaps.push(sorted[i]-sorted[i-1]);
       if(sorted[i]===sorted[i-1]+1){cur++;maxSeq=Math.max(maxSeq,cur);}else cur=1;
     }
-    return {odd:odd,even:game.length-odd,sum:sum,rows:rc,cols:cc,miolo:miolo,maxSeq:maxSeq};
+    // Entropia (naturalidade): média das entropias de linhas e colunas, normalizada
+    var hRow=shannon(rc,game.length),hCol=shannon(cc,game.length);
+    var naturalidade=Math.round(((hRow+hCol)/2/LOG2_5)*100);
+    // Dispersão: desvio-padrão das dezenas
+    var mean=sum/game.length,varSum=0;
+    game.forEach(function(n){varSum+=(n-mean)*(n-mean);});
+    var disp=Math.sqrt(varSum/game.length);
+    // Distância média entre dezenas
+    var avgGap=gaps.length? gaps.reduce(function(a,b){return a+b;},0)/gaps.length : 0;
+    var occRows=rc.filter(function(x){return x>0;}).length;
+    return {odd:odd,even:game.length-odd,sum:sum,rows:rc,cols:cc,miolo:miolo,
+            maxSeq:maxSeq,naturalidade:naturalidade,disp:disp,avgGap:avgGap,occRows:occRows};
+  }
+
+  function shannon(counts,total){
+    var h=0;counts.forEach(function(c){if(c>0){var p=c/total;h-=p*Math.log2(p);}});return h;
   }
 
   function passes(game,f){
     var s=stats(game),size=game.length;
+    // ── Equilíbrio clássico ──
     if(f.parimpar){
-      // aceita distância de até 1 do padrão 8-7/9-6 (escala p/ tamanho)
-      var ideal=Math.round(size*0.53); // ~ímpares
+      var ideal=Math.round(size*0.53);
       if(Math.abs(s.odd-ideal)>1)return false;
     }
     if(f.soma){
-      var lo=size*11.3,hi=size*14.7; // faixa proporcional (15=>~170-220)
-      if(s.sum<lo||s.sum>hi)return false;
+      if(s.sum<size*11.3||s.sum>size*14.7)return false;
     }
     if(f.linhas){
       for(var r=0;r<5;r++){if(s.rows[r]>4||s.rows[r]<1)return false;}
@@ -411,59 +456,42 @@ footer p{font-size:12px;color:var(--text3);}
     if(f.colunas){
       for(var c=0;c<5;c++){if(s.cols[c]>4)return false;}
     }
-    if(f.seq){ if(s.maxSeq>=5)return false; }
     if(f.moldura){
       var lo2=Math.round(size*0.27),hi2=Math.round(size*0.53);
       if(s.miolo<lo2||s.miolo>hi2)return false;
     }
+    // ── Avançado ──
+    if(f.exclusao){
+      var minority=Math.min(s.odd,s.even);
+      if(minority<Math.max(2,Math.round(size*0.2)))return false; // paridade extrema
+      if(s.maxSeq>=6)return false;                               // 14 consecutivos etc.
+      if(s.occRows<=2)return false;                              // tudo em 2 linhas
+      for(var c2=0;c2<5;c2++){if(s.cols[c2]>=5)return false;}    // excesso numa coluna
+    }
+    if(f.entropia){ if(s.naturalidade<55)return false; }
+    if(f.dispersao){
+      // desvio-padrão natural p/ 15 dezenas em 1-25 fica ~6.3 a 8.0
+      var dLo=size*0.42,dHi=size*0.56;
+      if(s.disp<dLo||s.disp>dHi)return false;
+    }
+    if(f.distancia){ if(s.maxSeq>=5)return false; }
     return true;
   }
 
-  // ── Combination generator from base group ──
+  // ── Combination generator ──
   function genOne(base,f){
     var fixedArr=base.filter(function(n){return fixed.has(n);});
     var freeArr=base.filter(function(n){return !fixed.has(n);});
     if(fixedArr.length>gameSize)return null;
     var need=gameSize-fixedArr.length;
     if(need>freeArr.length)return null;
-    for(var attempt=0;attempt<600;attempt++){
+    for(var attempt=0;attempt<800;attempt++){
       var pool=freeArr.slice();shuffle(pool);
       var game=fixedArr.concat(pool.slice(0,need)).sort(function(a,b){return a-b;});
       if(passes(game,f))return game;
     }
-    return null; // não achou com os filtros
+    return null;
   }
-
-  function keyOf(g){return g.join('-');}
-
-  // ── Generate ──
-  document.getElementById('gen-btn').addEventListener('click',generate);
-  document.getElementById('again-btn').addEventListener('click',generate);
-
-  function generate(){
-    var base=Array.from(selected);
-    if(base.length<gameSize){
-      flash('Selecione ao menos '+gameSize+' dezenas no grupo-base.');return;
-    }
-    var f=filtersActive();
-    var want=+qty.value, out=[], seen=new Set(), relaxed=false;
-    var guard=0;
-    while(out.length<want && guard<want*400){
-      guard++;
-      var g=genOne(base,f);
-      if(!g){ // relaxa filtros para não travar
-        relaxed=true;
-        g=genOneRelaxed(base);
-        if(!g)break;
-      }
-      var k=keyOf(g);
-      if(!seen.has(k)){seen.add(k);out.push(g);}
-      if(seen.size>=maxCombos(base.length,gameSize))break; // esgotou o espaço
-    }
-    lastGames=out;
-    renderResults(out,relaxed);
-  }
-
   function genOneRelaxed(base){
     var fixedArr=base.filter(function(n){return fixed.has(n);});
     var freeArr=base.filter(function(n){return !fixed.has(n);});
@@ -472,20 +500,79 @@ footer p{font-size:12px;color:var(--text3);}
     var pool=freeArr.slice();shuffle(pool);
     return fixedArr.concat(pool.slice(0,need)).sort(function(a,b){return a-b;});
   }
+  function keyOf(g){return g.join('-');}
+  function maxCombos(n,k){if(k>n)return 0;var r=1;for(var i=0;i<k;i++){r=r*(n-i)/(i+1);}return Math.round(r);}
 
-  function maxCombos(n,k){
-    // C(n,k) cap para evitar loop infinito quando espaço é pequeno
-    if(k>n)return 0;var r=1;for(var i=0;i<k;i++){r=r*(n-i)/(i+1);}return Math.round(r);
+  // ── Generate ──
+  document.getElementById('gen-btn').addEventListener('click',generate);
+  document.getElementById('again-btn').addEventListener('click',generate);
+
+  function generate(){
+    var base=Array.from(selected);
+    if(base.length<gameSize){flash('Selecione ao menos '+gameSize+' dezenas no grupo-base.');return;}
+    var f=filtersActive();
+    var want=+qty.value, out=[], seen=new Set(), relaxed=false, guard=0;
+    var cap=maxCombos(base.length,gameSize);
+    while(out.length<want && guard<want*500){
+      guard++;
+      var g=genOne(base,f);
+      if(!g){relaxed=true;g=genOneRelaxed(base);if(!g)break;}
+      var k=keyOf(g);
+      if(!seen.has(k)){seen.add(k);out.push(g);}
+      if(seen.size>=cap)break;
+    }
+    lastGames=out;
+    renderResults(out,relaxed,base);
+  }
+
+  function natColor(v){
+    if(v>=70)return 'background:rgba(29,185,84,.15);color:var(--green-light)';
+    if(v>=55)return 'background:rgba(245,166,35,.15);color:var(--gold)';
+    return 'background:rgba(232,52,74,.15);color:var(--red-light)';
+  }
+
+  // ── Coverage (cobertura combinatória) ──
+  function coverage(games,base){
+    var used=new Set();
+    games.forEach(function(g){g.forEach(function(n){used.add(n);});});
+    // pares cobertos entre as dezenas do grupo-base
+    var coveredPairs=new Set();
+    games.forEach(function(g){
+      for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++)coveredPairs.add(g[i]+'-'+g[j]);
+    });
+    var baseUsed=base.length;
+    var totalPairs=baseUsed*(baseUsed-1)/2;
+    var pairPct=totalPairs? Math.round(coveredPairs.size/totalPairs*100):0;
+    // redundância média (dezenas em comum entre pares de jogos)
+    var overlapSum=0,pairs=0;
+    for(var a=0;a<games.length;a++)for(var b=a+1;b<games.length;b++){
+      var setB={};games[b].forEach(function(n){setB[n]=1;});
+      var ov=0;games[a].forEach(function(n){if(setB[n])ov++;});
+      overlapSum+=ov;pairs++;
+    }
+    var avgOverlap=pairs? (overlapSum/pairs):0;
+    return {used:used.size,baseUsed:baseUsed,coveredPairs:coveredPairs.size,totalPairs:totalPairs,pairPct:pairPct,avgOverlap:avgOverlap};
   }
 
   // ── Render results ──
-  function renderResults(games,relaxed){
+  function renderResults(games,relaxed,base){
     var box=document.getElementById('results');
-    if(!games.length){box.innerHTML='<div class="empty">Não foi possível montar jogos com estes filtros. Tente ampliar o grupo-base ou desativar alguns filtros.</div>';
-      document.getElementById('res-actions').style.display='none';return;}
-
+    if(!games.length){
+      box.innerHTML='<div class="empty">Não foi possível montar jogos com estes filtros. Amplie o grupo-base ou desative alguns filtros avançados.</div>';
+      document.getElementById('res-actions').style.display='none';return;
+    }
     var prev=parsePrev();
+    var cov=coverage(games,base);
     var html='';
+
+    // Cobertura combinatória
+    html+='<div class="coverage"><div class="c-title">🎯 Cobertura combinatória</div><div class="cov-grid">'+
+      '<div class="cov-item"><div class="cv blue">'+cov.used+'</div><div class="cl">Dezenas usadas</div></div>'+
+      '<div class="cov-item"><div class="cv blue">'+cov.pairPct+'%</div><div class="cl">Pares do grupo cobertos</div></div>'+
+      '<div class="cov-item"><div class="cv blue">'+cov.coveredPairs+'</div><div class="cl">Combinações de pares</div></div>'+
+      '<div class="cov-item"><div class="cv blue">'+cov.avgOverlap.toFixed(1)+'</div><div class="cl">Repetição média/jogo</div></div>'+
+      '</div><div class="bar"><span style="width:'+cov.pairPct+'%"></span></div></div>';
+
     html+='<div class="summary"><b>'+games.length+' jogo(s)</b> de <b>'+gameSize+' dezenas</b> gerados'+
       (relaxed?' — <span style="color:var(--gold)">alguns com filtros relaxados</span> (grupo-base pequeno para tantas combinações).':'.');
     if(prev)html+=' Dezenas em <b style="color:var(--gold)">dourado</b> repetem o concurso anterior.';
@@ -496,7 +583,7 @@ footer p{font-size:12px;color:var(--text3);}
       var repCount=prev?g.filter(function(n){return prev.has(n);}).length:0;
       html+='<div class="game"><div class="g-head">'+
         '<span class="g-title">Jogo '+String(idx+1).padStart(2,'0')+'</span>'+
-        '<span class="g-meta">'+(prev?repCount+' repetidas · ':'')+'soma '+s.sum+'</span></div>';
+        '<span class="g-nat" style="'+natColor(s.naturalidade)+'">Naturalidade '+s.naturalidade+'%</span></div>';
       html+='<div class="balls">';
       g.forEach(function(n){
         var rep=prev&&prev.has(n);
@@ -506,9 +593,11 @@ footer p{font-size:12px;color:var(--text3);}
       html+='<div class="stat-tags">'+
         '<span class="tag">Ímpar/Par <b>'+s.odd+'-'+s.even+'</b></span>'+
         '<span class="tag">Soma <b>'+s.sum+'</b></span>'+
+        '<span class="tag blue">Dispersão <b>'+s.disp.toFixed(1)+'</b></span>'+
+        '<span class="tag blue">Dist. média <b>'+s.avgGap.toFixed(1)+'</b></span>'+
         '<span class="tag">Miolo <b>'+s.miolo+'</b></span>'+
         '<span class="tag">Máx. seq. <b>'+s.maxSeq+'</b></span>'+
-        '<span class="tag">Linhas <b>'+s.rows.join('·')+'</b></span>'+
+        (prev?'<span class="tag">Repetidas <b>'+repCount+'</b></span>':'')+
         '</div>';
       html+='</div>';
     });
@@ -516,7 +605,7 @@ footer p{font-size:12px;color:var(--text3);}
     document.getElementById('res-actions').style.display='flex';
   }
 
-  // ── Prev result parsing ──
+  // ── Prev result ──
   function parsePrev(){
     var raw=document.getElementById('prev-result').value;
     var nums=(raw.match(/\d+/g)||[]).map(Number).filter(function(n){return n>=1&&n<=25;});
