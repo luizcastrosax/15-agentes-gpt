@@ -49,12 +49,17 @@ function getSetting(k) { const r = db.prepare('SELECT value FROM settings WHERE 
 function setSetting(k, v) { db.prepare('INSERT INTO settings(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run(k, JSON.stringify(v)); }
 
 function getConfig() {
-  return getSetting('config') || {
+  const c = getSetting('config') || {
     name: 'ParkFlow Estacionamento', capacity: 130,
     pixKey: 'estacionamento@parkflow.com.br', pixName: 'PARKFLOW ESTACIONAMENTO', pixCity: 'SAO PAULO',
     autoPix: true, gateGraceMin: 15,
     tariff: { graceMin: 15, firstMin: 60, firstPrice: 12, addMin: 30, addPrice: 5, dailyMax: 45, nightPrice: 35, lostTicket: 90, minPrice: 5 }
   };
+  // A chave PIX real vem do .env (privado, fora do repositório). Nunca hardcode o CPF aqui.
+  if (process.env.PIX_KEY)  c.pixKey  = process.env.PIX_KEY;
+  if (process.env.PIX_NAME) c.pixName = process.env.PIX_NAME;
+  if (process.env.PIX_CITY) c.pixCity = process.env.PIX_CITY;
+  return c;
 }
 function setConfig(c) { setSetting('config', c); }
 
