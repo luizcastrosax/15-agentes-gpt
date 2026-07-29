@@ -52,8 +52,18 @@ function load(){
 function migrate(d){
   d.cfg = Object.assign(baseCfg(), d.cfg||{});
   d.cfg.tariff = Object.assign(baseCfg().tariff, d.cfg.tariff||{});
+  if(!d.staff){ d.staff=(d.operators||['Operador']).map((n,i)=>({id:uid(),name:n,role:i===0?'admin':i===1?'gerente':'operador',pin:String(1234+i),active:true})); }
   return d;
 }
+
+/* ═══════════ FUNCIONÁRIOS / PERMISSÕES ═══════════ */
+const ROLE_PERMS = {
+  admin:   {label:'Administrador', sangria:true, fecharCaixa:true, cadastros:true, config:true},
+  gerente: {label:'Gerente',       sangria:true, fecharCaixa:true, cadastros:true, config:false},
+  operador:{label:'Operador',      sangria:false,fecharCaixa:false,cadastros:false,config:false},
+};
+function currentStaff(){ return db.cashier.open ? db.staff.find(s=>s.id===db.cashier.operatorId) : null; }
+function can(perm){ const s=currentStaff(); if(!s) return true; return !!(ROLE_PERMS[s.role]||{})[perm]; }
 function save(){ localStorage.setItem(LS, JSON.stringify(db)); refreshChrome(); }
 
 function seed(){
@@ -76,8 +86,13 @@ function seed(){
     {id:uid(),name:'Cliente VIP (isenção)',type:'free',value:0,label:'Isenção total',today:0,status:'ativo'},
   ];
   const operators=['João Pedro','Maria Clara','Rafael Lima'];
+  const staff=[
+    {id:uid(),name:'João Pedro',role:'admin',pin:'1234',active:true},
+    {id:uid(),name:'Maria Clara',role:'gerente',pin:'2345',active:true},
+    {id:uid(),name:'Rafael Lima',role:'operador',pin:'3456',active:true},
+  ];
   const db={
-    cfg, sectors, monthlies, partners, operators, seq:421,
+    cfg, sectors, monthlies, partners, operators, staff, seq:421,
     vehicles:[], cashier:{open:false, operator:null, openedTs:null, openingFloat:0, movements:[]},
     history:[] // closed cashier sessions
   };
@@ -691,13 +706,14 @@ function renderCaixa(){
         <div style="font-size:52px">💰</div>
         <h3 style="margin:10px 0 6px">Caixa fechado</h3>
         <p class="muted" style="margin-bottom:20px">Abra o turno para começar a registrar pagamentos em cartão e dinheiro.</p>
-        <div class="field" style="text-align:left;margin-bottom:12px"><label>Operador</label><select id="cxOp">${db.operators.map(o=>`<option>${o}</option>`).join('')}</select></div>
+        <div class="field" style="text-align:left;margin-bottom:12px"><label>Funcionário</label><select id="cxOp">${db.staff.filter(s=>s.active).map(s=>`<option value="${s.id}">${s.name} · ${ROLE_PERMS[s.role].label}</option>`).join('')}</select></div>
         <div class="field" style="text-align:left;margin-bottom:18px"><label>Fundo de troco inicial (R$)</label><input type="number" id="cxFloat" value="100" step="10"></div>
         <button class="btn btn-green btn-full btn-lg" id="openCash">🔓 Abrir caixa</button>
       </div>`;
     $('#openCash').onclick=()=>{
-      db.cashier={open:true,operator:$('#cxOp').value,openedTs:Date.now(),openingFloat:parseFloat($('#cxFloat').value)||0,movements:[]};
-      save(); toast('Caixa aberto',db.cashier.operator,'ok'); renderCaixa();
+      const sid=$('#cxOp').value; const st=db.staff.find(s=>s.id===sid);
+      db.cashier={open:true,operatorId:sid,operator:st?st.name:'—',role:st?st.role:'operador',openedTs:Date.now(),openingFloat:parseFloat($('#cxFloat').value)||0,movements:[]};
+      save(); toast('Caixa aberto',db.cashier.operator+' · '+ROLE_PERMS[db.cashier.role].label,'ok'); renderCaixa();
     };
     return;
   }
@@ -739,9 +755,9 @@ function renderCaixa(){
         </div>
       </div>
     </div>`;
-  $('#btnSangria').onclick=()=>cashMove('sangria');
+  $('#btnSangria').onclick=()=>{ if(!can('sangria')) return toast('Sem permissão','Sangria requer Gerente ou Admin','warn'); cashMove('sangria'); };
   $('#btnSuprimento').onclick=()=>cashMove('suprimento');
-  $('#btnClose').onclick=closeCash;
+  $('#btnClose').onclick=()=>{ if(!can('fecharCaixa')) return toast('Sem permissão','Fechar caixa requer Gerente ou Admin','warn'); closeCash(); };
 }
 function cashMove(type){
   const t=type==='sangria'?'📤 Sangria (retirada)':'📥 Suprimento (reforço)';
@@ -920,19 +936,75 @@ function editSector(id){
 }
 function delSector(id){ if(db.sectors.length<=1){toast('Mantenha ao menos 1 setor','','warn');return;} if(confirm('Excluir setor?')){ db.sectors=db.sectors.filter(x=>x.id!==id); save(); renderSectors(); } }
 
+/* ═══════════ FUNCIONÁRIOS (tela) ═══════════ */
+function renderFuncionarios(){
+  const ativos=db.staff.filter(s=>s.active).length;
+  $('#funcBody').innerHTML=`
+    <div class="kpis">
+      ${kpi('Funcionários', db.staff.length, ativos+' ativos','👥','blue')}
+      ${kpi('Administradores', db.staff.filter(s=>s.role==='admin').length,'acesso total','🛡️','red')}
+      ${kpi('Gerentes', db.staff.filter(s=>s.role==='gerente').length,'sangria e fechamento','🧑‍💼','gold')}
+      ${kpi('Operadores', db.staff.filter(s=>s.role==='operador').length,'operação do totem','🧑‍🔧','green')}
+    </div>
+    <div class="table-wrap">
+      <div class="table-head"><h3>Funcionários &amp; acessos</h3><button class="btn btn-sm" id="addStaff">+ Novo funcionário</button></div>
+      <div class="scroll-x"><table>
+        <thead><tr><th>Nome</th><th>Função</th><th>PIN</th><th>Permissões</th><th>Status</th><th></th></tr></thead>
+        <tbody>${db.staff.map(s=>{
+          const p=ROLE_PERMS[s.role]||ROLE_PERMS.operador;
+          const perms=[p.sangria&&'Sangria',p.fecharCaixa&&'Fechar caixa',p.cadastros&&'Cadastros',p.config&&'Config'].filter(Boolean).join(' · ')||'Operar totem';
+          const roleTag={admin:'red',gerente:'gold',operador:'green'}[s.role]||'gray';
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><span class="avatar">${initials(s.name)}</span><b>${s.name}</b></div></td>
+            <td><span class="tag ${roleTag}">${p.label}</span></td>
+            <td class="mono">${s.pin||'—'}</td>
+            <td class="muted" style="font-size:12px">${perms}</td>
+            <td>${s.active?'<span class="tag green">Ativo</span>':'<span class="tag gray">Inativo</span>'}</td>
+            <td><div class="row-actions">
+              <button class="icon-btn" title="${s.active?'Desativar':'Ativar'}" onclick="toggleStaff('${s.id}')">${s.active?'🚫':'✅'}</button>
+              <button class="icon-btn" title="Editar" onclick="editStaff('${s.id}')">✏️</button>
+              <button class="icon-btn danger" title="Excluir" onclick="delStaff('${s.id}')">🗑️</button>
+            </div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+    <p class="foot-note">As permissões vêm da função. O funcionário logado no Caixa define o que pode ser feito — ex.: só Gerente/Admin dão sangria ou fecham o caixa. O PIN serve para login no terminal.</p>`;
+  $('#addStaff').onclick=addStaff;
+}
+function staffForm(s){
+  const roles=[['operador','Operador — opera o totem'],['gerente','Gerente — + sangria, fechar caixa, cadastros'],['admin','Administrador — acesso total']];
+  return `<div class="form-grid">
+    <div class="field full"><label>Nome</label><input id="sfName" value="${s?s.name:''}" placeholder="Nome do funcionário"></div>
+    <div class="field"><label>Função</label><select id="sfRole">${roles.map(r=>`<option value="${r[0]}" ${s&&s.role===r[0]?'selected':''}>${r[1]}</option>`).join('')}</select></div>
+    <div class="field"><label>PIN de acesso</label><input id="sfPin" class="mono" maxlength="6" inputmode="numeric" value="${s?(s.pin||''):''}" placeholder="ex: 1234"></div>
+  </div>`;
+}
+function addStaff(){ openModal('👥 Novo funcionário', staffForm(null), `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" id="sfOk">Salvar</button>`); $('#sfOk').onclick=()=>saveStaff(null); }
+function editStaff(id){ const s=db.staff.find(x=>x.id===id); openModal('✏️ Editar funcionário', staffForm(s), `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" id="sfOk">Salvar</button>`); $('#sfOk').onclick=()=>saveStaff(id); }
+function saveStaff(id){
+  const name=$('#sfName').value.trim(), role=$('#sfRole').value, pin=$('#sfPin').value.trim();
+  if(!name){ toast('Informe o nome','','warn'); return; }
+  if(id){ Object.assign(db.staff.find(x=>x.id===id),{name,role,pin}); }
+  else{ db.staff.push({id:uid(),name,role,pin,active:true}); }
+  save(); closeModal(); renderFuncionarios(); toast('Funcionário salvo',name,'ok');
+}
+function toggleStaff(id){ const s=db.staff.find(x=>x.id===id); s.active=!s.active; save(); renderFuncionarios(); toast(s.active?'Funcionário ativado':'Funcionário desativado',s.name,s.active?'ok':'warn'); }
+function delStaff(id){ const s=db.staff.find(x=>x.id===id); if(db.cashier.open&&db.cashier.operatorId===id){ return toast('Não é possível excluir','Funcionário está com o caixa aberto','warn'); } if(confirm('Excluir '+s.name+'?')){ db.staff=db.staff.filter(x=>x.id!==id); save(); renderFuncionarios(); } }
+
 /* ═══════════ SHARED UI ═══════════ */
 function kpi(k,v,sub,ic,cls=''){ return `<div class="kpi ${cls}"><span class="ic">${ic}</span><div class="k">${k}</div><div class="v">${v}</div><div class="sub">${sub}</div></div>`; }
 function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 
 /* ═══════════ ROUTER ═══════════ */
-const titles={operacao:['🖥️','Operação'],patio:['🚗','Pátio ao vivo'],caixa:['💰','Caixa & Turno'],mensalistas:['👤','Mensalistas'],convenios:['🤝','Convênios'],tarifas:['🏷️','Tarifas'],relatorios:['📊','Relatórios & BI'],config:['⚙️','Configurações']};
+const titles={operacao:['🖥️','Operação'],patio:['🚗','Pátio ao vivo'],caixa:['💰','Caixa & Turno'],mensalistas:['👤','Mensalistas'],convenios:['🤝','Convênios'],tarifas:['🏷️','Tarifas'],funcionarios:['👥','Funcionários'],relatorios:['📊','Relatórios & BI'],config:['⚙️','Configurações']};
 function switchView(name){
   $$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
   $$('.view').forEach(v=>v.classList.remove('active'));
   $('#view-'+name).classList.add('active');
   const [em,ti]=titles[name]; $('#ptEmoji').textContent=em; $('#ptTitle').textContent=ti;
   closeSidebar();
-  ({operacao:renderIdle,patio:renderPatio,caixa:renderCaixa,mensalistas:renderMensalistas,convenios:renderConvenios,tarifas:renderTarifas,relatorios:renderRelatorios,config:renderConfig}[name])();
+  ({operacao:renderIdle,patio:renderPatio,caixa:renderCaixa,mensalistas:renderMensalistas,convenios:renderConvenios,tarifas:renderTarifas,funcionarios:renderFuncionarios,relatorios:renderRelatorios,config:renderConfig}[name])();
 }
 $$('.nav-item').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 
@@ -949,7 +1021,7 @@ $('#addMens').onclick=addMens;
 $('#addConv').onclick=addConv;
 
 /* expose for inline onclick */
-Object.assign(window,{closeModal,goExit,renewMonthly,editMonthly,delMonthly,editConv,delConv,editSector,delSector});
+Object.assign(window,{closeModal,goExit,renewMonthly,editMonthly,delMonthly,editConv,delConv,editSector,delSector,editStaff,delStaff,toggleStaff});
 
 /* ═══════════ BOOT ═══════════ */
 setInterval(()=>{ const el=$('#clock'); if(el)el.textContent=fmtTime(new Date()); },1000);

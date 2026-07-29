@@ -12,6 +12,9 @@ const crypto = require('crypto');
 const D = require('./db');
 const { calcCharge, applyPartner } = require('./tariff');
 const { buildPixPayload } = require('./pix');
+const gate = require('./hardware/gate');          // cancela (relé)
+const printer = require('./hardware/printer');     // impressora ESC/POS
+const pixProvider = require('./pix-provider');     // PIX real (Mercado Pago) ou mock
 
 D.init();
 const PORT = process.env.PORT || 4000;
@@ -49,8 +52,12 @@ function serveFile(res, filePath) {
 
 /* ═══════════ FLUXO PIX ═══════════ */
 function abrirCancela(vehicle, motivo) {
-  // Em produção: enviar comando à controladora física da cancela.
-  D.logEvent('gate', `🚧 Cancela liberada · ${vehicle.ticket} (${vehicle.plate || 's/ placa'}) · ${motivo}`);
+  // Aciona o relé físico da cancela (entrada ou saída). Em modo mock, apenas registra.
+  const lane = motivo === 'entrada' ? 'entrada' : 'saida';
+  gate.open(lane).then(r => {
+    const extra = r.driver === 'mock' ? '' : ` [${r.driver}${r.ok ? '' : ' ERRO: ' + r.error}]`;
+    D.logEvent('gate', `🚧 Cancela (${lane}) liberada · ${vehicle.ticket} (${vehicle.plate || 's/ placa'}) · ${motivo}${extra}`);
+  });
 }
 function confirmarPagamento(txid, origem) {
   const pay = D.getPayment(txid);
@@ -85,8 +92,14 @@ route('POST', /^\/api\/entrada$/, async (req, res) => {
   const sector = monthly ? monthly.sector : autoSector();
   const v = D.createEntry({ plate: b.plate || null, type: monthly ? 'mensalista' : 'avulso', sector, monthly_id: monthly ? monthly.id : null });
   D.logEvent('entry', `🎫 Entrada ${v.ticket}${v.plate ? ' · ' + v.plate : ''}${monthly ? ' · mensalista ' + monthly.name : ''}`);
+  // Imprime o ticket (impressora térmica) — mensalista não precisa de ticket
+  if (!monthly) {
+    const secName = (D.listSectors().find(s => s.id === v.sector) || {}).name || v.sector;
+    const pr = await printer.printTicket({ ticket: v.ticket, plate: v.plate, sector: secName, entryTs: v.entry_ts, qr: v.ticket, nome: cfg.name });
+    D.logEvent('printer', `🖨️ Ticket ${v.ticket} ${pr.driver === 'mock' ? '(simulado)' : (pr.ok ? 'impresso' : 'ERRO: ' + pr.error)}`);
+  }
   abrirCancela(v, 'entrada');
-  json(res, 201, { vehicle: v, monthly: monthly || null });
+  json(res, 201, { vehicle: v, monthly: monthly || null, printer: printer.DRIVER, gate: gate.DRIVER });
 });
 
 // Consulta (por ticket ou placa)
@@ -127,12 +140,18 @@ route('POST', /^\/api\/cobranca$/, async (req, res) => {
   if (partner) D.bumpPartner(partner.id);
   const cfg = D.getConfig();
   const txid = 'PF' + crypto.randomBytes(8).toString('hex').toUpperCase();
-  const pixPayload = buildPixPayload({ key: cfg.pixKey, name: cfg.pixName, city: cfg.pixCity, amount: pr.net, txid });
+  let pixPayload = buildPixPayload({ key: cfg.pixKey, name: cfg.pixName, city: cfg.pixCity, amount: pr.net, txid });
   const method = (b.method || 'pix');
+  // PIX real (Mercado Pago): substitui o BR Code local pela cobrança oficial do banco
+  if (method === 'pix') {
+    const charge = await pixProvider.createCharge({ amount: pr.net, description: 'Estacionamento ' + v.ticket, txid });
+    if (charge.provider !== 'mock' && charge.pixPayload) { pixPayload = charge.pixPayload; }
+    else if (charge.error) { D.logEvent('pay', `⚠️ PIX (${charge.provider}) falhou: ${charge.error}`); }
+  }
   const pay = D.createPayment({ txid, vehicle_id: v.id, amount: pr.net, method, pix_payload: pixPayload, discount: pr.discount, partner: partner ? partner.name : null });
-  D.logEvent('pay', `₽ Cobrança criada · ${method.toUpperCase()} · R$ ${pr.net.toFixed(2)} · ${v.ticket}`);
-  // Simulação do webhook do banco (PIX confirma sozinho em 2–5s)
-  if (method === 'pix' && cfg.autoPix) {
+  D.logEvent('pay', `₽ Cobrança criada · ${method.toUpperCase()} · R$ ${pr.net.toFixed(2)} · ${v.ticket} [${pixProvider.PROVIDER}]`);
+  // Só no modo mock o backend confirma sozinho; com provedor real, quem confirma é o webhook do banco.
+  if (method === 'pix' && cfg.autoPix && pixProvider.PROVIDER === 'mock') {
     const delay = 2000 + Math.random() * 3000;
     setTimeout(() => confirmarPagamento(txid, 'webhook-banco'), delay);
   }
@@ -150,8 +169,16 @@ route('GET', /^\/api\/cobranca\/[^/]+$/, (req, res, url) => {
 // Webhook do banco (em produção, chamado pelo PSP/banco)
 route('POST', /^\/api\/webhook\/pix$/, async (req, res) => {
   const b = await readBody(req);
-  if (!b.txid) return json(res, 400, { error: 'txid obrigatório' });
-  const pay = confirmarPagamento(b.txid, 'webhook');
+  // Provedor real (Mercado Pago): valida a notificação e descobre nosso txid pelo external_reference.
+  const wh = await pixProvider.handleWebhook(b);
+  let txid = b.txid;
+  if (wh.provider !== 'mock') {
+    if (wh.error) { D.logEvent('pay', `⚠️ Webhook (${wh.provider}) erro: ${wh.error}`); }
+    if (!wh.paid) return json(res, 200, { status: 'ignored' });  // pagamento ainda não aprovado
+    txid = wh.externalRef;
+  }
+  if (!txid) return json(res, 400, { error: 'txid obrigatório' });
+  const pay = confirmarPagamento(txid, wh.provider === 'mock' ? 'webhook' : wh.provider);
   if (!pay) return json(res, 404, { error: 'cobranca_invalida' });
   json(res, 200, { status: 'paid', txid: pay.txid });
 });

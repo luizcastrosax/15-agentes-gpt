@@ -6,3 +6,6 @@ parkflow.db-wal
 # Node
 node_modules/
 npm-debug.log*
+
+# Segredos / config local
+.env
