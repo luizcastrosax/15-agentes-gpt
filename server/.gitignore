@@ -1,0 +1,8 @@
+# Banco SQLite (gerado em runtime)
+parkflow.db
+parkflow.db-shm
+parkflow.db-wal
+
+# Node
+node_modules/
+npm-debug.log*

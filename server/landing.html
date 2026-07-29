@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ParkFlow · Servidor</title>
+<style>
+:root{--red:#E8344A;--green:#1DB954;--gold:#F5A623;--bg:#09090B;--bg2:#18181B;--border:#2A2A30;--text:#FAFAFA;--text2:#A1A1AA;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.wrap{max-width:720px;width:100%;text-align:center;}
+.logo{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--red),var(--gold));display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 18px;box-shadow:0 10px 30px rgba(232,52,74,.35);}
+h1{font-size:34px;font-weight:900;letter-spacing:-1px;}
+p.sub{color:var(--text2);margin:8px 0 32px;font-size:16px;}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:560px){.cards{grid-template-columns:1fr;}}
+a.card{display:block;background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;text-decoration:none;color:var(--text);transition:.2s;text-align:left;}
+a.card:hover{transform:translateY(-4px);border-color:var(--red);box-shadow:0 12px 30px rgba(0,0,0,.4);}
+a.card .ic{font-size:34px;margin-bottom:12px;}
+a.card b{font-size:19px;display:block;}
+a.card span{color:var(--text2);font-size:14px;}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);color:#3DE875;font-size:13px;font-weight:700;padding:6px 14px;border-radius:50px;margin-bottom:22px;}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);}
+code{background:#111;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:13px;color:var(--gold);}
+.foot{margin-top:30px;color:#71717A;font-size:13px;line-height:1.7;}
+</style></head>
+<body><div class="wrap">
+  <div class="logo">🅿️</div>
+  <div class="badge"><span class="dot"></span> API online</div>
+  <h1>ParkFlow</h1>
+  <p class="sub">Backend Node.js + SQLite · sistema de gestão de estacionamento</p>
+  <div class="cards">
+    <a class="card" href="/cliente"><div class="ic">📱</div><b>App do Cliente</b><span>Consulte o ticket, pague por PIX e saia sem parar na cancela.</span></a>
+    <a class="card" href="/operador"><div class="ic">🖥️</div><b>Painel do Operador</b><span>Totem, pátio ao vivo, mensalistas, caixa e relatórios.</span></a>
+  </div>
+  <p class="foot">API REST em <code>/api</code> · fluxo PIX com webhook · dados em SQLite.<br>Health check: <code>/api/health</code></p>
+</div></body></html>
