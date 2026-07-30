@@ -1,0 +1,27 @@
+# Render Blueprint — sobe o backend do ParkFlow com 1 clique.
+# Como usar: em render.com → New → Blueprint → conecte este repositório.
+# O Render lê este arquivo e cria o serviço automaticamente.
+services:
+  - type: web
+    name: parkflow
+    runtime: node
+    rootDir: server
+    plan: free
+    region: virginia          # mais próximo do Brasil entre as regiões do Render
+    buildCommand: npm install  # backend não tem dependências obrigatórias
+    startCommand: node --experimental-sqlite --no-warnings server.js
+    healthCheckPath: /api/health
+    autoDeploy: true           # cada push no GitHub atualiza sozinho
+    envVars:
+      # Chave PIX do recebedor (seu CPF). Marque como secreta ao colar no painel.
+      - key: PIX_KEY
+        sync: false
+      - key: PIX_NAME
+        sync: false
+      # PIX real: mude para "mercadopago" e cole o token para cobrar de verdade.
+      - key: PIX_PROVIDER
+        value: mock
+      - key: MP_ACCESS_TOKEN
+        sync: false            # token do Mercado Pago — NUNCA versionar
+      - key: PIX_WEBHOOK_URL
+        sync: false            # ex.: https://parkflow.onrender.com/api/webhook/pix
