@@ -38,6 +38,10 @@ function init() {
     CREATE TABLE IF NOT EXISTS events (
       id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER, kind TEXT, message TEXT
     );
+    CREATE TABLE IF NOT EXISTS registrations (
+      plate TEXT PRIMARY KEY, name TEXT, phone TEXT, model TEXT,
+      consent_ts INTEGER, created_ts INTEGER, visits INTEGER DEFAULT 0
+    );
     CREATE INDEX IF NOT EXISTS idx_veh_status ON vehicles(status);
     CREATE INDEX IF NOT EXISTS idx_veh_plate ON vehicles(plate);
   `);
@@ -158,6 +162,22 @@ function settleVehicle(id, { charge, minutes, method, discount, partner }) {
     .run(Date.now(), charge, minutes, method, discount || 0, partner || null, id);
 }
 
+/* ---------- registros de clientes/veículos (modelo online) ---------- */
+function findRegistration(plate) { return db.prepare('SELECT * FROM registrations WHERE plate=?').get(normPlate(plate)); }
+function upsertRegistration({ plate, name, phone, model, consent }) {
+  const p = normPlate(plate), now = Date.now();
+  const cur = findRegistration(p);
+  if (cur) {
+    db.prepare('UPDATE registrations SET name=?, phone=?, model=? WHERE plate=?').run(name || cur.name, phone || cur.phone, model || cur.model, p);
+  } else {
+    db.prepare('INSERT INTO registrations(plate,name,phone,model,consent_ts,created_ts,visits) VALUES(?,?,?,?,?,?,0)')
+      .run(p, name || null, phone || null, model || null, consent ? now : null, now);
+  }
+  return findRegistration(p);
+}
+function incRegistrationVisit(plate) { db.prepare('UPDATE registrations SET visits=visits+1 WHERE plate=?').run(normPlate(plate)); }
+function isInside(plate) { return !!db.prepare("SELECT id FROM vehicles WHERE status='ativo' AND plate=?").get(normPlate(plate)); }
+
 /* ---------- monthlies / partners ---------- */
 function findMonthlyByPlate(p) { return db.prepare("SELECT * FROM monthlies WHERE plate=? AND status='ativo'").get(normPlate(p)); }
 function listMonthlies() { return db.prepare('SELECT * FROM monthlies ORDER BY name').all(); }
@@ -180,6 +200,7 @@ module.exports = {
   getConfig, setConfig, getSetting, setSetting,
   logEvent, recentEvents,
   activeVehicles, findActiveByTicket, findActiveByPlate, getVehicle, createEntry, settleVehicle,
+  findRegistration, upsertRegistration, incRegistrationVisit, isInside,
   findMonthlyByPlate, listMonthlies, listPartners, getPartner, bumpPartner, listSectors,
   createPayment, getPayment, markPaid,
 };

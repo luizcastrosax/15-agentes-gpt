@@ -248,8 +248,70 @@ function renderSuccess(amount){
 function clearPoll(){ if(state.poll){clearInterval(state.poll);state.poll=null;} }
 function setOffline(){ $('#apiStatus').className='status off'; $('#apiStatus').innerHTML='<span class="d"></span> sem conexão'; }
 
+/* ===== ENTRADA (modelo online por placa) ===== */
+const MODE = new URLSearchParams(location.search).get('modo') || 'saida';
+const GATE = new URLSearchParams(location.search).get('gate') || '';
+function renderEntryHome(){
+  const sub=document.querySelector('.appbar small'); if(sub) sub.textContent='Entrada';
+  scr().innerHTML=`
+    <div class="steps"><span class="s on"></span><span class="s"></span><span class="s"></span></div>
+    <div class="hero"><div class="emo">🚗</div><h1>Bem-vindo!</h1><p>Informe a placa do seu veículo para entrar.</p></div>
+    <div class="field"><label>Placa do veículo</label><input id="plate" placeholder="ABC1D23" maxlength="8" autocomplete="off"></div>
+    <div id="err"></div>
+    <button class="btn btn-lg btn-green" id="go">Entrar</button>`;
+  const inp=$('#plate'); inp.focus();
+  const go=async()=>{
+    const plate=inp.value.trim(); if(!plate) return;
+    $('#err').innerHTML=''; $('#go').disabled=true; $('#go').textContent='Verificando…';
+    try{
+      const r=await api('/api/entrada',{method:'POST',body:JSON.stringify({plate,gateToken:GATE,lane:'entrada'})});
+      if(r.needsRegistration) return renderRegister(r.plate);
+      renderEntrySuccess(r);
+    }catch(e){ $('#go').disabled=false; $('#go').textContent='Entrar'; $('#err').innerHTML=`<div class="err">${e.message||'Erro'}</div>`; }
+  };
+  $('#go').onclick=go; inp.addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+}
+function renderRegister(plate){
+  scr().innerHTML=`
+    <div class="steps"><span class="s on"></span><span class="s on"></span><span class="s"></span></div>
+    <div class="hero" style="padding:12px 0 0"><div class="emo">📝</div><h1>Primeiro acesso</h1><p>Cadastro rápido — só desta vez. Nas próximas, é só a placa.</p></div>
+    <div style="text-align:center;margin-top:14px"><span class="plate-badge">${plate}</span></div>
+    <div class="field"><label>Seu nome</label><input id="rgName" style="text-align:left;letter-spacing:0;font-size:16px;text-transform:none" placeholder="Nome completo"></div>
+    <div class="field"><label>WhatsApp (com DDD)</label><input id="rgPhone" style="text-align:left;letter-spacing:0;font-size:16px" inputmode="tel" placeholder="(11) 90000-0000"></div>
+    <div class="field"><label>Modelo do veículo</label><input id="rgModel" style="text-align:left;letter-spacing:0;font-size:16px;text-transform:none" placeholder="Ex: Honda Civic prata"></div>
+    <label style="display:flex;gap:10px;align-items:flex-start;margin-top:16px;font-size:12.5px;color:var(--text2)"><input type="checkbox" id="rgConsent" style="margin-top:3px;width:auto"><span>Autorizo o uso dos meus dados para controle de entrada/saída e envio do comprovante (LGPD).</span></label>
+    <div id="err"></div>
+    <button class="btn btn-lg btn-green" id="go">Cadastrar e entrar</button>
+    <button class="btn btn-ghost" id="back">Voltar</button>`;
+  $('#back').onclick=renderEntryHome;
+  $('#go').onclick=async()=>{
+    const name=$('#rgName').value.trim(), phone=$('#rgPhone').value.trim(), model=$('#rgModel').value.trim(), consent=$('#rgConsent').checked;
+    if(!name||!phone){ $('#err').innerHTML='<div class="err">Preencha nome e WhatsApp.</div>'; return; }
+    if(!consent){ $('#err').innerHTML='<div class="err">É preciso aceitar o uso dos dados.</div>'; return; }
+    $('#go').disabled=true; $('#go').textContent='Cadastrando…';
+    try{
+      const r=await api('/api/registro',{method:'POST',body:JSON.stringify({plate,name,phone,model,consent:true,gateToken:GATE,lane:'entrada'})});
+      renderEntrySuccess(r);
+    }catch(e){ $('#go').disabled=false; $('#go').textContent='Cadastrar e entrar'; $('#err').innerHTML=`<div class="err">${e.message||'Erro'}</div>`; }
+  };
+}
+function renderEntrySuccess(r){
+  const wa=r.wa&&r.wa.link, nome=r.cliente&&r.cliente.name?r.cliente.name.split(' ')[0]:null;
+  scr().innerHTML=`
+    <div class="steps"><span class="s on"></span><span class="s on"></span><span class="s on"></span></div>
+    <div class="success">
+      <div class="check">✓</div>
+      <h1>Entrada liberada!</h1>
+      <p>${nome?('Bem-vindo, '+nome+'! · '):''}Ticket ${r.vehicle.ticket}</p>
+    </div>
+    <div class="gate-msg"><span class="g">🚧</span><div><b>Cancela abrindo</b><span>Pode seguir e estacionar. Boa estadia!</span></div></div>
+    ${wa?`<a class="btn btn-green" href="${wa}" target="_blank" rel="noopener" style="text-decoration:none">💬 Salvar comprovante no WhatsApp</a>`:''}
+    <button class="btn btn-ghost" id="done">Concluir</button>`;
+  $('#done').onclick=renderEntryHome;
+}
+
 /* boot */
-(async()=>{ try{ await api('/api/health'); }catch(e){ setOffline(); } renderHome(); })();
+(async()=>{ try{ await api('/api/health'); }catch(e){ setOffline(); } (MODE==='entrada'?renderEntryHome:renderHome)(); })();
 </script>
 </body>
 </html>

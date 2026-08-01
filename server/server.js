@@ -13,8 +13,34 @@ const D = require('./db');
 const { calcCharge, applyPartner } = require('./tariff');
 const { buildPixPayload } = require('./pix');
 const gate = require('./hardware/gate');          // cancela (relé)
-const printer = require('./hardware/printer');     // impressora ESC/POS
+const printer = require('./hardware/printer');     // impressora ESC/POS (opcional)
 const pixProvider = require('./pix-provider');     // PIX real (Mercado Pago) ou mock
+const whatsapp = require('./whatsapp');            // comprovante no WhatsApp
+
+/* ── Segurança da cancela (modelo online) ── */
+const GATE_TOKEN = process.env.GATE_TOKEN || '';               // token embutido no QR físico
+const GATE_REQUIRE_PRESENCE = process.env.GATE_REQUIRE_PRESENCE === 'true'; // laço indutivo
+const presence = { entrada: false, saida: false };             // estado do sensor de presença
+const rateHits = new Map();                                    // anti-abuso por placa
+function gateGuard(body, url) {
+  const token = (body && body.gateToken) || url.searchParams.get('gate') || '';
+  if (GATE_TOKEN && token !== GATE_TOKEN) return { ok: false, code: 403, error: 'gate_token', message: 'Acesso inválido — escaneie o QR na cancela' };
+  const key = D.normPlate((body && body.plate) || '') || 'anon';
+  const now = Date.now(); const arr = (rateHits.get(key) || []).filter(t => now - t < 60000);
+  if (arr.length >= 8) return { ok: false, code: 429, error: 'muitas_tentativas', message: 'Muitas tentativas — aguarde um instante' };
+  arr.push(now); rateHits.set(key, arr);
+  if (GATE_REQUIRE_PRESENCE) {
+    const lane = (body && body.lane) || url.searchParams.get('lane') || 'entrada';
+    if (!presence[lane]) return { ok: false, code: 409, error: 'sem_veiculo', message: 'Aproxime o veículo da cancela' };
+  }
+  return { ok: true };
+}
+async function notifyEntry(v, reg, cfg) {
+  const secName = (D.listSectors().find(s => s.id === v.sector) || {}).name || v.sector;
+  const wa = await whatsapp.sendTicket(reg, { ticket: v.ticket, plate: v.plate, entryTs: v.entry_ts, sector: secName, estab: cfg.name });
+  D.logEvent('wa', `💬 Comprovante ${v.ticket} ${wa.sent ? 'enviado ao WhatsApp' : '(link wa.me pronto)'}`);
+  return wa;
+}
 
 D.init();
 const PORT = process.env.PORT || 4000;
@@ -52,12 +78,14 @@ function serveFile(res, filePath) {
 
 /* ═══════════ FLUXO PIX ═══════════ */
 function abrirCancela(vehicle, motivo) {
-  // Aciona o relé físico da cancela (entrada ou saída). Em modo mock, apenas registra.
+  // Aciona o relé físico da cancela (entrada ou saída), com 1 retentativa. Mock apenas registra.
   const lane = motivo === 'entrada' ? 'entrada' : 'saida';
-  gate.open(lane).then(r => {
-    const extra = r.driver === 'mock' ? '' : ` [${r.driver}${r.ok ? '' : ' ERRO: ' + r.error}]`;
+  (async () => {
+    let r = await gate.open(lane);
+    if (!r.ok) { await new Promise(s => setTimeout(s, 500)); r = await gate.open(lane); }  // retenta 1x
+    const extra = r.driver === 'mock' ? '' : ` [${r.driver}${r.ok ? '' : ' FALHA: ' + r.error}]`;
     D.logEvent('gate', `🚧 Cancela (${lane}) liberada · ${vehicle.ticket} (${vehicle.plate || 's/ placa'}) · ${motivo}${extra}`);
-  });
+  })();
 }
 function confirmarPagamento(txid, origem) {
   const pay = D.getPayment(txid);
@@ -83,23 +111,52 @@ route('GET', /^\/api\/config$/, (req, res) => json(res, 200, D.getConfig()));
 route('PUT', /^\/api\/config$/, async (req, res) => { const b = await readBody(req); const c = Object.assign(D.getConfig(), b); if (b.tariff) c.tariff = Object.assign(D.getConfig().tariff, b.tariff); D.setConfig(c); json(res, 200, c); });
 
 // Entrada
-route('POST', /^\/api\/entrada$/, async (req, res) => {
+// ENTRADA (modelo online por placa): 1ª vez pede cadastro; a partir daí, reconhece.
+route('POST', /^\/api\/entrada$/, async (req, res, url) => {
   const b = await readBody(req);
-  const active = D.activeVehicles().length;
+  const g = gateGuard(b, url); if (!g.ok) return json(res, g.code, { error: g.error, message: g.message });
   const cfg = D.getConfig();
-  if (active >= cfg.capacity) return json(res, 409, { error: 'lotado', message: 'Estacionamento lotado' });
-  const monthly = b.plate ? D.findMonthlyByPlate(b.plate) : null;
+  const plate = D.normPlate(b.plate || '');
+  if (!plate) return json(res, 400, { error: 'placa_obrigatoria', message: 'Informe a placa do veículo' });
+  if (D.isInside(plate)) return json(res, 409, { error: 'ja_dentro', message: 'Este veículo já consta no pátio' });
+  if (D.activeVehicles().length >= cfg.capacity) return json(res, 409, { error: 'lotado', message: 'Estacionamento lotado' });
+  const monthly = D.findMonthlyByPlate(plate);
+  const reg = D.findRegistration(plate);
+  if (!monthly && !reg) return json(res, 200, { needsRegistration: true, plate });  // 1ª vez → cadastrar
   const sector = monthly ? monthly.sector : autoSector();
-  const v = D.createEntry({ plate: b.plate || null, type: monthly ? 'mensalista' : 'avulso', sector, monthly_id: monthly ? monthly.id : null });
-  D.logEvent('entry', `🎫 Entrada ${v.ticket}${v.plate ? ' · ' + v.plate : ''}${monthly ? ' · mensalista ' + monthly.name : ''}`);
-  // Imprime o ticket (impressora térmica) — mensalista não precisa de ticket
-  if (!monthly) {
-    const secName = (D.listSectors().find(s => s.id === v.sector) || {}).name || v.sector;
-    const pr = await printer.printTicket({ ticket: v.ticket, plate: v.plate, sector: secName, entryTs: v.entry_ts, qr: v.ticket, nome: cfg.name });
-    D.logEvent('printer', `🖨️ Ticket ${v.ticket} ${pr.driver === 'mock' ? '(simulado)' : (pr.ok ? 'impresso' : 'ERRO: ' + pr.error)}`);
-  }
+  const v = D.createEntry({ plate, type: monthly ? 'mensalista' : 'avulso', sector, monthly_id: monthly ? monthly.id : null });
+  if (reg) D.incRegistrationVisit(plate);
+  D.logEvent('entry', `🚗 Entrada ${v.ticket} · ${plate}${monthly ? ' · mensalista ' + monthly.name : reg ? ' · ' + reg.name : ''}`);
+  const wa = (reg && !monthly) ? await notifyEntry(v, reg, cfg) : null;
   abrirCancela(v, 'entrada');
-  json(res, 201, { vehicle: v, monthly: monthly || null, printer: printer.DRIVER, gate: gate.DRIVER });
+  json(res, 201, { returning: true, vehicle: v, monthly: monthly || null, cliente: reg ? { name: reg.name } : null, wa, gate: gate.DRIVER });
+});
+
+// CADASTRO + ENTRADA (1ª vez): salva placa/nome/telefone/modelo (com consentimento LGPD).
+route('POST', /^\/api\/registro$/, async (req, res, url) => {
+  const b = await readBody(req);
+  const g = gateGuard(b, url); if (!g.ok) return json(res, g.code, { error: g.error, message: g.message });
+  const cfg = D.getConfig();
+  const plate = D.normPlate(b.plate || '');
+  if (!plate || !b.name || !b.phone) return json(res, 400, { error: 'dados_incompletos', message: 'Preencha placa, nome e telefone' });
+  if (!b.consent) return json(res, 400, { error: 'consentimento', message: 'É preciso aceitar o uso dos dados (LGPD)' });
+  if (D.isInside(plate)) return json(res, 409, { error: 'ja_dentro', message: 'Este veículo já consta no pátio' });
+  if (D.activeVehicles().length >= cfg.capacity) return json(res, 409, { error: 'lotado', message: 'Estacionamento lotado' });
+  const reg = D.upsertRegistration({ plate, name: b.name, phone: b.phone, model: b.model, consent: true });
+  const v = D.createEntry({ plate, type: 'avulso', sector: autoSector() });
+  D.incRegistrationVisit(plate);
+  D.logEvent('entry', `📝 Cadastro + entrada ${v.ticket} · ${plate} · ${reg.name}`);
+  const wa = await notifyEntry(v, reg, cfg);
+  abrirCancela(v, 'entrada');
+  json(res, 201, { registered: true, vehicle: v, cliente: { name: reg.name }, wa, gate: gate.DRIVER });
+});
+
+// Sensor de presença (laço indutivo) informa se há veículo na cancela.
+route('POST', /^\/api\/gate\/presence$/, async (req, res) => {
+  const b = await readBody(req);
+  const lane = b.lane === 'saida' ? 'saida' : 'entrada';
+  presence[lane] = !!b.present;
+  json(res, 200, { lane, present: presence[lane] });
 });
 
 // Consulta (por ticket ou placa)

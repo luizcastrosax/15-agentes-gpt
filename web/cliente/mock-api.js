@@ -48,6 +48,7 @@
 
   /* ---------- store ---------- */
   let store = load();
+  if (!store.registrations) store.registrations = {};
   function load() {
     try { const d = JSON.parse(localStorage.getItem(LS)); if (d && d.vehicles && d.vehicles.some(v => v.status === 'ativo')) return d; } catch (e) {}
     return seed();
@@ -77,7 +78,14 @@
         type: isM ? 'mensalista' : 'avulso', sector: sectors[Math.random() * 3 | 0].id,
         entry_ts: now - stay * 60000, status: 'ativo' });
     }
-    return { sectors, monthlies, partners, vehicles, payments: {}, seq };
+    const registrations = {};  // clientes já cadastrados (reconhecidos na entrada)
+    monthlies.forEach(m => { registrations[normPlate(m.plate)] = { name: m.name, phone: '11999990000', model: '', plate: normPlate(m.plate) }; });
+    return { sectors, monthlies, partners, vehicles, payments: {}, registrations, seq };
+  }
+  function waLinkMock(phone, ticket, plate) {
+    const to = (phone || '').replace(/\D/g, ''); const num = to.length <= 11 ? '55' + to : to;
+    const text = '🅿️ ParkFlow — comprovante de entrada\nTicket: ' + ticket + '\nPlaca: ' + plate + '\nGuarde esta mensagem.';
+    return 'https://wa.me/' + num + '?text=' + encodeURIComponent(text);
   }
 
   const minutesOf = v => Math.max(0, Math.round((Date.now() - v.entry_ts) / 60000));
@@ -131,6 +139,26 @@
       // confirmação automática (simula webhook do banco) em 2,5–4,5s
       setTimeout(() => { const p = store.payments[txid]; if (p && p.status === 'pending') { p.status = 'paid'; p.paid = Date.now(); const veh = store.vehicles.find(x => x.id === p.vehicleId); if (veh) { veh.status = 'pago'; veh.exit_ts = Date.now(); veh.charge = p.amount; } persist(); } }, 2500 + Math.random() * 2000);
       return [201, { txid, amount: pr.net, status: 'pending', method: 'pix', pixPayload, ticket: v.ticket, discount: pr.discount }];
+    }
+    if (pathname === '/api/entrada' && method === 'POST') {
+      const plate = normPlate(body.plate);
+      if (!plate) return [400, { error: 'placa_obrigatoria', message: 'Informe a placa do veículo' }];
+      if (store.vehicles.some(v => v.status === 'ativo' && normPlate(v.plate) === plate)) return [409, { error: 'ja_dentro', message: 'Este veículo já consta no pátio' }];
+      const reg = store.registrations[plate];
+      if (!reg) return [200, { needsRegistration: true, plate }];
+      const s = ++store.seq; const v = { id: s, ticket: '#' + String(s).padStart(4, '0'), plate, type: 'avulso', sector: store.sectors[0].id, entry_ts: Date.now(), status: 'ativo' };
+      store.vehicles.push(v); persist();
+      return [201, { returning: true, vehicle: v, cliente: { name: reg.name }, wa: { sent: false, provider: 'mock', link: waLinkMock(reg.phone, v.ticket, plate) } }];
+    }
+    if (pathname === '/api/registro' && method === 'POST') {
+      const plate = normPlate(body.plate);
+      if (!plate || !body.name || !body.phone) return [400, { error: 'dados_incompletos', message: 'Preencha placa, nome e telefone' }];
+      if (!body.consent) return [400, { error: 'consentimento', message: 'É preciso aceitar o uso dos dados (LGPD)' }];
+      if (store.vehicles.some(v => v.status === 'ativo' && normPlate(v.plate) === plate)) return [409, { error: 'ja_dentro', message: 'Este veículo já consta no pátio' }];
+      store.registrations[plate] = { name: body.name, phone: body.phone, model: body.model || '', plate };
+      const s = ++store.seq; const v = { id: s, ticket: '#' + String(s).padStart(4, '0'), plate, type: 'avulso', sector: store.sectors[0].id, entry_ts: Date.now(), status: 'ativo' };
+      store.vehicles.push(v); persist();
+      return [201, { registered: true, vehicle: v, cliente: { name: body.name }, wa: { sent: false, provider: 'mock', link: waLinkMock(body.phone, v.ticket, plate) } }];
     }
     const mCob = pathname.match(/^\/api\/cobranca\/([^/]+)$/);
     if (mCob) { const p = store.payments[mCob[1]]; if (!p) return [404, { error: 'nao_encontrado' }]; return [200, { txid: p.txid, status: p.status, amount: p.amount, method: 'pix', paid_ts: p.paid || null }]; }
