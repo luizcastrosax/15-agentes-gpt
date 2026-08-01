@@ -283,6 +283,10 @@ footer p{font-size:12px;color:var(--text3);}
           <input type="checkbox" id="f-distancia" checked/>
           <div class="txt"><label for="f-distancia">Distância entre dezenas<span class="badge">Pro</span></label><p>Limita blocos de números colados (máx. 4 consecutivos).</p></div>
         </div>
+        <div class="chk">
+          <input type="checkbox" id="f-diversificar" checked/>
+          <div class="txt"><label for="f-diversificar">Diversificar jogos (anti-clones)<span class="badge">Pro</span></label><p>Ao gerar vários jogos, minimiza a repetição entre eles — evita apostar quase a mesma coisa várias vezes.</p></div>
+        </div>
       </div>
     </div>
 
@@ -542,20 +546,44 @@ footer p{font-size:12px;color:var(--text3);}
   document.getElementById('gen-btn').addEventListener('click',generate);
   document.getElementById('again-btn').addEventListener('click',generate);
 
+  function overlap(a,b){var s={};b.forEach(function(n){s[n]=1;});var c=0;a.forEach(function(n){if(s[n])c++;});return c;}
+
   function generate(){
     var base=Array.from(selected);
     if(base.length<gameSize){flash('Selecione ao menos '+gameSize+' dezenas no grupo-base.');return;}
     var f=filtersActive();
-    var want=+qty.value, out=[], seen=new Set(), relaxed=false, guard=0;
+    var diversify=document.getElementById('f-diversificar').checked;
+    var want=+qty.value, relaxed=false, guard=0;
     var cap=maxCombos(base.length,gameSize);
-    while(out.length<want && guard<want*500){
+
+    // monta um conjunto de jogos válidos únicos
+    var pool=[], seen=new Set();
+    var poolTarget = (diversify && want>1) ? Math.min(cap, Math.max(want*12, 120)) : want;
+    while(pool.length<poolTarget && guard<poolTarget*500+3000){
       guard++;
       var g=genOne(base,f);
       if(!g){relaxed=true;g=genOneRelaxed(base);if(!g)break;}
       var k=keyOf(g);
-      if(!seen.has(k)){seen.add(k);out.push(g);}
+      if(!seen.has(k)){seen.add(k);pool.push(g);}
       if(seen.size>=cap)break;
     }
+
+    var out;
+    if(diversify && want>1 && pool.length>want){
+      // seleção gulosa: começa por um jogo e vai escolhendo o de MENOR sobreposição com os já escolhidos
+      out=[pool.splice(Math.floor(Math.random()*pool.length),1)[0]];
+      while(out.length<want && pool.length){
+        var best=0,bestScore=Infinity;
+        for(var i=0;i<pool.length;i++){
+          var sc=0;for(var j=0;j<out.length;j++)sc+=overlap(pool[i],out[j]);
+          if(sc<bestScore){bestScore=sc;best=i;}
+        }
+        out.push(pool.splice(best,1)[0]);
+      }
+    } else {
+      out=pool.slice(0,want);
+    }
+
     lastGames=out;
     renderResults(out,relaxed,base);
   }
@@ -606,7 +634,20 @@ footer p{font-size:12px;color:var(--text3);}
       '<div class="cov-item"><div class="cv blue">'+cov.pairPct+'%</div><div class="cl">Pares do grupo cobertos</div></div>'+
       '<div class="cov-item"><div class="cv blue">'+cov.coveredPairs+'</div><div class="cl">Combinações de pares</div></div>'+
       '<div class="cov-item"><div class="cv blue">'+cov.avgOverlap.toFixed(1)+'</div><div class="cl">Repetição média/jogo</div></div>'+
-      '</div><div class="bar"><span style="width:'+cov.pairPct+'%"></span></div></div>';
+      '</div><div class="bar"><span style="width:'+cov.pairPct+'%"></span></div>';
+    // qualidade da diversificação (piso teórico de repetição = 2*n - base)
+    if(games.length>1){
+      var floor=Math.max(0, 2*gameSize - base.length);
+      var msg;
+      if(cov.avgOverlap<=floor+0.15)
+        msg='✅ Diversificação no máximo possível para esta base (mínimo teórico de repetição: '+floor+' dezenas).';
+      else
+        msg='Repetição média '+cov.avgOverlap.toFixed(1)+' — mínimo possível para esta base é '+floor+'.';
+      if(floor>=11)
+        msg+=' <b style="color:var(--gold)">Base pequena: para jogos bem diferentes, marque mais dezenas (ex.: 20 → repetição cai para ~'+Math.max(0,2*gameSize-20)+').</b>';
+      html+='<div style="font-size:11.5px;color:var(--text3);margin-top:10px;line-height:1.5;">'+msg+'</div>';
+    }
+    html+='</div>';
 
     html+='<div class="summary"><b>'+games.length+' jogo(s)</b> de <b>'+gameSize+' dezenas</b> gerados'+
       (relaxed?' — <span style="color:var(--gold)">alguns com filtros relaxados</span> (grupo-base pequeno para tantas combinações).':'.');
