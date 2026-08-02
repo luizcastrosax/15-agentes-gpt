@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Fechamento com Garantia | Lotofácil</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%233B82F6'/%3E%3C/svg%3E"/>
+<meta name="description" content="Motor de fechamento (wheel) da Lotofácil com garantia matemática comprovada: gera o menor número de jogos que garante X pontos se Y das suas dezenas saírem."/>
+<style>
+:root{
+  --red:#E8344A;--red-light:#FF4D63;
+  --green:#1DB954;--green-dark:#169040;--green-light:#2EE066;
+  --gold:#F5A623;--blue:#3B82F6;
+  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
+  --border:#2A2A30;
+  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --radius:12px;--radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:16px;}
+button{font-family:inherit;}
+a{color:var(--green-light);}
+.nav{display:flex;gap:18px;justify-content:center;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg2);font-size:13px;flex-wrap:wrap;}
+.nav a{color:var(--text2);text-decoration:none;font-weight:600;}
+.nav a:hover{color:var(--green-light);}
+.nav a.active{color:var(--green);}
+.top{padding:48px 20px 34px;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,130,246,.12) 0%, transparent 70%);border-bottom:1px solid var(--border);}
+.top .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#7EB0FF;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border-radius:50px;margin-bottom:20px;}
+.top h1{font-size:clamp(26px,5vw,46px);font-weight:900;line-height:1.1;letter-spacing:-1.2px;margin-bottom:12px;}
+.top h1 em{font-style:normal;color:var(--blue);}
+.top p{font-size:clamp(14px,2.2vw,17px);color:var(--text2);max-width:640px;margin:0 auto;}
+.wrap{max-width:1000px;margin:0 auto;padding:34px 20px 80px;}
+.grid2{display:grid;grid-template-columns:1fr 1.1fr;gap:26px;align-items:start;}
+@media(max-width:840px){.grid2{grid-template-columns:1fr;}}
+.panel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;}
+.panel h2{font-size:17px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.panel .hint{font-size:13px;color:var(--text3);margin-bottom:20px;}
+.volante-label{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:10px;display:flex;justify-content:space-between;}
+.volante-label .count{color:var(--green);font-weight:800;}
+.volante{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.dez{aspect-ratio:1;border:1.5px solid var(--border);background:var(--bg4);border-radius:10px;color:var(--text2);font-weight:800;font-size:17px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;}
+.dez:hover{border-color:var(--green);color:var(--text);}
+.dez.on{background:var(--green);border-color:var(--green);color:#04220f;box-shadow:0 4px 14px rgba(29,185,84,.35);}
+.mini-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:#04220f;font-weight:800;font-size:16px;padding:15px 26px;border-radius:50px;border:none;cursor:pointer;width:100%;transition:background .2s,transform .15s,box-shadow .2s;}
+.btn:hover{background:var(--green-light);transform:translateY(-2px);box-shadow:0 8px 24px rgba(29,185,84,.35);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;box-shadow:none;}
+.btn.sec{background:var(--bg4);color:var(--text);border:1.5px solid var(--border);font-size:13px;padding:9px 16px;width:auto;}
+.btn.sec:hover{background:var(--bg4);border-color:var(--green);box-shadow:none;transform:none;}
+.btn.ghost{background:transparent;border:1.5px solid var(--red);color:var(--red-light);font-size:13px;padding:9px 16px;width:auto;}
+.btn.ghost:hover{background:rgba(232,52,74,.1);box-shadow:none;transform:none;}
+.field{margin-bottom:18px;}
+.field > label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+.seg{display:flex;gap:6px;flex-wrap:wrap;}
+.seg button{flex:1;min-width:52px;padding:9px 8px;border:1.5px solid var(--border);background:var(--bg4);color:var(--text2);border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;transition:all .12s;}
+.seg button:hover{border-color:var(--green);color:var(--text);}
+.seg button.on{background:var(--green);border-color:var(--green);color:#04220f;}
+.preset{display:flex;flex-direction:column;gap:8px;}
+.preset button{text-align:left;padding:12px 14px;border:1.5px solid var(--border);background:var(--bg4);color:var(--text);border-radius:10px;cursor:pointer;transition:all .12s;font-size:13px;}
+.preset button:hover{border-color:var(--blue);}
+.preset button.on{border-color:var(--blue);background:rgba(59,130,246,.08);}
+.preset button b{display:block;font-size:14px;font-weight:800;margin-bottom:2px;}
+.preset button span{color:var(--text3);font-size:12px;}
+.row-num{display:flex;align-items:center;gap:12px;}
+.row-num input[type=range]{flex:1;accent-color:var(--blue);}
+.row-num .val{min-width:36px;text-align:center;font-weight:800;font-size:16px;color:var(--blue);font-variant-numeric:tabular-nums;}
+.adv{border-top:1px solid var(--border);margin-top:16px;padding-top:8px;}
+.adv summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--text2);padding:8px 0;}
+.guarantee-line{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5;}
+.guarantee-line b{color:#7EB0FF;}
+#out{min-height:120px;}
+.placeholder{color:var(--text3);font-size:14px;text-align:center;padding:36px 10px;}
+.result-hero{text-align:center;background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;}
+.result-hero .big{font-size:52px;font-weight:900;letter-spacing:-2px;line-height:1;color:var(--green);}
+.result-hero .big small{font-size:16px;color:var(--text2);font-weight:700;}
+.result-hero .stmt{font-size:14px;color:var(--text);margin-top:10px;line-height:1.5;}
+.result-hero .stmt b{color:var(--green-light);}
+.verified{display:inline-flex;align-items:center;gap:6px;background:rgba(29,185,84,.14);color:var(--green-light);border:1px solid rgba(29,185,84,.3);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:800;margin-top:14px;}
+.meta-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px;}
+.mtag{font-size:11px;font-weight:700;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 9px;}
+.mtag b{color:var(--blue);}
+.game{background:var(--bg4);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.game .gi{font-size:11px;font-weight:800;color:var(--text3);min-width:54px;}
+.balls{display:flex;flex-wrap:wrap;gap:4px;}
+.ball{width:28px;height:28px;border-radius:50%;background:var(--green);color:#04220f;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-variant-numeric:tabular-nums;}
+.res-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#04220f;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.warn{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--text2);margin-top:10px;}
+.warn b{color:var(--gold);}
+.explain{margin-top:44px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.explain h3{font-size:16px;font-weight:800;margin-bottom:10px;}
+.explain p{font-size:13.5px;color:var(--text2);margin-bottom:10px;line-height:1.65;}
+.explain b{color:var(--text);}
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:24px 20px;text-align:center;margin-top:50px;}
+footer p{font-size:12px;color:var(--text3);}
+@media(max-width:520px){.wrap{padding:24px 14px 60px;}.panel{padding:18px;}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="gerador-lotofacil.html">🎟️ Gerador</a>
+  <a href="fechamento.html" class="active">🔗 Fechamento</a>
+  <a href="backtest.html">📊 Backtest &amp; Histórico</a>
+</nav>
+
+<header class="top">
+  <div class="eyebrow">🔗 Teoria dos conjuntos · garantia comprovada</div>
+  <h1>Fechamento com <em>Garantia</em></h1>
+  <p>Escolha um grupo de dezenas e o sistema calcula o <b>menor número de jogos</b> que <b>garante matematicamente</b> um prêmio, se um número mínimo das suas dezenas for sorteado. Não é probabilidade — é um teorema, e a página <b>verifica a garantia</b> antes de mostrar.</p>
+</header>
+
+<div class="wrap">
+  <div class="grid2">
+    <!-- CONFIG -->
+    <div>
+      <div class="panel">
+        <h2>1 · Grupo de dezenas</h2>
+        <p class="hint">Selecione de 16 a 20 dezenas. Quanto maior o grupo, mais jogos o fechamento exige.</p>
+        <div class="volante-label"><span>Selecionadas: <span class="count" id="sel-count">0</span></span><span style="color:var(--text3)">01–25</span></div>
+        <div class="volante" id="volante"></div>
+        <div class="mini-actions">
+          <button class="btn sec" id="auto-btn">🎲 Sugerir 18</button>
+          <button class="btn ghost" id="clear-btn">Limpar</button>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:22px;">
+        <h2>2 · Objetivo da garantia</h2>
+        <p class="hint">Escolha um preset ou ajuste no modo avançado.</p>
+        <div class="field">
+          <label>Dezenas por jogo</label>
+          <div class="seg" id="seg-n">
+            <button data-v="15" class="on">15</button>
+            <button data-v="16">16</button>
+            <button data-v="17">17</button>
+          </div>
+        </div>
+        <div class="preset" id="presets"></div>
+
+        <details class="adv">
+          <summary>⚙️ Modo avançado (definir t e p manualmente)</summary>
+          <div style="margin-top:14px;">
+            <div class="field">
+              <label>Se <b id="t-lbl" style="color:var(--blue)">14</b> das minhas dezenas saírem…</label>
+              <div class="row-num"><input type="range" id="t-range" min="10" max="20" value="14"/><span class="val" id="t-val">14</span></div>
+            </div>
+            <div class="field">
+              <label>…garantir pelo menos <b id="p-lbl" style="color:var(--blue)">13</b> pontos</label>
+              <div class="row-num"><input type="range" id="p-range" min="11" max="15" value="13"/><span class="val" id="p-val">13</span></div>
+            </div>
+            <div class="guarantee-line" id="g-line"></div>
+          </div>
+        </details>
+      </div>
+
+      <button class="btn" id="gen-btn" style="margin-top:22px;">CALCULAR FECHAMENTO</button>
+    </div>
+
+    <!-- RESULT -->
+    <div>
+      <div class="panel">
+        <h2>3 · Fechamento gerado</h2>
+        <p class="hint">Garantia verificada por conferência exaustiva de todos os cenários.</p>
+        <div id="out"><div class="placeholder">Escolha o grupo e o objetivo, depois clique em <b style="color:var(--green)">Calcular fechamento</b>.</div></div>
+        <div class="res-actions" id="res-actions" style="display:none;">
+          <button class="btn sec" id="copy-btn">📋 Copiar jogos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="explain">
+    <h3>Por que isto é diferente de "prever números"</h3>
+    <p><b>Nada aqui tenta adivinhar o sorteio.</b> O fechamento resolve um problema de <b>cobertura de conjuntos</b> (covering design): dado o seu grupo de K dezenas, encontrar a menor coleção de jogos tal que, para <b>qualquer</b> combinação de dezenas suas que seja sorteada, pelo menos um jogo alcance a pontuação prometida.</p>
+    <p>Por isso a garantia é <b>determinística e auditável</b>: a página testa <b>todos os cenários possíveis</b> e só mostra o resultado com o selo "garantia comprovada". Um único jogo já garante <b>n + t − K</b> pontos; o fechamento acrescenta jogos para elevar essa garantia.</p>
+    <p style="color:var(--gold);"><b>⚠️ Importante:</b> a garantia vale <b>somente se</b> o número mínimo das suas dezenas for realmente sorteado. Se saírem menos, a garantia não se aplica — e isso não muda a chance de acertar as 15. Fechamento organiza e protege a aposta; não vence a loteria. Jogue com responsabilidade. +18.</p>
+  </div>
+</div>
+
+<footer><p>Ferramenta educativa de estatística e combinatória aplicada à Lotofácil · Não afiliada à Caixa · Jogue com responsabilidade · +18</p></footer>
+
+<script>
+(function(){
+  "use strict";
+  var selected=new Set(), lastGames=[], N=15, T=14, P=13, worker=null;
+
+  // Volante
+  var volante=document.getElementById('volante');
+  for(var i=1;i<=25;i++){var b=document.createElement('button');b.className='dez';b.textContent=String(i).padStart(2,'0');b.dataset.n=i;b.addEventListener('click',toggle);volante.appendChild(b);}
+  function toggle(e){var n=+e.currentTarget.dataset.n;if(selected.has(n))selected.delete(n);else{if(selected.size>=20){flash('Máximo de 20 dezenas.');return;}selected.add(n);}render();}
+  function render(){document.querySelectorAll('.dez').forEach(function(el){el.classList.toggle('on',selected.has(+el.dataset.n));});document.getElementById('sel-count').textContent=selected.size;syncRanges();updatePresets();updateGLine();}
+
+  document.getElementById('clear-btn').addEventListener('click',function(){selected.clear();render();});
+  document.getElementById('auto-btn').addEventListener('click',function(){
+    selected.clear();
+    var rows=[[1,5],[6,10],[11,15],[16,20],[21,25]],per=[4,4,4,3,3];shuffleArr(per);
+    for(var r=0;r<5;r++){var pool=[];for(var n=rows[r][0];n<=rows[r][1];n++)pool.push(n);shuffleArr(pool);for(var j=0;j<per[r];j++)selected.add(pool[j]);}
+    render();
+  });
+
+  // n selector
+  document.querySelectorAll('#seg-n button').forEach(function(btn){btn.addEventListener('click',function(){document.querySelectorAll('#seg-n button').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');N=+btn.dataset.v;syncRanges();buildPresets();updatePresets();updateGLine();});});
+
+  // presets (depend on N)
+  function presetDefs(){
+    return [
+      {t:N-1, p:N-2, label:'Conservador'},
+      {t:N-1, p:N-1, label:'Equilibrado'},
+      {t:N,   p:N-1, label:'Agressivo'}
+    ];
+  }
+  function buildPresets(){
+    var box=document.getElementById('presets');box.innerHTML='';
+    presetDefs().forEach(function(d,idx){
+      var btn=document.createElement('button');
+      btn.dataset.t=d.t;btn.dataset.p=d.p;
+      btn.innerHTML='<b>Garantir '+d.p+' pontos se '+d.t+' saírem</b><span>'+d.label+' — grupos de '+N+' dezenas por jogo</span>';
+      btn.addEventListener('click',function(){T=d.t;P=d.p;syncRanges();updatePresets();updateGLine();});
+      box.appendChild(btn);
+    });
+  }
+  function updatePresets(){
+    document.querySelectorAll('#presets button').forEach(function(btn){
+      btn.classList.toggle('on', +btn.dataset.t===T && +btn.dataset.p===P);
+    });
+  }
+
+  // advanced ranges
+  var tR=document.getElementById('t-range'),pR=document.getElementById('p-range');
+  tR.addEventListener('input',function(){T=+tR.value;document.getElementById('t-val').textContent=T;document.getElementById('t-lbl').textContent=T;updatePresets();updateGLine();});
+  pR.addEventListener('input',function(){P=+pR.value;document.getElementById('p-val').textContent=P;document.getElementById('p-lbl').textContent=P;updatePresets();updateGLine();});
+  function syncRanges(){
+    var K=selected.size||18;
+    tR.max=Math.min(20,K);
+    if(T>tR.max)T=tR.max;
+    pR.max=N;
+    if(P>N)P=N;
+    tR.value=T;pR.value=P;
+    document.getElementById('t-val').textContent=T;document.getElementById('t-lbl').textContent=T;
+    document.getElementById('p-val').textContent=P;document.getElementById('p-lbl').textContent=P;
+  }
+  function updateGLine(){
+    var K=selected.size||18, baseline=N+T-K;
+    var el=document.getElementById('g-line');
+    var msg='Objetivo: se <b>'+T+'</b> das suas dezenas saírem, garantir <b>'+P+'</b> pontos. ';
+    if(P<=baseline)msg+='Um único jogo já garante '+Math.max(0,baseline)+' — objetivo trivial.';
+    else if(P>N)msg+='⚠️ Impossível: pontos garantidos não pode passar de '+N+'.';
+    else if(T>K)msg+='⚠️ Impossível: t não pode passar do tamanho do grupo ('+K+').';
+    else msg+='Um jogo sozinho garante '+Math.max(0,baseline)+' ponto(s); o fechamento eleva para '+P+'.';
+    el.innerHTML=msg;
+  }
+
+  // ── Worker (cálculo pesado isolado da UI) ──
+  var WORKER_SRC = [
+    'function combIdx(k,r){var res=[],idx=[];for(var i=0;i<r;i++)idx.push(i);if(r===0)return[[]];',
+    'while(true){res.push(idx.slice());var i=r-1;while(i>=0&&idx[i]===k-r+i)i--;if(i<0)break;idx[i]++;for(var j=i+1;j<r;j++)idx[j]=idx[j-1]+1;}return res;}',
+    'function mask(a){var m=0;for(var i=0;i<a.length;i++)m|=(1<<a[i]);return m;}',
+    'function pc(x){x=x-((x>>1)&0x55555555);x=(x&0x33333333)+((x>>2)&0x33333333);return(((x+(x>>4))&0x0F0F0F0F)*0x01010101)>>24;}',
+    'function wheel(K,n,t,p){var blocks=combIdx(K,n).map(mask);var targets=combIdx(K,t).map(mask);var Tt=targets.length,B=blocks.length;',
+    'var cov=new Array(B),gain=new Int32Array(B);for(var b=0;b<B;b++){var l=[];var bm=blocks[b];for(var ti=0;ti<Tt;ti++){if(pc(bm&targets[ti])>=p)l.push(ti);}cov[b]=l;gain[b]=l.length;}',
+    'var tb=new Array(Tt);for(var ti=0;ti<Tt;ti++)tb[ti]=[];for(var b=0;b<B;b++){var l=cov[b];for(var k2=0;k2<l.length;k2++)tb[l[k2]].push(b);}',
+    'var coveredT=new Uint8Array(Tt),chosen=[],remaining=Tt,guard=0;',
+    'while(remaining>0&&guard<20000){guard++;var best=-1,bg=0;for(var b=0;b<B;b++){if(gain[b]>bg){bg=gain[b];best=b;}}if(best<0||bg===0)break;chosen.push(blocks[best]);var l=cov[best];for(var k2=0;k2<l.length;k2++){var ti=l[k2];if(!coveredT[ti]){coveredT[ti]=1;remaining--;var bl=tb[ti];for(var z=0;z<bl.length;z++)gain[bl[z]]--;}}}',
+    'var ok=true;for(var ti=0;ti<Tt;ti++){var c=false;for(var z=0;z<chosen.length;z++){if(pc(chosen[z]&targets[ti])>=p){c=true;break;}}if(!c){ok=false;break;}}',
+    'return{chosen:chosen,verified:ok,T:Tt,B:B,baseline:(n+t-K)};}',
+    'self.onmessage=function(e){var d=e.data;var r=wheel(d.K,d.n,d.t,d.p);postMessage({chosen:r.chosen,verified:r.verified,T:r.T,B:r.B,baseline:r.baseline,dezenas:d.dezenas,n:d.n,t:d.t,p:d.p});};'
+  ].join('\n');
+
+  document.getElementById('gen-btn').addEventListener('click',run);
+
+  function run(){
+    var dz=Array.from(selected).sort(function(a,b){return a-b;});
+    var K=dz.length;
+    if(K<16){flash('Selecione ao menos 16 dezenas.');return;}
+    if(P>N){flash('Pontos garantidos não pode passar das dezenas por jogo.');return;}
+    if(T>K){flash('t não pode passar do tamanho do grupo.');return;}
+    if(P<=N+T-K){flash('Objetivo trivial: um jogo já garante isso. Aumente os pontos.');return;}
+    // estimativa de custo computacional
+    var targetsCount=comb(K,T), candCount=comb(K,N);
+    var product=candCount*targetsCount;
+    if(product>7e8){flash('Configuração pesada demais para o navegador. Reduza o grupo ou aumente a garantia (t ou pontos).');return;}
+    var out=document.getElementById('out');
+    var btn=document.getElementById('gen-btn');
+    document.getElementById('res-actions').style.display='none';
+    var heavy = (product>1.2e8);
+    out.innerHTML='<div class="placeholder"><span class="spinner"></span><br><br>Calculando o menor fechamento…<br><small style="color:var(--text3)">testando '+targetsCount.toLocaleString('pt-BR')+' cenários</small>'+(heavy?'<br><br><span style="color:var(--gold);font-size:12px">Configuração pesada, pode levar alguns segundos.</span>':'')+'</div>';
+    btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Calculando…';
+
+    if(worker)worker.terminate();
+    var blob=new Blob([WORKER_SRC],{type:'application/javascript'});
+    worker=new Worker(URL.createObjectURL(blob));
+    worker.onmessage=function(e){
+      btn.disabled=false;btn.textContent='CALCULAR FECHAMENTO';
+      showResult(e.data);
+    };
+    worker.onerror=function(){
+      btn.disabled=false;btn.textContent='CALCULAR FECHAMENTO';
+      out.innerHTML='<div class="placeholder" style="color:var(--red-light)">Erro no cálculo. Tente um grupo menor ou objetivo mais simples.</div>';
+    };
+    worker.postMessage({K:K,n:N,t:T,p:P,dezenas:dz});
+  }
+
+  function showResult(d){
+    var dz=d.dezenas;
+    var games=d.chosen.map(function(m){var g=[];for(var i=0;i<dz.length;i++){if(m&(1<<i))g.push(dz[i]);}return g.sort(function(a,b){return a-b;});});
+    lastGames=games;
+    // preço oficial por aposta depende das dezenas por jogo (n): 15=C(15,15), 16=C(16,15)=16, 17=C(17,15)=136 apostas de R$3,50
+    var priceEach=comb(d.n,15)*3.50, cost=games.length*priceEach;
+    var html='';
+    html+='<div class="result-hero"><div class="big">'+games.length+'<small> jogos</small></div>';
+    html+='<div class="stmt">Se <b>'+d.t+'</b> das suas '+dz.length+' dezenas forem sorteadas,<br>você garante <b>pelo menos '+d.p+' pontos</b>.</div>';
+    html+='<div class="'+(d.verified?'verified':'')+'">'+(d.verified?'✓ Garantia comprovada ('+d.T.toLocaleString('pt-BR')+' cenários testados)':'—')+'</div>';
+    html+='<div class="meta-tags">'+
+      '<span class="mtag">Grupo <b>'+dz.length+'</b> dezenas</span>'+
+      '<span class="mtag">'+d.n+' por jogo</span>'+
+      '<span class="mtag">1 jogo garante <b>'+Math.max(0,d.baseline)+'</b></span>'+
+      '<span class="mtag">Custo aprox. <b>R$ '+cost.toFixed(2).replace('.',',')+'</b></span>'+
+      '</div></div>';
+    games.forEach(function(g,i){
+      html+='<div class="game"><span class="gi">Jogo '+String(i+1).padStart(2,'0')+'</span><div class="balls">';
+      g.forEach(function(n){html+='<div class="ball">'+String(n).padStart(2,'0')+'</div>';});
+      html+='</div></div>';
+    });
+    document.getElementById('out').innerHTML=html;
+    document.getElementById('res-actions').style.display='flex';
+  }
+
+  document.getElementById('copy-btn').addEventListener('click',function(){
+    if(!lastGames.length)return;
+    var txt=lastGames.map(function(g,i){return 'Jogo '+String(i+1).padStart(2,'0')+': '+g.map(function(n){return String(n).padStart(2,'0');}).join(' ');}).join('\n');
+    navigator.clipboard.writeText(txt).then(function(){flash('Jogos copiados! ✅');},function(){flash('Não foi possível copiar.');});
+  });
+
+  // utils
+  function comb(n,k){if(k<0||k>n)return 0;k=Math.min(k,n-k);var r=1;for(var i=0;i<k;i++)r=r*(n-i)/(i+1);return Math.round(r);}
+  function shuffleArr(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  var toastEl=null;
+  function flash(msg){if(toastEl)toastEl.remove();toastEl=document.createElement('div');toastEl.textContent=msg;toastEl.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);';document.body.appendChild(toastEl);setTimeout(function(){if(toastEl){toastEl.style.opacity='0';toastEl.style.transition='opacity .4s';}},2200);setTimeout(function(){if(toastEl){toastEl.remove();toastEl=null;}},2700);}
+
+  buildPresets();render();
+})();
+</script>
+</body>
+</html>

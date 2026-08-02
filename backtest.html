@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Backtest &amp; Histórico | Lotofácil</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%233B82F6'/%3E%3C/svg%3E"/>
+<meta name="description" content="Análise histórica de todos os concursos da Lotofácil e backtest com validação fora da amostra: frequência, dispersão e comparação honesta entre filtros e aleatório."/>
+<style>
+:root{
+  --red:#E8344A;--red-light:#FF4D63;
+  --green:#1DB954;--green-dark:#169040;--green-light:#2EE066;
+  --gold:#F5A623;--blue:#3B82F6;--blue-light:#7EB0FF;
+  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
+  --border:#2A2A30;
+  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --radius:12px;--radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:16px;}
+button{font-family:inherit;}
+.nav{display:flex;gap:18px;justify-content:center;padding:14px 20px;border-bottom:1px solid var(--border);background:var(--bg2);font-size:13px;flex-wrap:wrap;}
+.nav a{color:var(--text2);text-decoration:none;font-weight:600;}
+.nav a:hover{color:var(--blue-light);}
+.nav a.active{color:var(--blue-light);}
+.top{padding:48px 20px 34px;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,130,246,.12) 0%, transparent 70%);border-bottom:1px solid var(--border);}
+.top .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:var(--blue-light);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border-radius:50px;margin-bottom:20px;}
+.top h1{font-size:clamp(26px,5vw,46px);font-weight:900;line-height:1.1;letter-spacing:-1.2px;margin-bottom:12px;}
+.top h1 em{font-style:normal;color:var(--blue);}
+.top p{font-size:clamp(14px,2.2vw,17px);color:var(--text2);max-width:660px;margin:0 auto;}
+.wrap{max-width:980px;margin:0 auto;padding:34px 20px 80px;}
+.panel{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px;}
+.panel h2{font-size:18px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.panel .hint{font-size:13px;color:var(--text3);margin-bottom:20px;}
+.status{font-size:13px;color:var(--text2);padding:10px 0;}
+.status .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--blue-light);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px;}
+.tile{background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.tile .v{font-size:26px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;}
+.tile .v.blue{color:var(--blue-light);}
+.tile .k{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;}
+.freq{margin-top:8px;}
+.freq-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.freq-row .lbl{width:26px;font-size:12px;font-weight:800;color:var(--text2);text-align:right;font-variant-numeric:tabular-nums;}
+.freq-row .track{flex:1;height:16px;background:var(--bg4);border-radius:4px;overflow:hidden;position:relative;}
+.freq-row .fill{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--blue-light));}
+.freq-row .fill.hot{background:linear-gradient(90deg,var(--green),var(--green-light));}
+.freq-row .fill.cold{background:linear-gradient(90deg,#8B5CF6,#A78BFA);}
+.freq-row .pct{width:60px;font-size:11px;color:var(--text3);text-align:right;font-variant-numeric:tabular-nums;}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--text3);margin-top:12px;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px;}
+.row-num{display:flex;align-items:center;gap:12px;}
+.row-num input[type=range]{flex:1;accent-color:var(--blue);}
+.row-num .val{min-width:52px;text-align:center;font-weight:800;font-size:15px;color:var(--blue-light);font-variant-numeric:tabular-nums;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--blue);color:#04121f;font-weight:800;font-size:16px;padding:15px 26px;border-radius:50px;border:none;cursor:pointer;width:100%;transition:filter .2s,transform .15s;}
+.btn:hover{filter:brightness(1.1);transform:translateY(-2px);}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.ab{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px;}
+@media(max-width:560px){.ab{grid-template-columns:1fr;}}
+.ab-col{background:var(--bg4);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.ab-head{padding:12px 16px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
+.ab-col.rnd .ab-head{background:rgba(161,161,170,.1);color:var(--text2);}
+.ab-col.flt .ab-head{background:rgba(29,185,84,.1);color:var(--green-light);}
+.ab-row{display:flex;justify-content:space-between;padding:9px 16px;border-top:1px solid var(--border);font-size:13px;}
+.ab-row .k{color:var(--text3);}
+.ab-row .v{font-weight:800;font-variant-numeric:tabular-nums;}
+.verdict{margin-top:18px;background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.28);border-radius:12px;padding:16px 18px;font-size:13.5px;color:var(--text2);line-height:1.6;}
+.verdict b{color:var(--gold);}
+.verdict .big{display:block;font-size:15px;color:var(--text);font-weight:700;margin-bottom:6px;}
+.note{font-size:12px;color:var(--text3);margin-top:14px;line-height:1.6;}
+footer{background:var(--bg2);border-top:1px solid var(--border);padding:24px 20px;text-align:center;margin-top:40px;}
+footer p{font-size:12px;color:var(--text3);}
+@media(max-width:520px){.wrap{padding:24px 14px 60px;}.panel{padding:18px;}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="gerador-lotofacil.html">🎟️ Gerador</a>
+  <a href="fechamento.html">🔗 Fechamento</a>
+  <a href="backtest.html" class="active">📊 Backtest &amp; Histórico</a>
+</nav>
+
+<header class="top">
+  <div class="eyebrow">📊 Dados reais · validação fora da amostra</div>
+  <h1>Backtest &amp; <em>Histórico</em></h1>
+  <p>Todos os concursos da Lotofácil analisados de verdade: frequência, dispersão e um backtest honesto que compara <b>filtros vs. aleatório</b> em milhares de sorteios — para <b>medir</b> qualquer melhoria, em vez de supor.</p>
+</header>
+
+<div class="wrap">
+
+  <!-- HISTÓRICO -->
+  <div class="panel">
+    <h2>📚 Base histórica</h2>
+    <p class="hint">Carregada ao vivo do repositório público (atualizado diariamente). Frequência e dispersão reais das 25 dezenas.</p>
+    <div id="hist-status" class="status"><span class="spinner"></span>Carregando concursos…</div>
+    <div id="hist-body" style="display:none;">
+      <div class="tiles" id="hist-tiles"></div>
+      <h2 style="font-size:14px;margin:18px 0 12px;">Frequência de cada dezena em todos os concursos</h2>
+      <div class="freq" id="freq"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--green)"></i> 5 mais sorteadas (quentes)</span>
+        <span><i class="dot" style="background:#8B5CF6"></i> 5 menos sorteadas (frias)</span>
+        <span><i class="dot" style="background:var(--blue)"></i> demais</span>
+      </div>
+      <p class="note">Atenção: frequência é <b>descritiva</b>, não preditiva. Numa loteria justa, uma dezena "atrasada" não tem chance maior de sair no próximo sorteio. Isto serve para calibrar filtros, não para adivinhar.</p>
+    </div>
+  </div>
+
+  <!-- BACKTEST A/B -->
+  <div class="panel">
+    <h2>🧪 Backtest: filtros vs. aleatório</h2>
+    <p class="hint">O histórico é dividido em treino (calibra os filtros) e teste (mede o resultado em sorteios que os filtros nunca viram). Assim evitamos enganar a nós mesmos com sobreajuste.</p>
+    <div class="field">
+      <label>Apostas simuladas por sorteio de teste</label>
+      <div class="row-num"><input type="range" id="m-range" min="50" max="400" step="50" value="200"/><span class="val" id="m-val">200</span></div>
+    </div>
+    <div class="field">
+      <label>Divisão treino / teste: <b id="split-lbl" style="color:var(--blue-light)">70%</b> treino</label>
+      <div class="row-num"><input type="range" id="split-range" min="50" max="85" step="5" value="70"/><span class="val" id="split-val">70%</span></div>
+    </div>
+    <button class="btn" id="run-btn" disabled>RODAR BACKTEST</button>
+    <div id="bt-out"></div>
+  </div>
+
+</div>
+
+<footer><p>Dados: repositório público loteria.json · Ferramenta educativa · Não afiliada à Caixa · Jogue com responsabilidade · +18</p></footer>
+
+<script>
+(function(){
+  "use strict";
+  var DATA_URL='https://raw.githubusercontent.com/guilhermeasn/loteria.json/master/data/lotofacil.json';
+  var FALLBACK_URL='lotofacil-historico.json'; // snapshot local (mesma origem)
+  var draws=[]; // array de arrays de 15 ints
+
+  // ── carregar histórico: ao vivo primeiro, snapshot local se falhar ──
+  function fetchJSON(url){return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();});}
+  fetchJSON(DATA_URL)
+    .catch(function(){return fetchJSON(FALLBACK_URL);})
+    .then(function(obj){
+      var vals=Array.isArray(obj)?obj:Object.keys(obj).map(function(k){return obj[k];});
+      draws=vals.map(function(a){return (a||[]).map(Number);}).filter(function(a){return a.length===15 && a.every(function(x){return x>=1&&x<=25;});});
+      if(!draws.length)throw new Error('sem dados');
+      onData();
+    })
+    .catch(function(){
+      document.getElementById('hist-status').innerHTML='<span style="color:var(--red-light)">Não foi possível carregar o histórico agora. Recarregue a página.</span>';
+    });
+
+  function onData(){
+    // frequência
+    var freq=new Array(26).fill(0);
+    var sums=[],odds=[],disps=[];
+    draws.forEach(function(d){
+      d.forEach(function(n){freq[n]++;});
+      var s=d.reduce(function(a,b){return a+b;},0);sums.push(s);
+      odds.push(d.filter(function(x){return x%2;}).length);
+      var m=s/15,v=0;d.forEach(function(x){v+=(x-m)*(x-m);});disps.push(Math.sqrt(v/15));
+    });
+    var total=draws.length;
+    var avg=function(a){return a.reduce(function(x,y){return x+y;},0)/a.length;};
+    // moda par/ímpar
+    var oc={};odds.forEach(function(o){oc[o]=(oc[o]||0)+1;});
+    var modeOdd=Object.keys(oc).sort(function(a,b){return oc[b]-oc[a];})[0];
+    // quentes/frias
+    var order=[];for(var n=1;n<=25;n++)order.push({n:n,f:freq[n]});
+    order.sort(function(a,b){return b.f-a.f;});
+    var hot=new Set(order.slice(0,5).map(function(o){return o.n;}));
+    var cold=new Set(order.slice(-5).map(function(o){return o.n;}));
+
+    // tiles
+    document.getElementById('hist-tiles').innerHTML=
+      tile(total.toLocaleString('pt-BR'),'Concursos')+
+      tile(avg(sums).toFixed(0),'Soma média')+
+      tile((modeOdd)+'-'+(15-modeOdd),'Ímpar-par + comum')+
+      tile(avg(disps).toFixed(2),'Dispersão média')+
+      tile(String(order[0].n).padStart(2,'0'),'Mais sorteada')+
+      tile(String(order[order.length-1].n).padStart(2,'0'),'Menos sorteada');
+
+    // barras — largura normalizada pela faixa [min,max] p/ evidenciar diferenças
+    var maxF=order[0].f, minF=order[order.length-1].f, range=Math.max(1,maxF-minF);
+    var html='';
+    for(var n=1;n<=25;n++){
+      var pctW=8+92*((freq[n]-minF)/range);
+      var cls=hot.has(n)?'hot':(cold.has(n)?'cold':'');
+      var perc=(100*freq[n]/total).toFixed(1);
+      html+='<div class="freq-row"><span class="lbl">'+String(n).padStart(2,'0')+'</span>'+
+        '<span class="track"><span class="fill '+cls+'" style="width:'+pctW.toFixed(1)+'%"></span></span>'+
+        '<span class="pct">'+perc+'%</span></div>';
+    }
+    document.getElementById('freq').innerHTML=html;
+    document.getElementById('hist-status').style.display='none';
+    document.getElementById('hist-body').style.display='block';
+    document.getElementById('run-btn').disabled=false;
+  }
+  function tile(v,k,blue){return '<div class="tile"><div class="v'+(blue?' blue':'')+'">'+v+'</div><div class="k">'+k+'</div></div>';}
+
+  // ── controles backtest ──
+  var mR=document.getElementById('m-range'),spR=document.getElementById('split-range');
+  mR.addEventListener('input',function(){document.getElementById('m-val').textContent=mR.value;});
+  spR.addEventListener('input',function(){document.getElementById('split-val').textContent=spR.value+'%';document.getElementById('split-lbl').textContent=spR.value+'%';});
+
+  // ── worker do backtest ──
+  var WSRC=[
+    'function odd(a){var c=0;for(var i=0;i<a.length;i++)if(a[i]%2)c++;return c;}',
+    'function sum(a){var s=0;for(var i=0;i<a.length;i++)s+=a[i];return s;}',
+    'function disp(a){var m=sum(a)/a.length,v=0;for(var i=0;i<a.length;i++)v+=(a[i]-m)*(a[i]-m);return Math.sqrt(v/a.length);}',
+    'function pctl(arr,p){var s=arr.slice().sort(function(a,b){return a-b;});return s[Math.floor(p*(s.length-1))];}',
+    'function randTicket(){var p=[];for(var i=1;i<=25;i++)p.push(i);for(var i=p.length-1;i>0;i--){var j=Math.random()*(i+1)|0;var t=p[i];p[i]=p[j];p[j]=t;}return p.slice(0,15);}',
+    'function hits(t,set){var c=0;for(var i=0;i<t.length;i++)if(set[t[i]])c++;return c;}',
+    'self.onmessage=function(e){var draws=e.data.draws,M=e.data.M,split=e.data.split;',
+    'var cut=Math.floor(draws.length*split),train=draws.slice(0,cut),test=draws.slice(cut);',
+    'var trSum=train.map(sum),trDisp=train.map(disp);',
+    'var sumLo=pctl(trSum,0.05),sumHi=pctl(trSum,0.95),dispLo=pctl(trDisp,0.05),dispHi=pctl(trDisp,0.95);',
+    'var oc={};train.forEach(function(d){var o=odd(d);oc[o]=(oc[o]||0)+1;});',
+    'var oddAllowed={};Object.keys(oc).forEach(function(o){if(oc[o]/train.length>=0.05)oddAllowed[o]=1;});',
+    'function pass(t){if(!oddAllowed[odd(t)])return false;var s=sum(t);if(s<sumLo||s>sumHi)return false;var dp=disp(t);if(dp<dispLo||dp>dispHi)return false;return true;}',
+    'function mk(){return{sh:0,n:0,t11:0,t12:0,t13:0,t14:0};}',
+    'function acc(st,h){st.sh+=h;st.n++;if(h>=11)st.t11++;if(h>=12)st.t12++;if(h>=13)st.t13++;if(h>=14)st.t14++;}',
+    'var R=mk(),F=mk();',
+    'for(var di=0;di<test.length;di++){var set={};for(var z=0;z<15;z++)set[test[di][z]]=1;',
+    'for(var i=0;i<M;i++){acc(R,hits(randTicket(),set));}',
+    'var got=0,guard=0;while(got<M&&guard<M*60){guard++;var t=randTicket();if(pass(t)){acc(F,hits(t,set));got++;}}',
+    'if(di%50===0)postMessage({progress:di/test.length});}',
+    'postMessage({done:true,R:R,F:F,train:train.length,test:test.length,cal:{sumLo:sumLo,sumHi:sumHi,dispLo:dispLo,dispHi:dispHi,odd:Object.keys(oddAllowed).map(Number).sort(function(a,b){return a-b;})}});};'
+  ].join('\n');
+
+  var worker=null;
+  document.getElementById('run-btn').addEventListener('click',function(){
+    if(!draws.length)return;
+    var btn=this;btn.disabled=true;btn.innerHTML='<span class="spinner" style="border-top-color:#04121f"></span> Rodando…';
+    var out=document.getElementById('bt-out');
+    out.innerHTML='<div class="status"><span class="spinner"></span>Simulando apostas fora da amostra…</div>';
+    var M=+mR.value, split=(+spR.value)/100;
+    if(worker)worker.terminate();
+    var blob=new Blob([WSRC],{type:'application/javascript'});
+    worker=new Worker(URL.createObjectURL(blob));
+    worker.onmessage=function(e){
+      if(e.data.progress!==undefined){
+        out.innerHTML='<div class="status"><span class="spinner"></span>Simulando… '+Math.round(e.data.progress*100)+'%</div>';return;
+      }
+      if(e.data.done){btn.disabled=false;btn.textContent='RODAR BACKTEST';showBT(e.data,M);}
+    };
+    worker.postMessage({draws:draws,M:M,split:split});
+  });
+
+  function showBT(d,M){
+    var R=d.R,F=d.F;
+    function line(k,rv,fv){return '<div class="ab-row"><span class="k">'+k+'</span><span class="v">'+rv+'</span></div>';}
+    function col(cls,head,st){
+      return '<div class="ab-col '+cls+'"><div class="ab-head">'+head+'</div>'+
+        '<div class="ab-row"><span class="k">Média de acertos</span><span class="v">'+(st.sh/st.n).toFixed(3)+'</span></div>'+
+        '<div class="ab-row"><span class="k">11+ pontos</span><span class="v">'+(100*st.t11/st.n).toFixed(2)+'%</span></div>'+
+        '<div class="ab-row"><span class="k">12+ pontos</span><span class="v">'+(100*st.t12/st.n).toFixed(2)+'%</span></div>'+
+        '<div class="ab-row"><span class="k">13+ pontos</span><span class="v">'+(100*st.t13/st.n).toFixed(3)+'%</span></div>'+
+        '<div class="ab-row"><span class="k">14+ pontos</span><span class="v">'+(100*st.t14/st.n).toFixed(3)+'%</span></div>'+
+        '</div>';
+    }
+    var diff=((F.sh/F.n)-(R.sh/R.n));
+    var verdict='<div class="verdict"><span class="big">📌 Veredito: '+(Math.abs(diff)<0.03?'sem diferença mensurável':'diferença de '+diff.toFixed(3)+' acerto/aposta')+'</span>'+
+      'Testado em <b>'+d.test.toLocaleString('pt-BR')+'</b> sorteios que os filtros nunca viram (treino: '+d.train.toLocaleString('pt-BR')+'). '+
+      'A média de acertos é <b>≈ 9,0 para qualquer aposta</b> — filtrada ou não — porque em um sorteio justo cada dezena tem a mesma chance. '+
+      'Os filtros deixam os jogos mais "parecidos com sorteios reais", mas <b>não aumentam o retorno esperado</b>. '+
+      'O ganho comprovável está no <b>fechamento</b> (garantias), não em prever dezenas.</div>';
+    var cal='<p class="note">Filtro calibrado no treino → soma ['+d.cal.sumLo+'–'+d.cal.sumHi+'], dispersão ['+d.cal.dispLo.toFixed(2)+'–'+d.cal.dispHi.toFixed(2)+'], ímpares aceitos: '+d.cal.odd.join(', ')+'. Simulação: '+M+' apostas por sorteio de teste.</p>';
+    document.getElementById('bt-out').innerHTML='<div class="ab">'+col('rnd','🎲 Aleatório',R)+col('flt','🎯 Com filtros',F)+'</div>'+verdict+cal;
+  }
+})();
+</script>
+</body>
+</html>
