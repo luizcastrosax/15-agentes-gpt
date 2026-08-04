@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/macro_event.schema.json",
+  "title": "MacroEvent",
+  "description": "Entrada de calendario macro. published_at e obrigatorio no arquivo de entrada: sem ele o backtest usaria o calendario de hoje para decidir no passado.",
+  "type": "object",
+  "required": ["event_id", "name", "scheduled_at", "impact", "published_at"],
+  "properties": {
+    "event_id": { "type": "string" },
+    "name": { "type": "string" },
+    "scheduled_at": { "type": "string", "format": "date-time" },
+    "published_at": { "type": "string", "format": "date-time" },
+    "impact": { "type": "string", "description": "vocabulario da fonte; HIGH/MEDIUM/LOW no config padrao" },
+    "country": { "type": "string" },
+    "source": { "type": "string" }
+  }
+}

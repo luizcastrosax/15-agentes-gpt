@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/telemetry_event.schema.json",
+  "title": "TelemetryEvent",
+  "description": "Envelope de uma linha JSONL de telemetria.",
+  "type": "object",
+  "required": ["schema_version", "event_type", "emitted_at", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "string" },
+    "event_type": { "type": "string", "examples": ["decision"] },
+    "emitted_at": { "type": "string", "format": "date-time" },
+    "payload": { "type": "object" }
+  }
+}

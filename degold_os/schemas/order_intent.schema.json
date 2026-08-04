@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/order_intent.schema.json",
+  "title": "OrderIntent",
+  "description": "Intencao de ordem. Nesta versao nenhum adapter a converte em ordem real.",
+  "type": "object",
+  "required": ["kind", "side", "order_type", "quantity", "price"],
+  "additionalProperties": false,
+  "properties": {
+    "kind": { "enum": ["ENTRY", "STOP_LOSS", "TAKE_PROFIT", "FLATTEN"] },
+    "side": { "enum": ["LONG", "SHORT"] },
+    "order_type": { "enum": ["MARKET", "LIMIT", "STOP", "STOP_LIMIT"] },
+    "quantity": { "type": "integer", "minimum": 1 },
+    "price": { "type": ["number", "null"] },
+    "stop_price": { "type": ["number", "null"] },
+    "time_in_force": { "enum": ["DAY", "GTC", "IOC"] },
+    "client_tag": { "type": "string" }
+  }
+}

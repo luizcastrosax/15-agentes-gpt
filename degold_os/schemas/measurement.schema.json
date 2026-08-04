@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/measurement.schema.json",
+  "title": "Measurement",
+  "description": "Valor numerico com proveniencia. Ausencia e representada por value=null com source=MISSING e um campo reason — nunca por 0.",
+  "type": "object",
+  "required": ["value", "unit", "source"],
+  "properties": {
+    "value": { "type": ["number", "null"] },
+    "unit": { "type": "string" },
+    "source": { "enum": ["DIRECT", "DERIVED", "PROXY", "SYNTHETIC", "MISSING"] },
+    "proxy_for": {
+      "type": ["string", "null"],
+      "description": "obrigatorio e nao-nulo quando source=PROXY: nomeia a grandeza substituida"
+    },
+    "method": { "type": "string" },
+    "sample_size": { "type": ["integer", "null"] },
+    "reason": { "type": "string", "description": "presente quando source=MISSING" },
+    "expected_source": { "type": "string" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "source": { "const": "PROXY" } }, "required": ["source"] },
+      "then": { "required": ["proxy_for"], "properties": { "proxy_for": { "type": "string" } } }
+    },
+    {
+      "if": { "properties": { "source": { "const": "MISSING" } }, "required": ["source"] },
+      "then": { "required": ["reason"], "properties": { "value": { "const": null } } }
+    }
+  ]
+}

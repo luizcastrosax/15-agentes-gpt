@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/decision_record.schema.json",
+  "title": "DecisionRecord",
+  "description": "Registro auditavel de uma avaliacao. Saida canonica do Decision Orchestrator e unidade da telemetria.",
+  "type": "object",
+  "required": [
+    "decision_id", "as_of", "instrument", "execution_mode", "session_phase",
+    "decision", "gates", "trade_plan", "assessments",
+    "code_version", "ruleset_version", "config_hash", "inputs_digest"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "decision_id": { "type": "string" },
+    "as_of": { "type": "string", "format": "date-time" },
+    "instrument": { "type": "string" },
+    "execution_mode": {
+      "enum": ["READ_ONLY", "SHADOW", "LIVE"],
+      "description": "LIVE existe no enum mas e recusado no boot desta versao"
+    },
+    "session_phase": {
+      "enum": ["ASIA", "LONDON", "PRE_NY", "NY_OPEN", "NY_MIDDAY", "NY_CLOSE", "OUT_OF_SCOPE", "MARKET_CLOSED", "UNKNOWN"]
+    },
+    "decision": {
+      "enum": ["NO_TRADE", "OBSERVE", "SHADOW_INTENT", "LIVE_ORDER"],
+      "description": "LIVE_ORDER nunca e emitido nesta versao"
+    },
+    "gates": {
+      "type": "object",
+      "required": ["results", "short_circuited_at"],
+      "additionalProperties": false,
+      "properties": {
+        "results": {
+          "type": "array",
+          "items": { "$ref": "https://degold.local/schemas/gate_result.schema.json" }
+        },
+        "short_circuited_at": { "type": ["string", "null"] }
+      }
+    },
+    "trade_plan": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "https://degold.local/schemas/trade_plan.schema.json" }
+      ],
+      "description": "obrigatorio quando decision=SHADOW_INTENT; proibido quando decision=NO_TRADE"
+    },
+    "assessments": {
+      "type": "object",
+      "description": "saidas serializadas de cada engine, para auditoria completa"
+    },
+    "code_version": { "type": "string" },
+    "ruleset_version": { "type": "string" },
+    "config_hash": { "type": "string" },
+    "inputs_digest": { "type": "string" },
+    "eval_ms": { "type": ["number", "null"] },
+    "warnings": { "type": "array", "items": { "type": "string" } }
+  }
+}

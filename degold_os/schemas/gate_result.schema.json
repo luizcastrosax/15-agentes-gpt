@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/gate_result.schema.json",
+  "title": "GateResult",
+  "description": "Veredito de um Decision Gate. Status diferente de PASS exige ao menos uma razao legivel.",
+  "type": "object",
+  "required": ["gate", "status", "reasons", "evidence", "critical", "uses_proxy"],
+  "additionalProperties": false,
+  "properties": {
+    "gate": {
+      "enum": ["G0_DATA", "G1_MACRO", "G2_REGIME", "G3_LIQUIDITY", "G4_INTERACTION",
+               "G5_FLOW", "G6_EXECUTION", "G7_RISK", "G8_POSITION", "G9_EDGE_MATURITY"]
+    },
+    "status": { "enum": ["PASS", "CONDITIONAL", "FAIL", "NOT_AVAILABLE"] },
+    "reasons": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "vazio somente quando status=PASS"
+    },
+    "evidence": { "type": "object", "description": "insumos que sustentam o veredito" },
+    "critical": {
+      "type": "boolean",
+      "description": "true = FAIL neste gate forca NO_TRADE imediato"
+    },
+    "uses_proxy": {
+      "type": "boolean",
+      "description": "true impede status=PASS (rebaixamento automatico para CONDITIONAL)"
+    }
+  }
+}

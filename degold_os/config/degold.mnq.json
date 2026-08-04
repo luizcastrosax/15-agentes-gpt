@@ -1,0 +1,129 @@
+{
+  "_doc": "Configuracao MVP: MNQ, Pre-NY + NY Open, setup sweep+rejeicao. Toda alteracao aqui muda config_hash e portanto a identidade de auditoria das decisoes.",
+
+  "runtime": {
+    "execution_mode": "READ_ONLY",
+    "code_version": "0.1.0",
+    "ruleset_version": "2026.08.0",
+    "ingestion_latency_ms": 250
+  },
+
+  "instrument_ref": "instruments/mnq.json",
+
+  "session": {
+    "timezone": "America/New_York",
+    "trading_weekdays": [0, 1, 2, 3, 4],
+    "windows": [
+      { "name": "ASIA",      "start": "18:00", "end": "03:00", "tradable": false },
+      { "name": "LONDON",    "start": "03:00", "end": "07:00", "tradable": false },
+      { "name": "PRE_NY",    "start": "07:00", "end": "09:30", "tradable": true  },
+      { "name": "NY_OPEN",   "start": "09:30", "end": "11:00", "tradable": true  },
+      { "name": "NY_MIDDAY", "start": "11:00", "end": "14:00", "tradable": false },
+      { "name": "NY_CLOSE",  "start": "14:00", "end": "17:00", "tradable": false }
+    ]
+  },
+
+  "data_quality": {
+    "required_timeframes": ["H4", "M15", "M5", "M2", "M1"],
+    "min_bars": { "H4": 60, "M15": 120, "M5": 120, "M2": 60, "M1": 60 },
+    "max_staleness_multiple": 2.5,
+    "max_feed_staleness_seconds": 90
+  },
+
+  "macro": {
+    "require_calendar": true,
+    "blackout_before_seconds": 900,
+    "blackout_after_seconds": 900,
+    "blocking_impacts": ["HIGH"]
+  },
+
+  "regime": {
+    "htf": "H4",
+    "mtf": "M15",
+    "atr_period": 14,
+    "atr_percentile_lookback": 60,
+    "ema_fast": 20,
+    "ema_slow": 50,
+    "vol_percentile_bounds": [0.2, 0.6, 0.9],
+    "allowed_regimes": ["TREND_UP", "TREND_DOWN", "BALANCE"]
+  },
+
+  "structure": {
+    "timeframe": "M2",
+    "swing_lookback": 2,
+    "min_break_ticks": 1.0
+  },
+
+  "liquidity": {
+    "detection_timeframe": "M5",
+    "pool_timeframe": "M15",
+    "swing_lookback": 2,
+    "equal_level_tolerance_ticks": 4.0,
+    "min_penetration_ticks": 2.0,
+    "max_penetration_ticks": 40.0,
+    "confirmation_bars": 1,
+    "sweep_validity_bars": 6,
+    "max_pools_per_side": 4
+  },
+
+  "acceptance": {
+    "timeframe": "M1",
+    "evaluation_bars": 3,
+    "max_time_beyond_ratio": 0.34,
+    "min_rejection_wick_ratio": 0.3
+  },
+
+  "flow": {
+    "timeframe": "M1",
+    "lookback_bars": 20,
+    "min_volume_ratio": 1.2,
+    "allow_proxy": true
+  },
+
+  "execution": {
+    "entry_timeframe": "M1",
+    "entry_offset_ticks": 1.0,
+    "stop_buffer_ticks": 4.0,
+    "min_stop_ticks": 8.0,
+    "max_stop_ticks": 120.0,
+    "target_r_multiple": 2.0,
+    "min_rr_net": 1.5,
+    "assumed_slippage_ticks": 1.0,
+    "assumed_spread_ticks": 1.0,
+    "validity_bars": 5
+  },
+
+  "risk": {
+    "max_risk_pct_per_trade": 0.25,
+    "daily_loss_limit_pct": 0.75,
+    "max_trades_per_session": 3,
+    "max_consecutive_losses": 2,
+    "max_contracts": 2,
+    "block_on_unknown_state": true
+  },
+
+  "gates": {
+    "_doc_max_conditional": "O MVP produz CONDITIONAL estrutural em G3 (pools sao proxy de liquidez em repouso), G4 (aceitacao medida por fechamento e proxy de tempo aceito), G5 (fluxo e proxy de OHLCV) e G6 (custo estimado quando nao ha bid/ask). Sao 4 por construcao. O limite 5 admite um CONDITIONAL adicional. Reduzir este numero e o objetivo conforme fontes reais (tick data, book, cotacao) substituirem os proxies.",
+    "treat_not_available_as": "FAIL",
+    "non_critical_gates": [],
+    "max_conditional_gates": 5
+  },
+
+  "maturity": {
+    "setup_id": "mnq_sweep_rejection_v1",
+    "stage": "RESEARCH",
+    "oos_completed": false,
+    "walk_forward_completed": false,
+    "sample_size": null,
+    "historical_confidence": null,
+    "evidence_ref": null,
+    "min_stage_for_shadow": "SHADOW_MODE"
+  },
+
+  "telemetry": {
+    "enabled": true,
+    "sink": "jsonl",
+    "path": "artifacts/telemetry/decisions.jsonl",
+    "log_all_decisions": true
+  }
+}

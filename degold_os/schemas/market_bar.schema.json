@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/market_bar.schema.json",
+  "title": "MarketBar",
+  "description": "Barra OHLCV com carimbos causais. Entrada do sistema. volume null significa AUSENTE, nunca zero.",
+  "type": "object",
+  "required": ["timeframe", "open_time", "close_time", "open", "high", "low", "close", "volume", "timing"],
+  "additionalProperties": false,
+  "properties": {
+    "timeframe": { "enum": ["H4", "M15", "M5", "M2", "M1"] },
+    "open_time": { "type": "string", "format": "date-time", "description": "inicio do intervalo, ISO-8601 com fuso" },
+    "close_time": { "type": "string", "format": "date-time", "description": "fim do intervalo (exclusivo)" },
+    "open": { "type": "number" },
+    "high": { "type": "number" },
+    "low": { "type": "number" },
+    "close": { "type": "number" },
+    "volume": { "type": ["number", "null"], "minimum": 0, "description": "null = indisponivel" },
+    "timing": { "$ref": "https://degold.local/schemas/event_timing.schema.json" }
+  }
+}

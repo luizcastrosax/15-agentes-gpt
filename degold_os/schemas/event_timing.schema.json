@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/event_timing.schema.json",
+  "title": "EventTiming",
+  "description": "Os quatro carimbos causais obrigatorios de todo fato do sistema. Invariantes (verificadas em codigo, nao expressaveis em JSON Schema): detected_at <= confirmed_at <= available_at <= invalidated_at.",
+  "type": "object",
+  "required": ["detected_at", "confirmed_at", "available_at", "invalidated_at"],
+  "additionalProperties": false,
+  "properties": {
+    "detected_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "quando o sistema percebeu o fato pela primeira vez"
+    },
+    "confirmed_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "quando o fato deixou de ser provisorio; null = ainda nao confirmado"
+    },
+    "available_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "a partir de quando o fato pode ser USADO; unico carimbo consultado por queries as-of"
+    },
+    "invalidated_at": {
+      "type": ["string", "null"],
+      "format": "date-time",
+      "description": "quando o fato deixou de valer; null = ainda valido"
+    }
+  }
+}

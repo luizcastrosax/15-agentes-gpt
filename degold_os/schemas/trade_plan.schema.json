@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://degold.local/schemas/trade_plan.schema.json",
+  "title": "TradePlan",
+  "description": "Plano autocontido de uma operacao candidata. Em v1 nunca vira ordem real.",
+  "type": "object",
+  "required": [
+    "side", "entry_price", "stop_price", "target_price", "quantity",
+    "risk_points", "reward_points", "risk_money", "rr", "cost_points", "rr_net",
+    "entry_intent", "stop_intent", "target_intent"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "side": { "enum": ["LONG", "SHORT"] },
+    "entry_price": { "type": "number" },
+    "stop_price": { "type": "number" },
+    "target_price": { "type": "number" },
+    "quantity": { "type": "integer", "minimum": 1 },
+    "risk_points": { "type": "number", "exclusiveMinimum": 0 },
+    "reward_points": { "type": "number" },
+    "risk_money": { "type": "number" },
+    "rr": { "type": "number", "description": "R:R bruto, sem custo. Nao usado em nenhum gate." },
+    "cost_points": {
+      "oneOf": [
+        { "type": "null" },
+        { "$ref": "https://degold.local/schemas/measurement.schema.json" }
+      ],
+      "description": "spread + slippage assumido; PROXY quando nao ha bid/ask"
+    },
+    "rr_net": {
+      "type": ["number", "null"],
+      "description": "R:R liquido de custo. E este, e nao rr, que o gate G6 avalia."
+    },
+    "entry_intent": { "$ref": "https://degold.local/schemas/order_intent.schema.json" },
+    "stop_intent": { "$ref": "https://degold.local/schemas/order_intent.schema.json" },
+    "target_intent": { "$ref": "https://degold.local/schemas/order_intent.schema.json" },
+    "valid_until": { "type": ["string", "null"], "format": "date-time" },
+    "invalidation_price": { "type": ["number", "null"] },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}
