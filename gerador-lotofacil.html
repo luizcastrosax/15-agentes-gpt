@@ -220,6 +220,7 @@ footer p{font-size:12px;color:var(--text3);}
 
         <div class="mini-actions">
           <button class="btn sec" id="auto-btn">🎲 Sugerir grupo (18)</button>
+          <button class="btn sec" id="last-btn">♻️ Sugerir do último</button>
           <button class="btn ghost" id="clear-btn">Limpar</button>
         </div>
       </div>
@@ -360,6 +361,10 @@ footer p{font-size:12px;color:var(--text3);}
 (function(){
   "use strict";
 
+  // trava de inicialização única (evita volante/eventos duplicados se o script rodar 2x)
+  if(window.__lotofacilLabLoaded){return;}
+  window.__lotofacilLabLoaded=true;
+
   var MIOLO=new Set([7,8,9,12,13,14,17,18,19]);
   var LOG2_5=Math.log2(5), selected=new Set(), fixed=new Set(), lastGames=[];
   var gameSize=15;
@@ -380,6 +385,7 @@ footer p{font-size:12px;color:var(--text3);}
   }
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 
+  volante.innerHTML='';
   for(var n=1;n<=25;n++){
     var b=document.createElement('button');b.className='dez';b.textContent=fmt(n);b.dataset.n=n;
     b.addEventListener('click',function(e){
@@ -405,6 +411,17 @@ footer p{font-size:12px;color:var(--text3);}
     var per=[4,4,4,3,3];shuffle(per);
     for(var r=0;r<5;r++){var p=[];for(var n=r*5+1;n<=r*5+5;n++)p.push(n);shuffle(p);p.slice(0,per[r]).forEach(function(x){selected.add(x);});}
     renderVolante();flash('Grupo diversificado de 18 dezenas criado.');
+  });
+  document.getElementById('last-btn').addEventListener('click',function(){
+    var prev=parseInput('prev-result',15);
+    if(!prev)return flash('Cole as 15 dezenas do último resultado no campo "Repetição do concurso anterior".');
+    var last=Array.from(prev),others=[];
+    for(var n=1;n<=25;n++)if(!prev.has(n))others.push(n);
+    shuffle(last);shuffle(others);
+    selected.clear();fixed.clear();
+    last.slice(0,9).concat(others.slice(0,9)).forEach(function(x){selected.add(x);});
+    renderVolante();
+    flash('Base de 18: 9 dezenas do último sorteio + 9 novas (repetição média histórica ≈ 9).');
   });
 
   document.querySelectorAll('#seg-size button').forEach(function(btn){btn.addEventListener('click',function(){
