@@ -134,6 +134,26 @@ footer p{font-size:12px;color:var(--text3);}
     <div id="bt-out"></div>
   </div>
 
+  <!-- WALK-FORWARD DA ESTRATÉGIA -->
+  <div class="panel">
+    <h2>🎯 Backtest da estratégia (walk-forward)</h2>
+    <p class="hint">Responde exatamente: <b>"se eu montasse a base pelo concurso anterior e gerasse os jogos, quantos acertariam o concurso seguinte?"</b> — repetido em centenas de concursos reais, comparado com jogos aleatórios.</p>
+    <div class="field">
+      <label>Base = as 18 dezenas mais frequentes nos últimos <b id="wf-w-lbl" style="color:var(--blue-light)">15</b> concursos</label>
+      <div class="row-num"><input type="range" id="wf-w" min="5" max="30" step="5" value="15"/><span class="val" id="wf-w-val">15</span></div>
+    </div>
+    <div class="field">
+      <label>Jogos gerados por concurso</label>
+      <div class="row-num"><input type="range" id="wf-q" min="1" max="10" step="1" value="5"/><span class="val" id="wf-q-val">5</span></div>
+    </div>
+    <div class="field">
+      <label>Quantos concursos testar (sempre contra o seguinte)</label>
+      <div class="row-num"><input type="range" id="wf-steps" min="50" max="600" step="50" value="300"/><span class="val" id="wf-steps-val">300</span></div>
+    </div>
+    <button class="btn" id="wf-btn" disabled>RODAR WALK-FORWARD</button>
+    <div id="wf-out"></div>
+  </div>
+
 </div>
 
 <footer><p>Dados: repositório público loteria.json · Ferramenta educativa · Não afiliada à Caixa · Jogue com responsabilidade · +18</p></footer>
@@ -205,6 +225,7 @@ footer p{font-size:12px;color:var(--text3);}
     document.getElementById('hist-status').style.display='none';
     document.getElementById('hist-body').style.display='block';
     document.getElementById('run-btn').disabled=false;
+    document.getElementById('wf-btn').disabled=false;
   }
 
   // ── Teste de aleatoriedade (qui-quadrado de uniformidade + repetição) ──
@@ -307,6 +328,69 @@ footer p{font-size:12px;color:var(--text3);}
       'O ganho comprovável está no <b>fechamento</b> (garantias), não em prever dezenas.</div>';
     var cal='<p class="note">Filtro calibrado no treino → soma ['+d.cal.sumLo+'–'+d.cal.sumHi+'], dispersão ['+d.cal.dispLo.toFixed(2)+'–'+d.cal.dispHi.toFixed(2)+'], ímpares aceitos: '+d.cal.odd.join(', ')+'. Simulação: '+M+' apostas por sorteio de teste.</p>';
     document.getElementById('bt-out').innerHTML='<div class="ab">'+col('rnd','🎲 Aleatório',R)+col('flt','🎯 Com filtros',F)+'</div>'+verdict+cal;
+  }
+
+  // ── Walk-forward da estratégia ──
+  var wfW=document.getElementById('wf-w'),wfQ=document.getElementById('wf-q'),wfS=document.getElementById('wf-steps');
+  wfW.addEventListener('input',function(){document.getElementById('wf-w-val').textContent=wfW.value;document.getElementById('wf-w-lbl').textContent=wfW.value;});
+  wfQ.addEventListener('input',function(){document.getElementById('wf-q-val').textContent=wfQ.value;});
+  wfS.addEventListener('input',function(){document.getElementById('wf-steps-val').textContent=wfS.value;});
+
+  var WF_SRC=[
+    'function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.random()*(i+1)|0;var t=a[i];a[i]=a[j];a[j]=t;}return a;}',
+    'function overlap(a,b){var s={};for(var i=0;i<b.length;i++)s[b[i]]=1;var n=0;for(var i=0;i<a.length;i++)if(s[a[i]])n++;return n;}',
+    'function topBase(win){var f=new Array(26).fill(0);for(var i=0;i<win.length;i++)for(var j=0;j<win[i].length;j++)f[win[i][j]]++;var arr=[];for(var n=1;n<=25;n++)arr.push([n,f[n]]);arr.sort(function(a,b){return b[1]-a[1]||a[0]-b[0];});var o=[];for(var k=0;k<18;k++)o.push(arr[k][0]);return o;}',
+    'function games15(base,q){var pool=[],seen={};for(var t=0;t<q*8;t++){var p=base.slice();shuffle(p);var g=p.slice(0,15).sort(function(a,b){return a-b;});var k=g.join("-");if(!seen[k]){seen[k]=1;pool.push(g);}}var out=[pool.shift()];while(out.length<q&&pool.length){var bi=0,bs=1e9;for(var i=0;i<pool.length;i++){var s=0;for(var j=0;j<out.length;j++)s+=overlap(pool[i],out[j]);if(s<bs){bs=s;bi=i;}}out.push(pool.splice(bi,1)[0]);}return out;}',
+    'function randGame(){var p=[];for(var i=1;i<=25;i++)p.push(i);shuffle(p);return p.slice(0,15);}',
+    'function hitset(g,set){var c=0;for(var i=0;i<g.length;i++)if(set[g[i]])c++;return c;}',
+    'function mk(){return{n:0,t11:0,t12:0,t13:0,t14:0,t15:0};}',
+    'function acc(o,h){o.n++;if(h>=11)o.t11++;if(h>=12)o.t12++;if(h>=13)o.t13++;if(h>=14)o.t14++;if(h>=15)o.t15++;}',
+    'self.onmessage=function(e){var draws=e.data.draws,W=e.data.W,Q=e.data.Q,STEPS=e.data.STEPS;',
+    'var strat=mk(),rnd=mk();var start=Math.max(W,draws.length-STEPS-1);',
+    'for(var i=start;i<draws.length-1;i++){var base=topBase(draws.slice(i-W+1,i+1));var set={};for(var z=0;z<15;z++)set[draws[i+1][z]]=1;',
+    'var gs=games15(base,Q);for(var g=0;g<gs.length;g++)acc(strat,hitset(gs[g],set));',
+    'for(var q=0;q<Q;q++)acc(rnd,hitset(randGame(),set));',
+    'if((i-start)%40===0)postMessage({progress:(i-start)/(draws.length-1-start)});}',
+    'postMessage({done:true,strat:strat,rnd:rnd,steps:(draws.length-1-start)});};'
+  ].join('\n');
+
+  var wfWorker=null;
+  document.getElementById('wf-btn').addEventListener('click',function(){
+    if(!draws.length)return;
+    var btn=this;btn.disabled=true;btn.innerHTML='<span class="spinner" style="border-top-color:#04121f"></span> Rodando…';
+    var out=document.getElementById('wf-out');
+    out.innerHTML='<div class="status"><span class="spinner"></span>Simulando concurso a concurso…</div>';
+    var W=+wfW.value,Q=+wfQ.value,STEPS=+wfS.value;
+    if(wfWorker)wfWorker.terminate();
+    var blob=new Blob([WF_SRC],{type:'application/javascript'});
+    wfWorker=new Worker(URL.createObjectURL(blob));
+    wfWorker.onmessage=function(e){
+      if(e.data.progress!==undefined){out.innerHTML='<div class="status"><span class="spinner"></span>Simulando… '+Math.round(e.data.progress*100)+'%</div>';return;}
+      if(e.data.done){btn.disabled=false;btn.textContent='RODAR WALK-FORWARD';showWF(e.data,W,Q);}
+    };
+    wfWorker.postMessage({draws:draws,W:W,Q:Q,STEPS:STEPS});
+  });
+
+  function showWF(d,W,Q){
+    var S=d.strat,R=d.rnd;
+    function col(cls,head,o){
+      return '<div class="ab-col '+cls+'"><div class="ab-head">'+head+'</div>'+
+        '<div class="ab-row"><span class="k">Jogos testados</span><span class="v">'+o.n.toLocaleString('pt-BR')+'</span></div>'+
+        '<div class="ab-row"><span class="k">11+ pontos</span><span class="v">'+(100*o.t11/o.n).toFixed(2)+'%</span></div>'+
+        '<div class="ab-row"><span class="k">12+ pontos</span><span class="v">'+(100*o.t12/o.n).toFixed(2)+'%</span></div>'+
+        '<div class="ab-row"><span class="k">13+ pontos</span><span class="v">'+(100*o.t13/o.n).toFixed(3)+'%</span></div>'+
+        '<div class="ab-row"><span class="k">14+ / 15</span><span class="v">'+o.t14+' / '+o.t15+'</span></div>'+
+        '</div>';
+    }
+    var d11=100*S.t11/S.n-100*R.t11/R.n;
+    var better13=(S.t13/S.n)>(R.t13/R.n); // faixa que realmente importa
+    var head = !better13
+      ? 'Sem vantagem real — no 13+ a estratégia empata ou perde'
+      : (Math.abs(d11)<1.5 ? 'Estratégia ≈ aleatório (dentro do ruído)' : 'Pequena diferença no 11+ (provável ruído de amostra)');
+    var verdict='<div class="verdict"><span class="big">📌 '+head+'</span>'+
+      'Walk-forward em <b>'+d.steps.toLocaleString('pt-BR')+'</b> concursos: a cada um, a base foi montada com as 18 mais frequentes dos '+W+' anteriores e '+Q+' jogos foram conferidos <b>contra o concurso seguinte</b> (que a estratégia nunca viu). '+
+      'As taxas ficam praticamente iguais às aleatórias, e o 11+ oscila com o tamanho da amostra (aumente os concursos para estabilizar). <b>Confirma: escolher a base pelo histórico não prevê o próximo resultado.</b> O ganho real é organização e garantias (fechamento), não previsão.</div>';
+    document.getElementById('wf-out').innerHTML='<div class="ab">'+col('rnd','🎲 Aleatório',R)+col('flt','🎯 Estratégia',S)+'</div>'+verdict;
   }
 })();
 </script>
