@@ -287,6 +287,10 @@ footer p{font-size:12px;color:var(--text3);}
           <input type="checkbox" id="f-diversificar" checked/>
           <div class="txt"><label for="f-diversificar">Diversificar jogos (anti-clones)<span class="badge">Pro</span></label><p>Ao gerar vários jogos, minimiza a repetição entre eles — evita apostar quase a mesma coisa várias vezes.</p></div>
         </div>
+        <div class="chk">
+          <input type="checkbox" id="f-populares" checked/>
+          <div class="txt"><label for="f-populares">Evitar padrões populares<span class="badge">Pro</span></label><p>Descarta jogos que muita gente costuma marcar (sequências, "os cincos", progressões). Não muda a chance — mas, se ganhar, você divide o prêmio com menos gente.</p></div>
+        </div>
       </div>
     </div>
 
@@ -444,7 +448,8 @@ footer p{font-size:12px;color:var(--text3);}
       exclusao:document.getElementById('f-exclusao').checked,
       entropia:document.getElementById('f-entropia').checked,
       dispersao:document.getElementById('f-dispersao').checked,
-      distancia:document.getElementById('f-distancia').checked
+      distancia:document.getElementById('f-distancia').checked,
+      populares:document.getElementById('f-populares').checked
     };
   }
 
@@ -514,6 +519,16 @@ footer p{font-size:12px;color:var(--text3);}
       if(s.disp<dLo||s.disp>dHi)return false;
     }
     if(f.distancia){ if(s.maxSeq>=5)return false; }
+    if(f.populares){
+      // padrões que muita gente marca (evitar divisão de prêmio) — não altera a probabilidade
+      if(game.filter(function(n){return n%5===0;}).length>=4)return false;   // "os cincos": 5 10 15 20 25
+      if(s.maxSeq>=4)return false;                                            // sequências óbvias (>=4 seguidos)
+      if(game.filter(function(n){return n<=15;}).length>=13)return false;     // quase tudo na 1ª metade
+      if(game.filter(function(n){return n>=11;}).length>=13)return false;     // quase tudo na 2ª metade
+      var sd=game.slice().sort(function(a,b){return a-b;}),ap=true;
+      for(var gi=2;gi<sd.length;gi++){if(sd[gi]-sd[gi-1]!==sd[1]-sd[0]){ap=false;break;}}
+      if(ap)return false;                                                     // progressão aritmética (gaps iguais)
+    }
     return true;
   }
 
