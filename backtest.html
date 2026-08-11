@@ -111,6 +111,13 @@ footer p{font-size:12px;color:var(--text3);}
     </div>
   </div>
 
+  <!-- TESTE DE ALEATORIEDADE -->
+  <div class="panel">
+    <h2>🔬 Teste de aleatoriedade</h2>
+    <p class="hint">A prova, não a promessa: se houvesse um padrão explorável, apareceria aqui. Rodado sobre todos os concursos carregados.</p>
+    <div id="randomness"><div class="status"><span class="spinner"></span>Aguardando o histórico…</div></div>
+  </div>
+
   <!-- BACKTEST A/B -->
   <div class="panel">
     <h2>🧪 Backtest: filtros vs. aleatório</h2>
@@ -194,9 +201,40 @@ footer p{font-size:12px;color:var(--text3);}
         '<span class="pct">'+perc+'%</span></div>';
     }
     document.getElementById('freq').innerHTML=html;
+    renderRandomness(freq,total);
     document.getElementById('hist-status').style.display='none';
     document.getElementById('hist-body').style.display='block';
     document.getElementById('run-btn').disabled=false;
+  }
+
+  // ── Teste de aleatoriedade (qui-quadrado de uniformidade + repetição) ──
+  function renderRandomness(freq,total){
+    var expected=total*15/25; // esperado por dezena
+    var chi=0;
+    for(var n=1;n<=25;n++){var o=freq[n];chi+=(o-expected)*(o-expected)/expected;}
+    var gl=24, c05=36.42, c01=42.98;
+    var veredito,cor;
+    if(chi>c01){veredito='Desvio muito significativo (1%)';cor='var(--red-light)';}
+    else if(chi>c05){veredito='Desvio no limite (5%)';cor='var(--gold)';}
+    else{veredito='Sem viés detectável — comportamento uniforme';cor='var(--green-light)';}
+    // repetição observada vs teórica (E[R]=9)
+    var reps=[];for(var i=1;i<draws.length;i++){var p={};draws[i-1].forEach(function(x){p[x]=1;});var r=0;draws[i].forEach(function(x){if(p[x])r++;});reps.push(r);}
+    var meanR=reps.reduce(function(a,b){return a+b;},0)/reps.length;
+    var html='';
+    html+='<div class="tiles">'+
+      '<div class="tile"><div class="v" style="color:'+cor+'">'+chi.toFixed(1)+'</div><div class="k">Qui-quadrado (X²)</div></div>'+
+      '<div class="tile"><div class="v blue">'+gl+'</div><div class="k">Graus de liberdade</div></div>'+
+      '<div class="tile"><div class="v blue">'+c05+'</div><div class="k">Limite p/ viés (5%)</div></div>'+
+      '<div class="tile"><div class="v blue">'+meanR.toFixed(2)+'</div><div class="k">Repetição média (teórica 9,00)</div></div>'+
+      '</div>';
+    html+='<div class="verdict"><span class="big" style="color:'+cor+'">📌 '+veredito+'</span>'+
+      'O X² observado ('+chi.toFixed(1)+') está <b>'+(chi<=c05?'abaixo':'acima')+'</b> do limite de '+c05+' (gl 24, 5%). '+
+      (chi<=c05
+        ? 'Ou seja: as 25 dezenas saem com frequência estatisticamente igual — <b>nenhum padrão explorável</b>. E a repetição média ('+meanR.toFixed(2)+') bate com o acaso puro (teórica 9,00).'
+        : 'Há um desvio a investigar, mas cuidado: testar muitas hipóteses gera "achados" por acaso (é preciso validação fora da amostra e correção para múltiplos testes).')+
+      '</div>';
+    html+='<p class="note">Teste de uniformidade aproximado (as contagens são levemente dependentes, pois cada sorteio tira exatamente 15 de 25). Serve para mostrar que não há viés grosseiro — não para prever dezenas.</p>';
+    document.getElementById('randomness').innerHTML=html;
   }
   function tile(v,k,blue){return '<div class="tile"><div class="v'+(blue?' blue':'')+'">'+v+'</div><div class="k">'+k+'</div></div>';}
 
