@@ -208,6 +208,11 @@ footer p{font-size:12px;color:var(--text3);}
 
     <!-- ══ CONFIG ══ -->
     <div>
+      <div class="panel" id="latest-panel" style="margin-bottom:22px;">
+        <h2>🎲 Último concurso <span style="font-size:11px;color:var(--text3);font-weight:600">(automático)</span></h2>
+        <div id="latest-body"><p class="hint" style="margin:0">Carregando o último resultado sorteado…</p></div>
+      </div>
+
       <div class="panel">
         <h2>⚙️ Grupo-base de dezenas</h2>
         <p class="hint">Clique para escolher de 15 a 20 dezenas. Um 2º clique <b style="color:var(--gold)">fixa</b> a dezena (entra em todos os jogos). O ideal é 18 a 20 para fechamentos.</p>
@@ -577,7 +582,60 @@ footer p{font-size:12px;color:var(--text3);}
     toast.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);';document.body.appendChild(toast);
     setTimeout(function(){if(toast){toast.remove();toast=null;}},2600);
   }
+  // ── Painel "Último concurso" ao vivo (com janela selecionável) ──
+  var DATA_URL='https://raw.githubusercontent.com/guilhermeasn/loteria.json/master/data/lotofacil.json';
+  var HIST=null, latestNo=null;
+  function freqLastN(N){
+    var slice=HIST.slice(Math.max(0,HIST.length-N)),f=new Array(26).fill(0);
+    slice.forEach(function(g){g.forEach(function(n){f[n]++;});});
+    var arr=[];for(var n=1;n<=25;n++)arr.push({n:n,f:f[n]});
+    arr.sort(function(a,b){return b.f-a.f||a.n-b.n;});
+    return {arr:arr,count:slice.length};
+  }
+  function renderLatest(N){
+    var body=document.getElementById('latest-body');
+    var last=HIST[HIST.length-1].slice().sort(function(a,b){return a-b;});
+    var fr=freqLastN(N);
+    var html='<div style="font-size:13px;color:var(--text2);margin-bottom:8px">Concurso <b style="color:var(--green)">'+latestNo+'</b> — dezenas sorteadas:</div>';
+    html+='<div class="balls" style="margin-bottom:14px">'+last.map(function(n){return '<div class="ball">'+fmt(n)+'</div>';}).join('')+'</div>';
+    html+='<label style="display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">Analisar os últimos concursos</label>';
+    html+='<div class="seg" id="seg-lastn">'+[1,5,10,20,50].map(function(v){return '<button data-v="'+v+'"'+(v===N?' class="on"':'')+'>'+(v===1?'Último':v)+'</button>';}).join('')+'</div>';
+    if(N>1){
+      var top=fr.arr.slice(0,18).map(function(o){return o.n;}).sort(function(a,b){return a-b;});
+      html+='<div style="font-size:12px;color:var(--text3);margin:12px 0 8px">18 dezenas mais frequentes nos últimos <b style="color:var(--text2)">'+fr.count+'</b> concursos:</div>';
+      html+='<div class="mini-balls">'+top.map(function(n){return '<div class="mb hit">'+fmt(n)+'</div>';}).join('')+'</div>';
+      html+='<div class="mini-actions"><button class="btn sec" id="use-freq">📥 Montar base com estas 18</button></div>';
+    } else {
+      html+='<div class="mini-actions"><button class="btn sec" id="use-freq">♻️ Montar base (9 do último + 9 novas)</button></div>';
+    }
+    html+='<p class="hint" style="margin-top:10px;color:var(--gold)">⚠️ Frequência recente é <b>descritiva</b>, não preditiva — dezena "quente/atrasada" não tem chance maior. É uma forma de escolher, não de prever.</p>';
+    body.innerHTML=html;
+    document.getElementById('prev-result').value=last.map(fmt).join(' ');
+    document.querySelectorAll('#seg-lastn button').forEach(function(btn){btn.addEventListener('click',function(){renderLatest(+btn.dataset.v);});});
+    document.getElementById('use-freq').addEventListener('click',function(){
+      var base;
+      if(N===1){
+        var la=last.slice(),others=[];for(var n=1;n<=25;n++)if(last.indexOf(n)<0)others.push(n);
+        shuffle(la);shuffle(others);base=la.slice(0,9).concat(others.slice(0,9));
+      }else{base=fr.arr.slice(0,18).map(function(o){return o.n;});}
+      selected.clear();fixed.clear();base.forEach(function(x){selected.add(x);});renderVolante();
+      flash('Base de 18 montada a partir dos últimos '+(N===1?'1':N)+' concurso(s).');
+    });
+  }
+  function loadLatest(){
+    var body=document.getElementById('latest-body');
+    fetch(DATA_URL).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
+      var keys=Object.keys(d).map(Number).filter(function(n){return !isNaN(n);}).sort(function(a,b){return a-b;});
+      HIST=keys.map(function(k){return d[String(k)].map(Number);});
+      latestNo=keys[keys.length-1];
+      renderLatest(10);
+    }).catch(function(){
+      body.innerHTML='<p class="hint" style="margin:0;color:var(--gold)">Não foi possível carregar os resultados aqui (dados externos podem estar bloqueados neste modo). Abra pelo <b>site público</b> para ver ao vivo, ou cole o último resultado manualmente no campo "Repetição do concurso anterior".</p>';
+    });
+  }
+
   renderVolante();
+  loadLatest();
 })();
 </script>
 </body>
