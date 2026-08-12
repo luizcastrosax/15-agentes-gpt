@@ -591,6 +591,8 @@ footer p{font-size:12px;color:var(--text3);}
   document.getElementById('hist-btn').addEventListener('click',function(){
     if(!lastGames.length)return flash('Gere seus jogos antes de testar.');
     if(!HIST||!HIST.length)return flash('Preciso do histórico — abra pelo site público (ou aguarde o painel "Último concurso" carregar).');
+    var PZ={11:7,12:14,13:35}; // tabela FIXA da Lotofácil (14 e 15 = rateio variável)
+    var PRECO=3.50;            // custo de 1 aposta simples de 15 dezenas
     var agg={11:0,12:0,13:0,14:0,15:0},rows='';
     lastGames.forEach(function(g,i){
       var d={11:0,12:0,13:0,14:0,15:0};
@@ -600,17 +602,26 @@ footer p{font-size:12px;color:var(--text3);}
         if(h>=11)d[h>15?15:h]++;
       }
       [11,12,13,14,15].forEach(function(k){agg[k]+=d[k];});
-      var tot=d[11]+d[12]+d[13]+d[14]+d[15];
+      var moneyG=d[11]*PZ[11]+d[12]*PZ[12]+d[13]*PZ[13];
       rows+='<div class="conf-game"><span class="g-title" style="min-width:56px">Jogo '+fmt(i+1)+'</span>'+
         '<span style="font-size:11.5px;color:var(--text2)">11:<b>'+d[11]+'</b> · 12:<b>'+d[12]+'</b> · 13:<b>'+d[13]+'</b> · 14:<b>'+d[14]+'</b> · 15:<b>'+d[15]+'</b></span>'+
-        '<span class="conf-badge" style="background:rgba(59,130,246,.16);color:#2563EB">'+tot+' prêmios</span></div>';
+        '<span class="conf-badge" style="background:rgba(59,130,246,.16);color:#2563EB">R$ '+moneyG.toLocaleString('pt-BR')+'</span></div>';
     });
     var totalAll=agg[11]+agg[12]+agg[13]+agg[14]+agg[15];
     var pairs=lastGames.length*HIST.length;
     var rate=(100*totalAll/pairs).toFixed(1);
+    var ganho=agg[11]*PZ[11]+agg[12]*PZ[12]+agg[13]*PZ[13];   // só faixas fixas
+    var gasto=lastGames.length*HIST.length*PRECO;
+    var saldo=ganho-gasto;
+    var brl=function(v){return 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
     var html='<div class="conf-summary">';[15,14,13,12,11].forEach(function(k){html+='<div class="cs'+(agg[k]?' hit-any':'')+'"><div class="n">'+agg[k]+'</div><div class="l">total '+k+'</div></div>';});
     html+='</div>';
-    html+='<div class="summary">Cada um dos <b>'+lastGames.length+'</b> jogos foi conferido contra os <b>'+HIST.length.toLocaleString('pt-BR')+'</b> concursos da história. No total, um jogo teria feito 11+ pontos <b>'+totalAll.toLocaleString('pt-BR')+'</b> vezes — isso é <b>'+rate+'%</b> dos casos, a <b>taxa normal de qualquer jogo</b>. É assim que ferramentas de "montar e testar" exibem números grandes: elas somam milhares de sorteios passados, não preveem o próximo.</div>'+rows;
+    html+='<div class="summary" style="border-color:rgba(211,47,69,.35);background:rgba(211,47,69,.05)">'+
+      '<b style="color:var(--text)">💰 Balanço se você jogasse estes '+lastGames.length+' jogos em TODOS os '+HIST.length.toLocaleString('pt-BR')+' concursos:</b><br>'+
+      'Prêmios (faixas fixas 11-13): <b style="color:var(--green)">'+brl(ganho)+'</b> · Gasto em apostas: <b>'+brl(gasto)+'</b><br>'+
+      'Saldo: <b style="color:'+(saldo>=0?'var(--green)':'var(--red)')+'">'+brl(saldo)+'</b> '+(saldo<0?'(prejuízo)':'')+
+      '<br><span style="font-size:11px;color:var(--text3)">11 pts = R$7 · 12 = R$14 · 13 = R$35 (tabela fixa da Caixa). 14 e 15 são rateio (variável) — não somados aqui.</span></div>';
+    html+='<div class="summary">Cada um dos <b>'+lastGames.length+'</b> jogos foi conferido contra os <b>'+HIST.length.toLocaleString('pt-BR')+'</b> concursos da história. No total, um jogo teria feito 11+ pontos <b>'+totalAll.toLocaleString('pt-BR')+'</b> vezes — <b>'+rate+'%</b> dos casos, a taxa normal de qualquer jogo. O número grande é só a soma de milhares de sorteios; o balanço acima mostra por que somar prêmios pequenos não vira lucro.</div>'+rows;
     document.getElementById('conf-out').innerHTML=html;
   });
 
