@@ -535,7 +535,16 @@ footer p{font-size:12px;color:var(--text3);}
     if(ranked.length)html+='<br>Reprovações por regra (uma combinação pode falhar em várias): '+ranked.map(function(k){return esc(reasonNames[k])+' <code>'+meta.rejects[k]+'</code>';}).join(' · ')+'.';
     if(meta.validCount<meta.want)html+='<br><span style="color:var(--gold)">Solicitadas '+meta.want+', mas somente '+meta.validCount+' passaram. Nenhum filtro foi relaxado.</span>';
     html+='</div>';
-    if(!games.length){box.innerHTML=html+'<div class="empty">Nenhuma combinação passou. Desative conscientemente um filtro ou amplie a base.</div>';document.getElementById('res-actions').style.display='none';return;}
+    if(!games.length){
+      var motivo;
+      if(meta.capacity<=1){
+        motivo='Sua base tem <b>'+meta.base.length+' dezenas</b> e o jogo tem <b>'+gameSize+'</b> — então existe só <b>1 combinação possível</b>, e ela não passou nos filtros. Regerar não muda nada. <b style="color:var(--green-light)">Marque de 16 a 20 dezenas</b> para o gerador ter o que variar.';
+      } else {
+        motivo='As <b>'+meta.capacity.toLocaleString('pt-BR')+'</b> combinações possíveis foram <b>todas reprovadas</b> pelos filtros (veja acima quais mais reprovaram). Amplie a base ou desative um filtro.';
+      }
+      box.innerHTML=html+'<div class="empty" style="border:1px solid rgba(245,166,35,.4);background:rgba(245,166,35,.07);border-radius:12px;color:var(--text2);text-align:left;padding:16px 18px"><b style="color:var(--gold);font-size:15px">⚠️ Nenhum jogo foi gerado</b><br><br>'+motivo+'</div>';
+      document.getElementById('res-actions').style.display='none';return;
+    }
     var c=coverage(games,meta.base);
     html+='<div class="coverage"><div class="c-title">🎯 Cobertura descritiva do portfólio</div><div class="cov-grid">'+
       '<div class="cov-item"><div class="cv blue">'+c.used+'</div><div class="cl">Dezenas usadas</div></div><div class="cov-item"><div class="cv blue">'+c.pct.toFixed(1)+'%</div><div class="cl">Pares da base presentes</div></div>'+
