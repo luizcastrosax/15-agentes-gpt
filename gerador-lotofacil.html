@@ -8,12 +8,12 @@
 <meta name="description" content="Laboratório combinatório da Lotofácil com filtros transparentes, diversificação, auditoria de rejeições e conferência correta de apostas múltiplas."/>
 <style>
 :root{
-  --red:#E8344A;--red-dark:#C41E35;--red-light:#FF4D63;
-  --green:#1DB954;--green-dark:#169040;--green-light:#2EE066;
-  --gold:#F5A623;--blue:#3B82F6;
-  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
-  --border:#2A2A30;
-  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --red:#D32F45;--red-dark:#A61E30;--red-light:#C42A3E;
+  --green:#12924A;--green-dark:#0C6E38;--green-light:#16A855;
+  --gold:#D98A00;--blue:#2563EB;
+  --bg:#EEEBF3;--bg2:#FAF7E8;--bg3:#FFFFFF;--bg4:#F1EEF6;
+  --border:#DAD4E6;
+  --text:#241C30;--text2:#565065;--text3:#857E95;
   --radius:12px;--radius-lg:20px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -88,7 +88,7 @@ button{font-family:inherit;}
 .chk input{width:18px;height:18px;margin-top:3px;accent-color:var(--green);flex-shrink:0;cursor:pointer;}
 .chk .txt label{font-size:14px;font-weight:600;color:var(--text);cursor:pointer;}
 .chk .txt p{font-size:12px;color:var(--text3);}
-.chk .txt .badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;background:rgba(59,130,246,.15);color:#7EB0FF;border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;text-transform:uppercase;}
+.chk .txt .badge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.5px;background:rgba(59,130,246,.15);color:#2563EB;border:1px solid rgba(59,130,246,.3);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;text-transform:uppercase;}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -109,7 +109,7 @@ button{font-family:inherit;}
 .cov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:12px;}
 .cov-item{text-align:center;}
 .cov-item .cv{font-size:24px;font-weight:900;letter-spacing:-1px;line-height:1;color:var(--text);font-variant-numeric:tabular-nums;}
-.cov-item .cv.blue{color:#7EB0FF;}
+.cov-item .cv.blue{color:#2563EB;}
 .cov-item .cl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:5px;}
 .bar{height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;margin-top:10px;}
 .bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--green-light));border-radius:3px;}
@@ -134,13 +134,13 @@ button{font-family:inherit;}
 .stat-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
 .tag{font-size:10px;font-weight:700;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:3px 7px;}
 .tag b{color:var(--green);}
-.tag.blue b{color:#7EB0FF;}
+.tag.blue b{color:#2563EB;}
 .res-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
 
 .summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);}
 .summary b{color:var(--text);}
 .audit{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.25);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.6;}
-.audit b{color:#7EB0FF}.audit code{color:var(--gold);font-family:inherit;font-weight:700}
+.audit b{color:#2563EB}.audit code{color:var(--gold);font-family:inherit;font-weight:700}
 
 /* ── CONFERIDOR ── */
 .conf-summary{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px;}
@@ -571,7 +571,7 @@ footer p{font-size:12px;color:var(--text3);}
     for(var k=11;k<=15;k++)d[k]=choose(hits,k)*choose(size-hits,15-k);
     return d;
   }
-  function prizeStyle(h){return h>=15?'background:rgba(245,166,35,.18);color:var(--gold)':h>=13?'background:rgba(29,185,84,.16);color:var(--green-light)':h>=11?'background:rgba(59,130,246,.16);color:#7EB0FF':'background:var(--bg3);color:var(--text3)';}
+  function prizeStyle(h){return h>=15?'background:rgba(245,166,35,.18);color:var(--gold)':h>=13?'background:rgba(29,185,84,.16);color:var(--green-light)':h>=11?'background:rgba(59,130,246,.16);color:#2563EB':'background:var(--bg3);color:var(--text3)';}
   document.getElementById('conf-btn').addEventListener('click',function(){
     if(!lastGames.length)return flash('Gere seus jogos antes de conferir.');
     var result=parseInput('conf-result',15);if(!result)return flash('Informe exatamente 15 dezenas distintas.');
@@ -603,7 +603,7 @@ footer p{font-size:12px;color:var(--text3);}
       var tot=d[11]+d[12]+d[13]+d[14]+d[15];
       rows+='<div class="conf-game"><span class="g-title" style="min-width:56px">Jogo '+fmt(i+1)+'</span>'+
         '<span style="font-size:11.5px;color:var(--text2)">11:<b>'+d[11]+'</b> · 12:<b>'+d[12]+'</b> · 13:<b>'+d[13]+'</b> · 14:<b>'+d[14]+'</b> · 15:<b>'+d[15]+'</b></span>'+
-        '<span class="conf-badge" style="background:rgba(59,130,246,.16);color:#7EB0FF">'+tot+' prêmios</span></div>';
+        '<span class="conf-badge" style="background:rgba(59,130,246,.16);color:#2563EB">'+tot+' prêmios</span></div>';
     });
     var totalAll=agg[11]+agg[12]+agg[13]+agg[14]+agg[15];
     var pairs=lastGames.length*HIST.length;
@@ -616,7 +616,7 @@ footer p{font-size:12px;color:var(--text3);}
 
   var toast=null;function flash(msg){
     if(toast)toast.remove();toast=document.createElement('div');toast.textContent=msg;
-    toast.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);';document.body.appendChild(toast);
+    toast.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);';document.body.appendChild(toast);
     setTimeout(function(){if(toast){toast.remove();toast=null;}},2600);
   }
   // ── Painel "Último concurso" ao vivo (com janela selecionável) ──

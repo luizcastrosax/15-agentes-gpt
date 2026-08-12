@@ -8,12 +8,12 @@
 <meta name="description" content="Análise histórica de todos os concursos da Lotofácil e backtest com validação fora da amostra: frequência, dispersão e comparação honesta entre filtros e aleatório."/>
 <style>
 :root{
-  --red:#E8344A;--red-light:#FF4D63;
-  --green:#1DB954;--green-dark:#169040;--green-light:#2EE066;
-  --gold:#F5A623;--blue:#3B82F6;--blue-light:#7EB0FF;
-  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
-  --border:#2A2A30;
-  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --red:#D32F45;--red-light:#C42A3E;
+  --green:#12924A;--green-dark:#0C6E38;--green-light:#16A855;
+  --gold:#D98A00;--blue:#2563EB;--blue-light:#2563EB;
+  --bg:#EEEBF3;--bg2:#FAF7E8;--bg3:#FFFFFF;--bg4:#F1EEF6;
+  --border:#DAD4E6;
+  --text:#241C30;--text2:#565065;--text3:#857E95;
   --radius:12px;--radius-lg:20px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -34,7 +34,7 @@ button{font-family:inherit;}
 .panel h2{font-size:18px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
 .panel .hint{font-size:13px;color:var(--text3);margin-bottom:20px;}
 .status{font-size:13px;color:var(--text2);padding:10px 0;}
-.status .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);border-top-color:var(--blue-light);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+.status .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:var(--blue-light);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:20px;}
 .tile{background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
