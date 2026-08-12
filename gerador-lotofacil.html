@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Gerador Inteligente da Lotofácil | Estratégia Estatística</title>
+<title>Lotofácil LAB v2 | Gerador Combinatório Auditável</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%231DB954'/%3E%3C/svg%3E"/>
-<meta name="description" content="Gerador de jogos da Lotofácil com filtros estatísticos avançados: entropia, dispersão, distância entre dezenas, cobertura combinatória e exclusão de padrões raros."/>
+<meta name="description" content="Laboratório combinatório da Lotofácil com filtros transparentes, diversificação, auditoria de rejeições e conferência correta de apostas múltiplas."/>
 <style>
 :root{
   --red:#E8344A;--red-dark:#C41E35;--red-light:#FF4D63;
@@ -139,6 +139,8 @@ button{font-family:inherit;}
 
 .summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:13px;color:var(--text2);}
 .summary b{color:var(--text);}
+.audit{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.25);border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;font-size:12px;color:var(--text2);line-height:1.6;}
+.audit b{color:#7EB0FF}.audit code{color:var(--gold);font-family:inherit;font-weight:700}
 
 /* ── CONFERIDOR ── */
 .conf-summary{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 6px;}
@@ -196,9 +198,9 @@ footer p{font-size:12px;color:var(--text3);}
 </nav>
 
 <header class="top">
-  <div class="eyebrow">🍀 Estatística avançada aplicada</div>
-  <h1>Gerador <em>Inteligente</em><br>da Lotofácil</h1>
-  <p>A Lotofácil não é adivinhação — é organização. Esta ferramenta monta jogos equilibrados usando entropia, dispersão, distância entre dezenas, cobertura combinatória e exclusão automática dos padrões historicamente raros.</p>
+  <div class="eyebrow">🧪 Motor combinatório auditável · v2</div>
+  <h1>Lotofácil <em>LAB</em><br>Gerador Auditável</h1>
+  <p>Organize um portfólio de apostas com filtros combinatórios transparentes, diversificação e diagnóstico de rejeições. Sem promessa de previsão.</p>
 </header>
 
 <div class="wrap">
@@ -206,6 +208,11 @@ footer p{font-size:12px;color:var(--text3);}
 
     <!-- ══ CONFIG ══ -->
     <div>
+      <div class="panel" id="latest-panel" style="margin-bottom:22px;">
+        <h2>🎲 Último concurso <span style="font-size:11px;color:var(--text3);font-weight:600">(automático)</span></h2>
+        <div id="latest-body"><p class="hint" style="margin:0">Carregando o último resultado sorteado…</p></div>
+      </div>
+
       <div class="panel">
         <h2>⚙️ Grupo-base de dezenas</h2>
         <p class="hint">Clique para escolher de 15 a 20 dezenas. Um 2º clique <b style="color:var(--gold)">fixa</b> a dezena (entra em todos os jogos). O ideal é 18 a 20 para fechamentos.</p>
@@ -218,6 +225,7 @@ footer p{font-size:12px;color:var(--text3);}
 
         <div class="mini-actions">
           <button class="btn sec" id="auto-btn">🎲 Sugerir grupo (18)</button>
+          <button class="btn sec" id="last-btn">♻️ Sugerir do último</button>
           <button class="btn ghost" id="clear-btn">Limpar</button>
         </div>
       </div>
@@ -247,11 +255,11 @@ footer p{font-size:12px;color:var(--text3);}
         <div class="subhead">Equilíbrio clássico</div>
         <div class="chk first">
           <input type="checkbox" id="f-parimpar" checked/>
-          <div class="txt"><label for="f-parimpar">Equilíbrio par / ímpar</label><p>Aceita apenas padrões 9-6 ou 8-7 (os mais frequentes).</p></div>
+          <div class="txt"><label for="f-parimpar">Faixa central par / ímpar</label><p>Aceita distribuições próximas do centro combinatório, ajustadas ao tamanho da aposta.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-soma" checked/>
-          <div class="txt"><label for="f-soma">Soma dentro da faixa</label><p>Mantém a soma das dezenas entre 170 e 220.</p></div>
+          <div class="txt"><label for="f-soma">Soma proporcional</label><p>Faixa 11,3 a 14,7 por dezena; em 15 dezenas equivale a 170–220.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-linhas" checked/>
@@ -269,23 +277,27 @@ footer p{font-size:12px;color:var(--text3);}
         <div class="subhead">Análise avançada</div>
         <div class="chk first">
           <input type="checkbox" id="f-exclusao" checked/>
-          <div class="txt"><label for="f-exclusao">Exclusão automática de padrões raros<span class="badge">Pro</span></label><p>Elimina jogos com 14+ consecutivos, ≤2 de uma paridade, dezenas em só 2 linhas ou 5+ numa coluna.</p></div>
+          <div class="txt"><label for="f-exclusao">Regras estruturais extremas<span class="badge">Lab</span></label><p>Rejeita sequência de 6+, paridade extrema, ocupação de só 2 linhas ou coluna completa.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-entropia" checked/>
-          <div class="txt"><label for="f-entropia">Entropia mínima (naturalidade)<span class="badge">Pro</span></label><p>Exige índice de naturalidade ≥ 55% — descarta jogos "artificiais" ou concentrados.</p></div>
+          <div class="txt"><label for="f-entropia">Uniformidade espacial mínima<span class="badge">Lab</span></label><p>Entropia normalizada de linhas e colunas ≥ 55%. Mede distribuição, não probabilidade.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-dispersao" checked/>
-          <div class="txt"><label for="f-dispersao">Índice de dispersão<span class="badge">Pro</span></label><p>Garante que as dezenas estejam espalhadas pelo volante, não amontoadas.</p></div>
+          <div class="txt"><label for="f-dispersao">Dispersão calibrada<span class="badge">Lab</span></label><p>Usa faixa de desvio-padrão estável para a escala 01–25, sem crescer linearmente com a aposta.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-distancia" checked/>
-          <div class="txt"><label for="f-distancia">Distância entre dezenas<span class="badge">Pro</span></label><p>Limita blocos de números colados (máx. 4 consecutivos).</p></div>
+          <div class="txt"><label for="f-distancia">Distância entre dezenas<span class="badge">Lab</span></label><p>Limita blocos a no máximo 4 consecutivos.</p></div>
         </div>
         <div class="chk">
           <input type="checkbox" id="f-diversificar" checked/>
-          <div class="txt"><label for="f-diversificar">Diversificar jogos (anti-clones)<span class="badge">Pro</span></label><p>Ao gerar vários jogos, minimiza a repetição entre eles — evita apostar quase a mesma coisa várias vezes.</p></div>
+          <div class="txt"><label for="f-diversificar">Diversificar jogos (anti-clones)<span class="badge">Lab</span></label><p>Seleciona o portfólio por menor sobreposição média entre combinações válidas.</p></div>
+        </div>
+        <div class="chk">
+          <input type="checkbox" id="f-populares" checked/>
+          <div class="txt"><label for="f-populares">Evitar padrões populares<span class="badge">Lab</span></label><p>Heurística de divisão potencial do prêmio. Não aumenta a chance de acerto.</p></div>
         </div>
       </div>
     </div>
@@ -328,7 +340,7 @@ footer p{font-size:12px;color:var(--text3);}
 
   <!-- ══ DISCLAIMER ══ -->
   <div class="disclaimer">
-    <b>⚠️ Importante — leia com atenção:</b> nenhum gerador garante prêmio. A Lotofácil é um jogo de azar e cada combinação tem exatamente a mesma probabilidade de ser sorteada. Os filtros avançados (entropia, dispersão, cobertura, exclusão) <b>reduzem o universo de apostas</b> eliminando padrões historicamente raros — mas <b>não alteram a probabilidade</b> de cada combinação que resta. O ganho é de organização e cobertura, não de sorte. Jogue com responsabilidade e defina um orçamento fixo. +18.
+    <b>⚠️ Importante:</b> nenhum gerador garante prêmio. Uma combinação simples específica tem chance de 1 em 3.268.760. Os filtros apenas selecionam uma classe de resultados e podem inclusive excluir o próximo resultado. “Cobertura de pares” mede pares presentes no portfólio; <b>não é fechamento nem garantia de premiação</b>. Jogue com responsabilidade, orçamento fixo e apenas se for maior de 18 anos.
   </div>
 
   <!-- ══ STRATEGY NOTES ══ -->
@@ -336,11 +348,11 @@ footer p{font-size:12px;color:var(--text3);}
     <h2>A matemática por trás do gerador</h2>
     <p class="sub">Recursos que os grandes sistemas profissionais usam</p>
     <div class="note-grid">
-      <div class="note-card"><div class="ico">🧠</div><h4>Entropia / Naturalidade</h4><p>Mede o quão "natural" é um jogo comparado à distribuição típica dos sorteios. Jogos concentrados têm baixa entropia.</p></div>
+      <div class="note-card"><div class="ico">🧠</div><h4>Uniformidade espacial</h4><p>Mede a distribuição entre linhas e colunas. Não estima a chance individual da combinação.</p></div>
       <div class="note-card"><div class="ico">📐</div><h4>Distância entre dezenas</h4><p>01 02 03 04 05… é possível, mas raríssimo. O filtro controla o espaçamento entre números vizinhos.</p></div>
       <div class="note-card"><div class="ico">🌐</div><h4>Índice de dispersão</h4><p>Quanto as dezenas estão espalhadas pelo volante — medido pelo desvio-padrão das posições.</p></div>
-      <div class="note-card"><div class="ico">🎯</div><h4>Cobertura combinatória</h4><p>A pergunta muda de "qual jogo fazer?" para "quantos cenários estou cobrindo?" — o coração dos fechamentos.</p></div>
-      <div class="note-card"><div class="ico">🚫</div><h4>Exclusão automática</h4><p>Elimina 13 pares/2 ímpares, 14 consecutivos, tudo em duas linhas ou excesso numa coluna.</p></div>
+      <div class="note-card"><div class="ico">🎯</div><h4>Cobertura de pares</h4><p>Mede somente quantos pares da base aparecem ao menos uma vez. Não representa cobertura dos resultados possíveis.</p></div>
+      <div class="note-card"><div class="ico">🚫</div><h4>Regras estruturais</h4><p>Rejeitam extremos definidos no painel. Cada rejeição fica registrada no diagnóstico da geração.</p></div>
       <div class="note-card"><div class="ico">⚖️</div><h4>Equilíbrio clássico</h4><p>Par/ímpar 9-6 ou 8-7, soma entre 170-220 e distribuição por linhas e colunas.</p></div>
     </div>
   </div>
@@ -354,415 +366,276 @@ footer p{font-size:12px;color:var(--text3);}
 (function(){
   "use strict";
 
-  // ── Grid geometry ──
-  var ROWS=[[1,5],[6,10],[11,15],[16,20],[21,25]];
-  function rowOf(n){return Math.floor((n-1)/5);}       // 0..4
-  function colOf(n){return (n-1)%5;}                    // 0..4
-  var MIOLO=[7,8,9,12,13,14,17,18,19];                 // 3x3 center
-  var LOG2_5=Math.log2(5);
+  // trava de inicialização única (evita volante/eventos duplicados se o script rodar 2x)
+  if(window.__lotofacilLabLoaded){return;}
+  window.__lotofacilLabLoaded=true;
 
-  // ── State ──
-  var selected=new Set();
-  var fixed=new Set();
-  var lastGames=[];
-
-  // ── Build volante ──
+  var MIOLO=new Set([7,8,9,12,13,14,17,18,19]);
+  var LOG2_5=Math.log2(5), selected=new Set(), fixed=new Set(), lastGames=[];
+  var gameSize=15;
   var volante=document.getElementById('volante');
-  for(var i=1;i<=25;i++){
-    var b=document.createElement('button');
-    b.className='dez';b.textContent=String(i).padStart(2,'0');b.dataset.n=i;
-    b.addEventListener('click',onDezClick);
+
+  function fmt(n){return String(n).padStart(2,'0');}
+  function rowOf(n){return Math.floor((n-1)/5);}
+  function colOf(n){return (n-1)%5;}
+  function choose(n,k){
+    if(k<0||k>n)return 0;
+    k=Math.min(k,n-k);var r=1;
+    for(var i=1;i<=k;i++)r=r*(n-k+i)/i;
+    return Math.round(r);
+  }
+  function shuffle(a){
+    for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+    return a;
+  }
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  volante.innerHTML='';
+  for(var n=1;n<=25;n++){
+    var b=document.createElement('button');b.className='dez';b.textContent=fmt(n);b.dataset.n=n;
+    b.addEventListener('click',function(e){
+      var x=+e.currentTarget.dataset.n;
+      if(!selected.has(x)){if(selected.size>=20)return flash('Máximo de 20 dezenas na base.');selected.add(x);}
+      else if(!fixed.has(x))fixed.add(x);else{selected.delete(x);fixed.delete(x);}
+      renderVolante();
+    });
     volante.appendChild(b);
   }
 
-  function onDezClick(e){
-    var n=+e.currentTarget.dataset.n;
-    if(!selected.has(n)){
-      if(selected.size>=20){flash('Máximo de 20 dezenas no grupo-base.');return;}
-      selected.add(n);
-    } else if(!fixed.has(n)){
-      fixed.add(n);
-    } else {
-      selected.delete(n);fixed.delete(n);
-    }
-    render();
-  }
-
-  function render(){
+  function renderVolante(){
     document.querySelectorAll('.dez').forEach(function(el){
-      var n=+el.dataset.n;
-      el.classList.toggle('on',selected.has(n)&&!fixed.has(n));
-      el.classList.toggle('fixed',fixed.has(n));
+      var n=+el.dataset.n;el.classList.toggle('on',selected.has(n)&&!fixed.has(n));el.classList.toggle('fixed',fixed.has(n));
     });
     document.getElementById('sel-count').textContent=selected.size;
     document.getElementById('fix-count').textContent=fixed.size;
   }
 
-  // ── Mini actions ──
-  document.getElementById('clear-btn').addEventListener('click',function(){
-    selected.clear();fixed.clear();render();
-  });
+  document.getElementById('clear-btn').addEventListener('click',function(){selected.clear();fixed.clear();lastGames=[];renderVolante();});
   document.getElementById('auto-btn').addEventListener('click',function(){
     selected.clear();fixed.clear();
-    suggestGroup(18).forEach(function(n){selected.add(n);});
-    render();
-    flash('Grupo de 18 dezenas sugerido. Ajuste como quiser.');
+    var per=[4,4,4,3,3];shuffle(per);
+    for(var r=0;r<5;r++){var p=[];for(var n=r*5+1;n<=r*5+5;n++)p.push(n);shuffle(p);p.slice(0,per[r]).forEach(function(x){selected.add(x);});}
+    renderVolante();flash('Grupo diversificado de 18 dezenas criado.');
+  });
+  document.getElementById('last-btn').addEventListener('click',function(){
+    var prev=parseInput('prev-result',15);
+    if(!prev)return flash('Cole as 15 dezenas do último resultado no campo "Repetição do concurso anterior".');
+    var last=Array.from(prev),others=[];
+    for(var n=1;n<=25;n++)if(!prev.has(n))others.push(n);
+    shuffle(last);shuffle(others);
+    selected.clear();fixed.clear();
+    last.slice(0,9).concat(others.slice(0,9)).forEach(function(x){selected.add(x);});
+    renderVolante();
+    flash('Base de 18: 9 dezenas do último sorteio + 9 novas (repetição média histórica ≈ 9).');
   });
 
-  function suggestGroup(k){
-    var perRow=[4,4,4,3,3];shuffle(perRow);
-    var out=[];
-    for(var r=0;r<5;r++){
-      var pool=[];for(var n=ROWS[r][0];n<=ROWS[r][1];n++)pool.push(n);
-      shuffle(pool);
-      for(var j=0;j<perRow[r];j++)out.push(pool[j]);
-    }
-    return out.slice(0,k).sort(function(a,b){return a-b;});
+  document.querySelectorAll('#seg-size button').forEach(function(btn){btn.addEventListener('click',function(){
+    document.querySelectorAll('#seg-size button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');gameSize=+btn.dataset.v;
+  });});
+  var qty=document.getElementById('qty');qty.addEventListener('input',function(){document.getElementById('qty-val').textContent=qty.value;});
+
+  function activeFilters(){return {
+    parimpar:document.getElementById('f-parimpar').checked,soma:document.getElementById('f-soma').checked,
+    linhas:document.getElementById('f-linhas').checked,colunas:document.getElementById('f-colunas').checked,
+    moldura:document.getElementById('f-moldura').checked,exclusao:document.getElementById('f-exclusao').checked,
+    entropia:document.getElementById('f-entropia').checked,dispersao:document.getElementById('f-dispersao').checked,
+    distancia:document.getElementById('f-distancia').checked,populares:document.getElementById('f-populares').checked
+  };}
+
+  function shannon(counts,total){var h=0;counts.forEach(function(c){if(c){var p=c/total;h-=p*Math.log2(p);}});return h;}
+  function stats(g){
+    var odd=0,sum=0,rows=[0,0,0,0,0],cols=[0,0,0,0,0],miolo=0;
+    g.forEach(function(n){odd+=n%2;sum+=n;rows[rowOf(n)]++;cols[colOf(n)]++;if(MIOLO.has(n))miolo++;});
+    var sorted=g.slice().sort(function(a,b){return a-b;}),maxSeq=1,cur=1,gaps=[];
+    for(var i=1;i<sorted.length;i++){var d=sorted[i]-sorted[i-1];gaps.push(d);if(d===1){cur++;maxSeq=Math.max(maxSeq,cur);}else cur=1;}
+    var mean=sum/g.length,variance=0;g.forEach(function(n){variance+=(n-mean)*(n-mean);});
+    return {odd:odd,even:g.length-odd,sum:sum,rows:rows,cols:cols,miolo:miolo,maxSeq:maxSeq,
+      uniformity:Math.round((shannon(rows,g.length)+shannon(cols,g.length))/(2*LOG2_5)*100),
+      disp:Math.sqrt(variance/g.length),avgGap:gaps.reduce(function(a,b){return a+b;},0)/(gaps.length||1),
+      occupiedRows:rows.filter(Boolean).length};
   }
 
-  // ── Segmented (size) ──
-  var gameSize=15;
-  document.querySelectorAll('#seg-size button').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      document.querySelectorAll('#seg-size button').forEach(function(b){b.classList.remove('on');});
-      btn.classList.add('on');gameSize=+btn.dataset.v;
-    });
-  });
-
-  // ── Qty slider ──
-  var qty=document.getElementById('qty'),qtyVal=document.getElementById('qty-val');
-  qty.addEventListener('input',function(){qtyVal.textContent=qty.value;});
-
-  // ── Filters ──
-  function filtersActive(){
-    return {
-      parimpar:document.getElementById('f-parimpar').checked,
-      soma:document.getElementById('f-soma').checked,
-      linhas:document.getElementById('f-linhas').checked,
-      colunas:document.getElementById('f-colunas').checked,
-      moldura:document.getElementById('f-moldura').checked,
-      exclusao:document.getElementById('f-exclusao').checked,
-      entropia:document.getElementById('f-entropia').checked,
-      dispersao:document.getElementById('f-dispersao').checked,
-      distancia:document.getElementById('f-distancia').checked
-    };
+  var reasonNames={parimpar:'Paridade',soma:'Soma',linhas:'Linhas',colunas:'Colunas',moldura:'Miolo',
+    exclusao:'Estrutural',entropia:'Uniformidade',dispersao:'Dispersão',distancia:'Sequência',populares:'Popularidade'};
+  function validate(g,f){
+    var s=stats(g),reasons=[],size=g.length;
+    if(f.parimpar){var center=size*13/25;if(Math.abs(s.odd-center)>1.55)reasons.push('parimpar');}
+    if(f.soma&&(s.sum<Math.ceil(size*11.3)||s.sum>Math.floor(size*14.7)))reasons.push('soma');
+    if(f.linhas&&s.rows.some(function(x){return x<1||x>4;}))reasons.push('linhas');
+    if(f.colunas&&s.cols.some(function(x){return x>4;}))reasons.push('colunas');
+    var miLo=Math.round(size*.27),miHi=Math.round(size*.53);
+    if(f.moldura&&(s.miolo<miLo||s.miolo>miHi))reasons.push('moldura');
+    if(f.exclusao&&(Math.min(s.odd,s.even)<Math.max(2,Math.round(size*.2))||s.maxSeq>=6||s.occupiedRows<=2||s.cols.some(function(x){return x===5;})))reasons.push('exclusao');
+    if(f.entropia&&s.uniformity<55)reasons.push('entropia');
+    if(f.dispersao&&(s.disp<6.0||s.disp>8.2))reasons.push('dispersao');
+    if(f.distancia&&s.maxSeq>=5)reasons.push('distancia');
+    if(f.populares){
+      var sorted=g.slice().sort(function(a,b){return a-b;}),ap=sorted.length>2,step=sorted[1]-sorted[0];
+      for(var i=2;i<sorted.length;i++)if(sorted[i]-sorted[i-1]!==step){ap=false;break;}
+      if(g.filter(function(n){return n%5===0;}).length>=4||g.filter(function(n){return n<=15;}).length>=13||g.filter(function(n){return n>=11;}).length>=13||ap)reasons.push('populares');
+    }
+    return {ok:reasons.length===0,reasons:reasons,s:s};
   }
 
-  // ── Metrics ──
-  function stats(game){
-    var odd=0,sum=0,rc=[0,0,0,0,0],cc=[0,0,0,0,0],miolo=0;
-    game.forEach(function(n){
-      if(n%2)odd++; sum+=n; rc[rowOf(n)]++; cc[colOf(n)]++;
-      if(MIOLO.indexOf(n)>=0)miolo++;
-    });
-    var sorted=game.slice().sort(function(a,b){return a-b;});
-    var maxSeq=1,cur=1,gaps=[];
-    for(var i=1;i<sorted.length;i++){
-      gaps.push(sorted[i]-sorted[i-1]);
-      if(sorted[i]===sorted[i-1]+1){cur++;maxSeq=Math.max(maxSeq,cur);}else cur=1;
+  function enumerate(base,size,fixArr,onGame){
+    var free=base.filter(function(n){return fixed.has(n)===false;}),need=size-fixArr.length,pick=[];
+    function walk(start,left){
+      if(left===0){onGame(fixArr.concat(pick).sort(function(a,b){return a-b;}));return;}
+      for(var i=start;i<=free.length-left;i++){pick.push(free[i]);walk(i+1,left-1);pick.pop();}
     }
-    // Entropia (naturalidade): média das entropias de linhas e colunas, normalizada
-    var hRow=shannon(rc,game.length),hCol=shannon(cc,game.length);
-    var naturalidade=Math.round(((hRow+hCol)/2/LOG2_5)*100);
-    // Dispersão: desvio-padrão das dezenas
-    var mean=sum/game.length,varSum=0;
-    game.forEach(function(n){varSum+=(n-mean)*(n-mean);});
-    var disp=Math.sqrt(varSum/game.length);
-    // Distância média entre dezenas
-    var avgGap=gaps.length? gaps.reduce(function(a,b){return a+b;},0)/gaps.length : 0;
-    var occRows=rc.filter(function(x){return x>0;}).length;
-    return {odd:odd,even:game.length-odd,sum:sum,rows:rc,cols:cc,miolo:miolo,
-            maxSeq:maxSeq,naturalidade:naturalidade,disp:disp,avgGap:avgGap,occRows:occRows};
+    walk(0,need);
+  }
+  function overlap(a,b){var set=new Set(b),n=0;a.forEach(function(x){if(set.has(x))n++;});return n;}
+  function diversify(pool,want){
+    if(pool.length<=want)return pool.slice();
+    var candidates=pool.slice(),out=[candidates.splice(Math.floor(Math.random()*candidates.length),1)[0]];
+    while(out.length<want&&candidates.length){
+      var best=0,bestScore=Infinity,bestMax=Infinity;
+      for(var i=0;i<candidates.length;i++){
+        var sum=0,max=0;out.forEach(function(g){var ov=overlap(candidates[i],g);sum+=ov;max=Math.max(max,ov);});
+        if(sum<bestScore||(sum===bestScore&&max<bestMax)){best=i;bestScore=sum;bestMax=max;}
+      }
+      out.push(candidates.splice(best,1)[0]);
+    }
+    return out;
   }
 
-  function shannon(counts,total){
-    var h=0;counts.forEach(function(c){if(c>0){var p=c/total;h-=p*Math.log2(p);}});return h;
-  }
-
-  function passes(game,f){
-    var s=stats(game),size=game.length;
-    // ── Equilíbrio clássico ──
-    if(f.parimpar){
-      var ideal=Math.round(size*0.53);
-      if(Math.abs(s.odd-ideal)>1)return false;
-    }
-    if(f.soma){
-      if(s.sum<size*11.3||s.sum>size*14.7)return false;
-    }
-    if(f.linhas){
-      for(var r=0;r<5;r++){if(s.rows[r]>4||s.rows[r]<1)return false;}
-    }
-    if(f.colunas){
-      for(var c=0;c<5;c++){if(s.cols[c]>4)return false;}
-    }
-    if(f.moldura){
-      var lo2=Math.round(size*0.27),hi2=Math.round(size*0.53);
-      if(s.miolo<lo2||s.miolo>hi2)return false;
-    }
-    // ── Avançado ──
-    if(f.exclusao){
-      var minority=Math.min(s.odd,s.even);
-      if(minority<Math.max(2,Math.round(size*0.2)))return false; // paridade extrema
-      if(s.maxSeq>=6)return false;                               // 14 consecutivos etc.
-      if(s.occRows<=2)return false;                              // tudo em 2 linhas
-      for(var c2=0;c2<5;c2++){if(s.cols[c2]>=5)return false;}    // excesso numa coluna
-    }
-    if(f.entropia){ if(s.naturalidade<55)return false; }
-    if(f.dispersao){
-      // desvio-padrão natural p/ 15 dezenas em 1-25 fica ~6.3 a 8.0
-      var dLo=size*0.42,dHi=size*0.56;
-      if(s.disp<dLo||s.disp>dHi)return false;
-    }
-    if(f.distancia){ if(s.maxSeq>=5)return false; }
-    return true;
-  }
-
-  // ── Combination generator ──
-  function genOne(base,f){
-    var fixedArr=base.filter(function(n){return fixed.has(n);});
-    var freeArr=base.filter(function(n){return !fixed.has(n);});
-    if(fixedArr.length>gameSize)return null;
-    var need=gameSize-fixedArr.length;
-    if(need>freeArr.length)return null;
-    for(var attempt=0;attempt<800;attempt++){
-      var pool=freeArr.slice();shuffle(pool);
-      var game=fixedArr.concat(pool.slice(0,need)).sort(function(a,b){return a-b;});
-      if(passes(game,f))return game;
-    }
-    return null;
-  }
-  function genOneRelaxed(base){
-    var fixedArr=base.filter(function(n){return fixed.has(n);});
-    var freeArr=base.filter(function(n){return !fixed.has(n);});
-    var need=gameSize-fixedArr.length;
-    if(need<0||need>freeArr.length)return null;
-    var pool=freeArr.slice();shuffle(pool);
-    return fixedArr.concat(pool.slice(0,need)).sort(function(a,b){return a-b;});
-  }
-  function keyOf(g){return g.join('-');}
-  function maxCombos(n,k){if(k>n)return 0;var r=1;for(var i=0;i<k;i++){r=r*(n-i)/(i+1);}return Math.round(r);}
-
-  // ── Generate ──
   document.getElementById('gen-btn').addEventListener('click',generate);
   document.getElementById('again-btn').addEventListener('click',generate);
-
-  function overlap(a,b){var s={};b.forEach(function(n){s[n]=1;});var c=0;a.forEach(function(n){if(s[n])c++;});return c;}
-
   function generate(){
-    var base=Array.from(selected);
-    if(base.length<gameSize){flash('Selecione ao menos '+gameSize+' dezenas no grupo-base.');return;}
-    var f=filtersActive();
-    var diversify=document.getElementById('f-diversificar').checked;
-    var want=+qty.value, relaxed=false, guard=0;
-    var cap=maxCombos(base.length,gameSize);
-
-    // monta um conjunto de jogos válidos únicos
-    var pool=[], seen=new Set();
-    var poolTarget = (diversify && want>1) ? Math.min(cap, Math.max(want*12, 120)) : want;
-    while(pool.length<poolTarget && guard<poolTarget*500+3000){
-      guard++;
-      var g=genOne(base,f);
-      if(!g){relaxed=true;g=genOneRelaxed(base);if(!g)break;}
-      var k=keyOf(g);
-      if(!seen.has(k)){seen.add(k);pool.push(g);}
-      if(seen.size>=cap)break;
-    }
-
-    var out;
-    if(diversify && want>1 && pool.length>want){
-      // seleção gulosa: começa por um jogo e vai escolhendo o de MENOR sobreposição com os já escolhidos
-      out=[pool.splice(Math.floor(Math.random()*pool.length),1)[0]];
-      while(out.length<want && pool.length){
-        var best=0,bestScore=Infinity;
-        for(var i=0;i<pool.length;i++){
-          var sc=0;for(var j=0;j<out.length;j++)sc+=overlap(pool[i],out[j]);
-          if(sc<bestScore){bestScore=sc;best=i;}
-        }
-        out.push(pool.splice(best,1)[0]);
-      }
-    } else {
-      out=pool.slice(0,want);
-    }
-
-    lastGames=out;
-    renderResults(out,relaxed,base);
+    var base=Array.from(selected).sort(function(a,b){return a-b;}),fixArr=Array.from(fixed).sort(function(a,b){return a-b;});
+    if(base.length<gameSize)return flash('Selecione pelo menos '+gameSize+' dezenas.');
+    if(fixArr.length>gameSize)return flash('Há mais fixas do que dezenas por jogo.');
+    var capacity=choose(base.length-fixArr.length,gameSize-fixArr.length),f=activeFilters(),valid=[],rejects={};
+    Object.keys(reasonNames).forEach(function(k){rejects[k]=0;});
+    enumerate(base,gameSize,fixArr,function(g){var v=validate(g,f);if(v.ok)valid.push(g);else v.reasons.forEach(function(r){rejects[r]++;});});
+    var want=+qty.value,useDiversify=document.getElementById('f-diversificar').checked;
+    var games=useDiversify?diversify(valid,want):shuffle(valid.slice()).slice(0,want);
+    lastGames=games;
+    renderResults(games,{capacity:capacity,validCount:valid.length,rejects:rejects,want:want,base:base});
   }
 
-  function natColor(v){
-    if(v>=70)return 'background:rgba(29,185,84,.15);color:var(--green-light)';
-    if(v>=55)return 'background:rgba(245,166,35,.15);color:var(--gold)';
-    return 'background:rgba(232,52,74,.15);color:var(--red-light)';
-  }
-
-  // ── Coverage (cobertura combinatória) ──
   function coverage(games,base){
-    var used=new Set();
-    games.forEach(function(g){g.forEach(function(n){used.add(n);});});
-    // pares cobertos entre as dezenas do grupo-base
-    var coveredPairs=new Set();
-    games.forEach(function(g){
-      for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++)coveredPairs.add(g[i]+'-'+g[j]);
-    });
-    var baseUsed=base.length;
-    var totalPairs=baseUsed*(baseUsed-1)/2;
-    var pairPct=totalPairs? Math.round(coveredPairs.size/totalPairs*100):0;
-    // redundância média (dezenas em comum entre pares de jogos)
-    var overlapSum=0,pairs=0;
-    for(var a=0;a<games.length;a++)for(var b=a+1;b<games.length;b++){
-      var setB={};games[b].forEach(function(n){setB[n]=1;});
-      var ov=0;games[a].forEach(function(n){if(setB[n])ov++;});
-      overlapSum+=ov;pairs++;
-    }
-    var avgOverlap=pairs? (overlapSum/pairs):0;
-    return {used:used.size,baseUsed:baseUsed,coveredPairs:coveredPairs.size,totalPairs:totalPairs,pairPct:pairPct,avgOverlap:avgOverlap};
+    var used=new Set(),pairsSet=new Set(),ovSum=0,ovN=0;
+    games.forEach(function(g){g.forEach(function(n){used.add(n);});for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++)pairsSet.add(g[i]+'-'+g[j]);});
+    for(var a=0;a<games.length;a++)for(var b=a+1;b<games.length;b++){ovSum+=overlap(games[a],games[b]);ovN++;}
+    var total=choose(base.length,2);return {used:used.size,pairs:pairsSet.size,total:total,pct:total?pairsSet.size/total*100:0,avg:ovN?ovSum/ovN:0};
   }
-
-  // ── Render results ──
-  function renderResults(games,relaxed,base){
-    var box=document.getElementById('results');
-    if(!games.length){
-      box.innerHTML='<div class="empty">Não foi possível montar jogos com estes filtros. Amplie o grupo-base ou desative alguns filtros avançados.</div>';
-      document.getElementById('res-actions').style.display='none';return;
-    }
-    var prev=parsePrev();
-    var cov=coverage(games,base);
-    var html='';
-
-    // Cobertura combinatória
-    html+='<div class="coverage"><div class="c-title">🎯 Cobertura combinatória</div><div class="cov-grid">'+
-      '<div class="cov-item"><div class="cv blue">'+cov.used+'</div><div class="cl">Dezenas usadas</div></div>'+
-      '<div class="cov-item"><div class="cv blue">'+cov.pairPct+'%</div><div class="cl">Pares do grupo cobertos</div></div>'+
-      '<div class="cov-item"><div class="cv blue">'+cov.coveredPairs+'</div><div class="cl">Combinações de pares</div></div>'+
-      '<div class="cov-item"><div class="cv blue">'+cov.avgOverlap.toFixed(1)+'</div><div class="cl">Repetição média/jogo</div></div>'+
-      '</div><div class="bar"><span style="width:'+cov.pairPct+'%"></span></div>';
-    // qualidade da diversificação (piso teórico de repetição = 2*n - base)
-    if(games.length>1){
-      var floor=Math.max(0, 2*gameSize - base.length);
-      var msg;
-      if(cov.avgOverlap<=floor+0.15)
-        msg='✅ Diversificação no máximo possível para esta base (mínimo teórico de repetição: '+floor+' dezenas).';
-      else
-        msg='Repetição média '+cov.avgOverlap.toFixed(1)+' — mínimo possível para esta base é '+floor+'.';
-      if(floor>=11)
-        msg+=' <b style="color:var(--gold)">Base pequena: para jogos bem diferentes, marque mais dezenas (ex.: 20 → repetição cai para ~'+Math.max(0,2*gameSize-20)+').</b>';
-      html+='<div style="font-size:11.5px;color:var(--text3);margin-top:10px;line-height:1.5;">'+msg+'</div>';
-    }
+  function parseInput(id,exact){
+    var nums=(document.getElementById(id).value.match(/\d+/g)||[]).map(Number).filter(function(n){return n>=1&&n<=25;}),u=Array.from(new Set(nums));
+    if(exact&&u.length!==exact)return null;
+    if(!exact&&u.length===0)return null;
+    return new Set(u);
+  }
+  function badgeColor(v){return v>=70?'background:rgba(29,185,84,.15);color:var(--green-light)':v>=55?'background:rgba(245,166,35,.15);color:var(--gold)':'background:rgba(232,52,74,.15);color:var(--red-light)';}
+  function renderResults(games,meta){
+    var box=document.getElementById('results'),prev=parseInput('prev-result'),html='';
+    var ranked=Object.keys(meta.rejects).filter(function(k){return meta.rejects[k]>0;}).sort(function(a,b){return meta.rejects[b]-meta.rejects[a];});
+    html+='<div class="audit"><b>Auditoria da geração</b><br>Capacidade exata com fixas: <code>'+meta.capacity+'</code> combinações · Aprovadas por todos os filtros: <code>'+meta.validCount+'</code>.';
+    if(ranked.length)html+='<br>Reprovações por regra (uma combinação pode falhar em várias): '+ranked.map(function(k){return esc(reasonNames[k])+' <code>'+meta.rejects[k]+'</code>';}).join(' · ')+'.';
+    if(meta.validCount<meta.want)html+='<br><span style="color:var(--gold)">Solicitadas '+meta.want+', mas somente '+meta.validCount+' passaram. Nenhum filtro foi relaxado.</span>';
     html+='</div>';
-
-    html+='<div class="summary"><b>'+games.length+' jogo(s)</b> de <b>'+gameSize+' dezenas</b> gerados'+
-      (relaxed?' — <span style="color:var(--gold)">alguns com filtros relaxados</span> (grupo-base pequeno para tantas combinações).':'.');
-    if(prev)html+=' Dezenas em <b style="color:var(--gold)">dourado</b> repetem o concurso anterior.';
-    html+='</div>';
-
-    games.forEach(function(g,idx){
-      var s=stats(g);
-      var repCount=prev?g.filter(function(n){return prev.has(n);}).length:0;
-      html+='<div class="game"><div class="g-head">'+
-        '<span class="g-title">Jogo '+String(idx+1).padStart(2,'0')+'</span>'+
-        '<span class="g-nat" style="'+natColor(s.naturalidade)+'">Naturalidade '+s.naturalidade+'%</span></div>';
-      html+='<div class="balls">';
-      g.forEach(function(n){
-        var rep=prev&&prev.has(n);
-        html+='<div class="ball'+(rep?' rep':'')+'">'+String(n).padStart(2,'0')+'</div>';
-      });
-      html+='</div>';
-      html+='<div class="stat-tags">'+
-        '<span class="tag">Ímpar/Par <b>'+s.odd+'-'+s.even+'</b></span>'+
-        '<span class="tag">Soma <b>'+s.sum+'</b></span>'+
-        '<span class="tag blue">Dispersão <b>'+s.disp.toFixed(1)+'</b></span>'+
-        '<span class="tag blue">Dist. média <b>'+s.avgGap.toFixed(1)+'</b></span>'+
-        '<span class="tag">Miolo <b>'+s.miolo+'</b></span>'+
-        '<span class="tag">Máx. seq. <b>'+s.maxSeq+'</b></span>'+
-        (prev?'<span class="tag">Repetidas <b>'+repCount+'</b></span>':'')+
-        '</div>';
-      html+='</div>';
+    if(!games.length){box.innerHTML=html+'<div class="empty">Nenhuma combinação passou. Desative conscientemente um filtro ou amplie a base.</div>';document.getElementById('res-actions').style.display='none';return;}
+    var c=coverage(games,meta.base);
+    html+='<div class="coverage"><div class="c-title">🎯 Cobertura descritiva do portfólio</div><div class="cov-grid">'+
+      '<div class="cov-item"><div class="cv blue">'+c.used+'</div><div class="cl">Dezenas usadas</div></div><div class="cov-item"><div class="cv blue">'+c.pct.toFixed(1)+'%</div><div class="cl">Pares da base presentes</div></div>'+
+      '<div class="cov-item"><div class="cv blue">'+c.pairs+'</div><div class="cl">Pares distintos</div></div><div class="cov-item"><div class="cv blue">'+c.avg.toFixed(1)+'</div><div class="cl">Sobreposição média</div></div></div>'+
+      '<div class="bar"><span style="width:'+Math.min(100,c.pct)+'%"></span></div><div style="font-size:11px;color:var(--text3);margin-top:9px">Métrica descritiva; não representa garantia de 11–15 pontos.</div></div>';
+    html+='<div class="summary"><b>'+games.length+' jogo(s)</b> de <b>'+gameSize+' dezenas</b>. Todos passaram integralmente pelos filtros ativos.</div>';
+    games.forEach(function(g,idx){var s=stats(g),rep=prev?g.filter(function(n){return prev.has(n);}).length:0;
+      html+='<div class="game"><div class="g-head"><span class="g-title">Jogo '+fmt(idx+1)+'</span><span class="g-nat" style="'+badgeColor(s.uniformity)+'">Uniformidade '+s.uniformity+'%</span></div><div class="balls">'+
+        g.map(function(n){return '<div class="ball'+(prev&&prev.has(n)?' rep':'')+'">'+fmt(n)+'</div>';}).join('')+'</div><div class="stat-tags">'+
+        '<span class="tag">Ímpar/Par <b>'+s.odd+'-'+s.even+'</b></span><span class="tag">Soma <b>'+s.sum+'</b></span><span class="tag blue">Dispersão <b>'+s.disp.toFixed(2)+'</b></span>'+
+        '<span class="tag blue">Dist. média <b>'+s.avgGap.toFixed(2)+'</b></span><span class="tag">Miolo <b>'+s.miolo+'</b></span><span class="tag">Máx. seq. <b>'+s.maxSeq+'</b></span>'+(prev?'<span class="tag">Repetidas <b>'+rep+'</b></span>':'')+'</div></div>';
     });
-    box.innerHTML=html;
-    document.getElementById('res-actions').style.display='flex';
+    box.innerHTML=html;document.getElementById('res-actions').style.display='flex';
   }
 
-  // ── Prev result ──
-  function parsePrev(){
-    var raw=document.getElementById('prev-result').value;
-    var nums=(raw.match(/\d+/g)||[]).map(Number).filter(function(n){return n>=1&&n<=25;});
-    if(nums.length<10)return null;
-    return new Set(nums);
-  }
-
-  // ── Copy ──
   document.getElementById('copy-btn').addEventListener('click',function(){
-    if(!lastGames.length)return;
-    var txt=lastGames.map(function(g,i){
-      return 'Jogo '+String(i+1).padStart(2,'0')+': '+g.map(function(n){return String(n).padStart(2,'0');}).join(' ');
-    }).join('\n');
-    navigator.clipboard.writeText(txt).then(function(){flash('Jogos copiados! ✅');},
-      function(){flash('Não foi possível copiar automaticamente.');});
+    var txt=lastGames.map(function(g,i){return 'Jogo '+fmt(i+1)+': '+g.map(fmt).join(' ');}).join('\n');
+    if(!txt)return;navigator.clipboard.writeText(txt).then(function(){flash('Jogos copiados. ✅');},function(){flash('Falha ao copiar.');});
   });
 
-  // ── Conferidor (checagem contra resultado oficial) ──
-  document.getElementById('conf-btn').addEventListener('click',conferir);
-
-  function prizeStyle(hits){
-    if(hits>=15)return 'background:rgba(245,166,35,.18);color:var(--gold)';
-    if(hits>=13)return 'background:rgba(29,185,84,.16);color:var(--green-light)';
-    if(hits>=11)return 'background:rgba(59,130,246,.16);color:#7EB0FF';
-    return 'background:var(--bg3);color:var(--text3)';
+  function ticketPrizes(size,hits){
+    var d={11:0,12:0,13:0,14:0,15:0};
+    for(var k=11;k<=15;k++)d[k]=choose(hits,k)*choose(size-hits,15-k);
+    return d;
   }
-
-  function conferir(){
-    var out=document.getElementById('conf-out');
-    if(!lastGames.length){flash('Gere seus jogos antes de conferir.');return;}
-    var raw=document.getElementById('conf-result').value;
-    var nums=(raw.match(/\d+/g)||[]).map(Number).filter(function(n){return n>=1&&n<=25;});
-    var uniq=Array.from(new Set(nums));
-    if(uniq.length!==15){flash('Informe exatamente 15 dezenas sorteadas.');return;}
-    var result=new Set(uniq);
-    var dist={11:0,12:0,13:0,14:0,15:0},best=0,premiados=0;
-
-    var rows='';
-    lastGames.forEach(function(g,i){
-      var hits=g.filter(function(n){return result.has(n);}).length;
-      best=Math.max(best,hits);
-      if(hits>=11){dist[hits]++;premiados++;}
-      var mini='<div class="mini-balls">';
-      g.forEach(function(n){
-        var hit=result.has(n);
-        mini+='<div class="mb'+(hit?' hit':'')+'">'+String(n).padStart(2,'0')+'</div>';
-      });
-      mini+='</div>';
-      rows+='<div class="conf-game">'+mini+
-        '<span class="conf-badge" style="'+prizeStyle(hits)+'">'+hits+' acertos</span></div>';
+  function prizeStyle(h){return h>=15?'background:rgba(245,166,35,.18);color:var(--gold)':h>=13?'background:rgba(29,185,84,.16);color:var(--green-light)':h>=11?'background:rgba(59,130,246,.16);color:#7EB0FF':'background:var(--bg3);color:var(--text3)';}
+  document.getElementById('conf-btn').addEventListener('click',function(){
+    if(!lastGames.length)return flash('Gere seus jogos antes de conferir.');
+    var result=parseInput('conf-result',15);if(!result)return flash('Informe exatamente 15 dezenas distintas.');
+    var totals={11:0,12:0,13:0,14:0,15:0},best=0,rows='';
+    lastGames.forEach(function(g){
+      var hits=g.filter(function(n){return result.has(n);}).length,d=ticketPrizes(g.length,hits);best=Math.max(best,hits);
+      Object.keys(totals).forEach(function(k){totals[k]+=d[k];});
+      var detail=Object.keys(d).reverse().filter(function(k){return d[k]>0;}).map(function(k){return d[k]+'×'+k+' pts';}).join(' · ')||'sem faixa premiada';
+      rows+='<div class="conf-game"><div><div class="mini-balls">'+g.map(function(n){return '<div class="mb'+(result.has(n)?' hit':'')+'">'+fmt(n)+'</div>';}).join('')+'</div><div style="font-size:10px;color:var(--text3);margin-top:5px">'+detail+'</div></div><span class="conf-badge" style="'+prizeStyle(hits)+'">'+hits+' de '+g.length+'</span></div>';
     });
+    var html='<div class="conf-summary">';[15,14,13,12,11].forEach(function(k){html+='<div class="cs'+(totals[k]?' hit-any':'')+'"><div class="n">'+totals[k]+'</div><div class="l">prêmios '+k+'</div></div>';});
+    html+='</div><div class="conf-best">Maior interseção: <b>'+best+' dezenas</b>. Apostas de 16–18 foram decompostas em suas combinações simples de 15.</div>'+rows;
+    document.getElementById('conf-out').innerHTML=html;
+  });
 
-    var html='<div class="conf-summary">';
-    [15,14,13,12,11].forEach(function(k){
-      html+='<div class="cs'+(dist[k]>0?' hit-any':'')+'"><div class="n">'+dist[k]+'</div><div class="l">'+k+' pts</div></div>';
-    });
-    html+='</div>';
-    html+='<div class="conf-best">Melhor jogo: <b>'+best+' acertos</b> · '+
-      premiados+' jogo(s) premiado(s) de '+lastGames.length+'</div>';
-    html+=rows;
-    if(best>=11){
-      html+='<div style="margin-top:14px;text-align:center;font-size:13px;color:var(--green-light);font-weight:700">🎉 Parabéns! Você teve jogo(s) premiado(s).</div>';
+  var toast=null;function flash(msg){
+    if(toast)toast.remove();toast=document.createElement('div');toast.textContent=msg;
+    toast.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);';document.body.appendChild(toast);
+    setTimeout(function(){if(toast){toast.remove();toast=null;}},2600);
+  }
+  // ── Painel "Último concurso" ao vivo (com janela selecionável) ──
+  var DATA_URL='https://raw.githubusercontent.com/guilhermeasn/loteria.json/master/data/lotofacil.json';
+  var HIST=null, latestNo=null;
+  function freqLastN(N){
+    var slice=HIST.slice(Math.max(0,HIST.length-N)),f=new Array(26).fill(0);
+    slice.forEach(function(g){g.forEach(function(n){f[n]++;});});
+    var arr=[];for(var n=1;n<=25;n++)arr.push({n:n,f:f[n]});
+    arr.sort(function(a,b){return b.f-a.f||a.n-b.n;});
+    return {arr:arr,count:slice.length};
+  }
+  function renderLatest(N){
+    var body=document.getElementById('latest-body');
+    var last=HIST[HIST.length-1].slice().sort(function(a,b){return a-b;});
+    var fr=freqLastN(N);
+    var html='<div style="font-size:13px;color:var(--text2);margin-bottom:8px">Concurso <b style="color:var(--green)">'+latestNo+'</b> — dezenas sorteadas:</div>';
+    html+='<div class="balls" style="margin-bottom:14px">'+last.map(function(n){return '<div class="ball">'+fmt(n)+'</div>';}).join('')+'</div>';
+    html+='<label style="display:block;font-size:13px;font-weight:700;color:var(--text2);margin-bottom:8px">Analisar os últimos concursos</label>';
+    html+='<div class="seg" id="seg-lastn">'+[1,5,10,20,50].map(function(v){return '<button data-v="'+v+'"'+(v===N?' class="on"':'')+'>'+(v===1?'Último':v)+'</button>';}).join('')+'</div>';
+    if(N>1){
+      var top=fr.arr.slice(0,18).map(function(o){return o.n;}).sort(function(a,b){return a-b;});
+      html+='<div style="font-size:12px;color:var(--text3);margin:12px 0 8px">18 dezenas mais frequentes nos últimos <b style="color:var(--text2)">'+fr.count+'</b> concursos:</div>';
+      html+='<div class="mini-balls">'+top.map(function(n){return '<div class="mb hit">'+fmt(n)+'</div>';}).join('')+'</div>';
+      html+='<div class="mini-actions"><button class="btn sec" id="use-freq">📥 Montar base com estas 18</button></div>';
+    } else {
+      html+='<div class="mini-actions"><button class="btn sec" id="use-freq">♻️ Montar base (9 do último + 9 novas)</button></div>';
     }
-    out.innerHTML=html;
+    html+='<p class="hint" style="margin-top:10px;color:var(--gold)">⚠️ Frequência recente é <b>descritiva</b>, não preditiva — dezena "quente/atrasada" não tem chance maior. É uma forma de escolher, não de prever.</p>';
+    body.innerHTML=html;
+    document.getElementById('prev-result').value=last.map(fmt).join(' ');
+    document.querySelectorAll('#seg-lastn button').forEach(function(btn){btn.addEventListener('click',function(){renderLatest(+btn.dataset.v);});});
+    document.getElementById('use-freq').addEventListener('click',function(){
+      var base;
+      if(N===1){
+        var la=last.slice(),others=[];for(var n=1;n<=25;n++)if(last.indexOf(n)<0)others.push(n);
+        shuffle(la);shuffle(others);base=la.slice(0,9).concat(others.slice(0,9));
+      }else{base=fr.arr.slice(0,18).map(function(o){return o.n;});}
+      selected.clear();fixed.clear();base.forEach(function(x){selected.add(x);});renderVolante();
+      flash('Base de 18 montada a partir dos últimos '+(N===1?'1':N)+' concurso(s).');
+    });
+  }
+  function loadLatest(){
+    var body=document.getElementById('latest-body');
+    fetch(DATA_URL).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
+      var keys=Object.keys(d).map(Number).filter(function(n){return !isNaN(n);}).sort(function(a,b){return a-b;});
+      HIST=keys.map(function(k){return d[String(k)].map(Number);});
+      latestNo=keys[keys.length-1];
+      renderLatest(10);
+    }).catch(function(){
+      body.innerHTML='<p class="hint" style="margin:0;color:var(--gold)">Não foi possível carregar os resultados aqui (dados externos podem estar bloqueados neste modo). Abra pelo <b>site público</b> para ver ao vivo, ou cole o último resultado manualmente no campo "Repetição do concurso anterior".</p>';
+    });
   }
 
-  // ── Utils ──
-  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-
-  var toastEl=null;
-  function flash(msg){
-    if(toastEl)toastEl.remove();
-    toastEl=document.createElement('div');
-    toastEl.textContent=msg;
-    toastEl.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);';
-    document.body.appendChild(toastEl);
-    setTimeout(function(){if(toastEl){toastEl.style.opacity='0';toastEl.style.transition='opacity .4s';}},2200);
-    setTimeout(function(){if(toastEl){toastEl.remove();toastEl=null;}},2700);
-  }
-
-  render();
+  renderVolante();
+  loadLatest();
 })();
 </script>
 </body>
