@@ -2,6 +2,7 @@
   "rewrites": [
     { "source": "/gerador", "destination": "/gerador-lotofacil.html" },
     { "source": "/fechamento", "destination": "/fechamento.html" },
-    { "source": "/backtest", "destination": "/backtest.html" }
+    { "source": "/backtest", "destination": "/backtest.html" },
+    { "source": "/factory", "destination": "/content-factory.html" }
   ]
 }

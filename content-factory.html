@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Content Factory — Fábrica de Conteúdo com IA (12 Motores)</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23D32F45'/%3E%3C/svg%3E"/>
+<style>
+:root{
+  --red:#D32F45;--red-dark:#A61E30;--red-light:#C42A3E;
+  --green:#12924A;--green-dark:#0C6E38;
+  --gold:#D98A00;--blue:#2B5FBF;--purple:#6B3FA0;
+  --bg:#EEEBF3;--bg2:#FAF7E8;--bg3:#FFFFFF;--bg4:#F1EEF6;
+  --border:#DAD4E6;
+  --text:#241C30;--text2:#565065;--text3:#857E95;
+  --radius:12px;--radius-lg:20px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.55;font-size:15px;}
+a{color:var(--red);}
+header{background:var(--bg3);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:50;}
+header .inner{max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+header h1{font-size:18px;font-weight:900;letter-spacing:-.3px;}
+header h1 em{font-style:normal;color:var(--red);}
+header .sub{font-size:12px;color:var(--text3);}
+.wrap{max-width:1280px;margin:0 auto;padding:22px 20px 80px;display:grid;grid-template-columns:340px 1fr;gap:22px;align-items:start;}
+@media(max-width:960px){.wrap{grid-template-columns:1fr;}}
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;}
+.card h2{font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text2);margin-bottom:14px;}
+label{display:block;font-size:12px;font-weight:700;color:var(--text2);margin:12px 0 5px;text-transform:uppercase;letter-spacing:.5px;}
+label:first-of-type{margin-top:0;}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg3);color:var(--text);font-family:inherit;font-size:14px;}
+input:focus,select:focus,textarea:focus{outline:2px solid rgba(211,47,69,.35);border-color:var(--red);}
+textarea{resize:vertical;min-height:110px;line-height:1.5;}
+.hint{font-size:11.5px;color:var(--text3);margin-top:5px;line-height:1.45;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--red);color:#fff;font-weight:800;font-size:14px;padding:12px 22px;border-radius:50px;text-decoration:none;border:none;cursor:pointer;transition:background .2s,transform .15s;}
+.btn:hover{background:var(--red-light);transform:translateY(-1px);}
+.btn:disabled{background:var(--text3);cursor:not-allowed;transform:none;}
+.btn-full{width:100%;}
+.btn-sm{font-size:12px;padding:8px 16px;font-weight:700;}
+.btn-ghost{background:var(--bg4);color:var(--text2);}
+.btn-ghost:hover{background:var(--border);}
+.btn-green{background:var(--green);}
+.btn-green:hover{background:var(--green-dark);}
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.row>*{flex:1;min-width:120px;}
+/* pipeline */
+.eng{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:9px;margin-bottom:7px;background:var(--bg3);font-size:13px;}
+.eng.done{border-color:rgba(18,146,74,.45);background:rgba(18,146,74,.06);}
+.eng.run{border-color:var(--gold);background:rgba(217,138,0,.08);}
+.eng.err{border-color:var(--red);background:rgba(211,47,69,.07);}
+.eng .n{font-weight:900;color:var(--text3);font-size:11px;width:22px;flex:0 0 22px;}
+.eng .nm{font-weight:700;flex:1;}
+.eng .ia{font-size:10.5px;font-weight:800;padding:3px 8px;border-radius:50px;background:var(--bg4);color:var(--text2);white-space:nowrap;letter-spacing:.3px;}
+.eng .st{width:18px;flex:0 0 18px;text-align:center;font-size:13px;}
+.eng input[type=checkbox]{width:auto;flex:0 0 auto;}
+/* resultados */
+.acc{border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;background:var(--bg3);}
+.acc>summary{cursor:pointer;padding:13px 16px;font-weight:800;font-size:14px;background:var(--bg4);list-style:none;display:flex;align-items:center;gap:10px;}
+.acc>summary::-webkit-details-marker{display:none;}
+.acc>summary::before{content:'\25B8';color:var(--red);font-size:13px;transition:transform .2s;}
+.acc[open]>summary::before{transform:rotate(90deg);}
+.acc .body{padding:16px;border-top:1px solid var(--border);}
+pre{white-space:pre-wrap;word-wrap:break-word;font-family:'SF Mono',Consolas,Menlo,monospace;font-size:12.5px;line-height:1.6;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;max-height:520px;overflow:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0;}
+th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top;}
+th{background:var(--bg4);font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);}
+.tag{display:inline-block;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:50px;color:#fff;letter-spacing:.3px;}
+.t-flow{background:var(--blue);}.t-runway{background:var(--purple);}.t-sora{background:var(--green);}
+.t-brain{background:var(--red);}.t-11{background:var(--gold);}.t-you{background:var(--text2);}
+#log{font-family:'SF Mono',Consolas,monospace;font-size:11.5px;color:var(--text2);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;max-height:150px;overflow:auto;white-space:pre-wrap;}
+.bar{height:6px;background:var(--bg4);border-radius:50px;overflow:hidden;margin:12px 0;}
+.bar i{display:block;height:100%;background:var(--green);width:0;transition:width .35s;}
+audio{width:100%;margin-top:10px;}
+.mini{font-size:11.5px;color:var(--text3);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <div>
+      <h1>CONTENT <em>FACTORY</em> — 12 Motores</h1>
+      <div class="sub">Um prompt entra. O sistema roteia para as IAs certas e devolve o pacote de produção completo.</div>
+    </div>
+    <button class="btn btn-sm btn-ghost" onclick="document.getElementById('rot').open=true;document.getElementById('rot').scrollIntoView({behavior:'smooth'})">Ver tabela de roteamento</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ══════════ COLUNA ESQUERDA: CONFIG ══════════ -->
+<aside>
+  <div class="card">
+    <h2>1. Cérebro central</h2>
+    <label>Provedor</label>
+    <select id="provider">
+      <option value="anthropic">Anthropic (Claude)</option>
+      <option value="openai">OpenAI / compatível (GPT)</option>
+    </select>
+    <label>API key</label>
+    <input type="password" id="apikey" placeholder="sk-..." autocomplete="off"/>
+    <label>Modelo</label>
+    <input id="model" list="models" placeholder="id do modelo"/>
+    <datalist id="models">
+      <option value="claude-sonnet-5"></option>
+      <option value="claude-fable-5"></option>
+      <option value="claude-haiku-4-5-20251001"></option>
+      <option value="gpt-5.6"></option>
+    </datalist>
+    <label>Endpoint (opcional)</label>
+    <input id="baseurl" placeholder="proxy próprio, ex: https://meu-proxy/v1"/>
+    <div class="hint">A chave fica só no seu navegador (localStorage) e vai direto para a API do provedor. Se preferir não expor a chave no browser, aponte o endpoint para um proxy seu.</div>
+  </div>
+
+  <div class="card">
+    <h2>2. Voz (ElevenLabs)</h2>
+    <label>API key</label>
+    <input type="password" id="elkey" placeholder="opcional — gera o MP3 de verdade" autocomplete="off"/>
+    <label>Voice ID</label>
+    <input id="elvoice" placeholder="21m00Tcm4TlvDq8ikWAM"/>
+    <div class="hint">Sem chave, o Motor 07 entrega o roteiro de narração, a direção de voz e os ajustes prontos para colar.</div>
+  </div>
+
+  <div class="card">
+    <h2>3. Entrega</h2>
+    <label>Webhook (opcional)</label>
+    <input id="webhook" placeholder="https://hook.make.com/..."/>
+    <div class="hint">Ao terminar, o dossiê completo é enviado via POST (JSON) para Make / n8n / Zapier — que entrega no seu Drive, e-mail ou Notion.</div>
+    <button class="btn btn-sm btn-ghost btn-full" style="margin-top:12px" onclick="salvarCfg()">Salvar configurações</button>
+  </div>
+
+  <div class="card">
+    <h2>Motores</h2>
+    <div id="engines"></div>
+  </div>
+</aside>
+
+<!-- ══════════ COLUNA DIREITA: OPERAÇÃO ══════════ -->
+<main>
+  <div class="card">
+    <h2>Briefing — o único campo obrigatório</h2>
+    <textarea id="brief" placeholder="Ex.: Daniel na Babilônia — o princípio de liderança que quase ninguém percebe"></textarea>
+    <div class="hint">Pode ser um tema, uma pergunta, um título torto ou um parágrafo inteiro. O Motor 01 refina antes de qualquer coisa.</div>
+
+    <div class="row" style="margin-top:14px">
+      <div>
+        <label>Vertical</label>
+        <select id="vertical">
+          <option>Bíblia + liderança + princípios extraordinários</option>
+          <option>Bíblia cinematográfica</option>
+          <option>Negócios / dinheiro / comportamento</option>
+          <option>Psicologia financeira / trading</option>
+          <option>Histórias cinematográficas</option>
+        </select>
+      </div>
+      <div>
+        <label>Duração do vídeo longo</label>
+        <select id="dur">
+          <option value="8">8 min</option>
+          <option value="10" selected>10 min</option>
+          <option value="12">12 min</option>
+          <option value="15">15 min</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:4px">
+      <div>
+        <label>Nº de Shorts</label>
+        <select id="nshorts"><option>4</option><option selected>6</option><option>8</option></select>
+      </div>
+      <div>
+        <label>Tom da narração</label>
+        <select id="tom">
+          <option>Autoridade calma e cinematográfica</option>
+          <option>Investigativo / documental</option>
+          <option>Provocativo e direto</option>
+          <option>Íntimo e reflexivo</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Identidade do canal (opcional)</label>
+    <input id="canal" placeholder="Ex.: canal de autoridade, sem rosto, narrador único, sem clickbait vazio"/>
+
+    <div class="bar"><i id="bar"></i></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn btn-full" id="run" onclick="rodar()">Rodar os 12 motores</button>
+      <button class="btn btn-ghost btn-sm" onclick="pararTudo()" id="stop" disabled>Parar</button>
+    </div>
+    <div id="log" style="margin-top:12px">Pronto. Configure o cérebro central à esquerda e escreva o briefing.</div>
+  </div>
+
+  <div class="card" id="entrega" style="display:none">
+    <h2>Resultado final</h2>
+    <div class="row">
+      <button class="btn btn-green btn-sm" onclick="baixar('md')">Dossiê completo (.md)</button>
+      <button class="btn btn-ghost btn-sm" onclick="baixar('json')">JSON estruturado</button>
+      <button class="btn btn-ghost btn-sm" onclick="baixar('srt')">Legendas (.srt)</button>
+      <button class="btn btn-ghost btn-sm" onclick="baixar('prompts')">Prompts de vídeo (.txt)</button>
+      <button class="btn btn-ghost btn-sm" onclick="copiarTudo()">Copiar tudo</button>
+    </div>
+    <div id="audio"></div>
+  </div>
+
+  <div id="out"></div>
+
+  <details class="acc" id="rot">
+    <summary>Tabela de roteamento — como o sistema decide qual IA usa cada peça</summary>
+    <div class="body">
+      <table>
+        <tr><th>Etapa</th><th>Destino</th><th>Critério</th></tr>
+        <tr><td>Motores 01–04, 09–12</td><td><span class="tag t-brain">Cérebro central</span></td><td>Pesquisa, ideia, roteiro, storyboard, empacotamento, distribuição, monetização e red team — tudo texto e estratégia.</td></tr>
+        <tr><td>Motor 05 — imagens</td><td><span class="tag t-flow">Imagen / Flow</span></td><td>Personagens, cenários e thumbnail saem como prompts com direção de arte, lente e notas de consistência.</td></tr>
+        <tr><td rowspan="3">Motor 06 — vídeo</td><td><span class="tag t-flow">Google Flow + Veo</span></td><td>Cena cinematográfica, documental, bíblica, B-roll, transição, recriação histórica.</td></tr>
+        <tr><td><span class="tag t-runway">Runway Gen-4.5</span></td><td>Personagem recorrente, continuidade entre cenas, referência de imagem, VFX, movimento controlado.</td></tr>
+        <tr><td><span class="tag t-sora">Sora 2</span></td><td>Diálogo, física realista, áudio sincronizado, efeitos sonoros nascendo na própria cena.</td></tr>
+        <tr><td>Motor 07 — voz</td><td><span class="tag t-11">ElevenLabs</span></td><td>Narração; com a chave configurada, o MP3 é gerado aqui mesmo.</td></tr>
+        <tr><td>Motor 08 — edição</td><td><span class="tag t-you">Você / editor</span></td><td>O sistema entrega EDL, mapa de cortes, briefing de trilha e SRT. A montagem final é humana — e é isso que sustenta a autoria original.</td></tr>
+      </table>
+      <p class="mini" style="margin-top:12px">O roteamento do Motor 06 é determinístico: cada cena do storyboard recebe um <code>tipo</code>, e a função <code>rotearCena()</code> converte tipo em motor de vídeo. O cérebro central classifica; o código decide.</p>
+    </div>
+  </details>
+</main>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════════════ */
+const CAMPOS = ['provider','apikey','model','baseurl','elkey','elvoice','webhook','vertical','dur','nshorts','tom','canal'];
+function salvarCfg(){
+  const o = {};
+  CAMPOS.forEach(c => o[c] = document.getElementById(c).value);
+  localStorage.setItem('cf_cfg', JSON.stringify(o));
+  log('Configurações salvas neste navegador.');
+}
+function carregarCfg(){
+  let o = {};
+  try { o = JSON.parse(localStorage.getItem('cf_cfg') || '{}'); } catch(e){}
+  CAMPOS.forEach(c => { if(o[c]) document.getElementById(c).value = o[c]; });
+  if(!document.getElementById('model').value) document.getElementById('model').value = 'claude-sonnet-5';
+  if(!document.getElementById('elvoice').value) document.getElementById('elvoice').value = '21m00Tcm4TlvDq8ikWAM';
+}
+const cfg = id => document.getElementById(id).value.trim();
+
+/* ═══════════════════════════════════════════════════════
+   OS 12 MOTORES
+   ═══════════════════════════════════════════════════════ */
+const SISTEMA = `Você é o cérebro central de uma content factory de YouTube operada por um estrategista experiente.
+Regras inegociáveis:
+- Responda SEMPRE e SOMENTE com um objeto JSON válido, sem crases, sem markdown, sem texto antes ou depois.
+- Escreva em português do Brasil, com autoridade editorial. Nada de clichê de YouTuber.
+- Nunca comece narração com "Olá pessoal, sejam bem-vindos". Comece no conflito.
+- Originalidade e autoria são requisitos: nada de conteúdo genérico, repetitivo ou de linha de montagem. Cada peça precisa de ângulo próprio e contribuição criativa real.
+- Não invente fatos, datas, números, citações ou versículos. Se um dado for incerto, marque com [VERIFICAR].`;
+
+const MOTORES = [
+  {
+    id:'intelligence', n:'01', nome:'Intelligence', ia:'brain', tag:'t-brain',
+    desc:'Descobre a oportunidade real por trás do briefing.',
+    prompt: c => `Briefing bruto: "${c.brief}"
+Vertical: ${c.vertical}. Canal: ${c.canal || 'canal de autoridade, sem rosto'}.
+
+Analise a oportunidade. JSON exato:
+{"tema_refinado":"","angulo_unico":"o que este vídeo diz que ninguém está dizendo","publico":{"quem":"","dor":"","desejo":"","gatilho_de_busca":""},"por_que_agora":"","concorrencia":[{"abordagem_comum":"","por_que_e_fraca":""}],"lacunas":["3 a 5 lacunas de conteúdo exploráveis"],"palavras_chave":["8 termos de busca reais"],"cpm_estimado":"faixa e justificativa","riscos_editoriais":["sensibilidades a respeitar neste tema"]}`
+  },
+  {
+    id:'viral', n:'02', nome:'Viral Engine', ia:'brain', tag:'t-brain',
+    desc:'Transforma o assunto em ideia clicável.',
+    prompt: c => `Contexto: ${J(c.r.intelligence)}
+
+Todo vídeo precisa responder: por que clicar, por que continuar, por que acreditar, por que compartilhar.
+Título: choque + lacuna + recompensa. Sem caixa alta gritada, sem promessa que o vídeo não cumpre.
+
+JSON exato:
+{"quatro_perguntas":{"por_que_clicar":"","por_que_continuar":"","por_que_acreditar":"","por_que_compartilhar":""},"titulo_principal":"máx 60 caracteres","titulos_ab":["5 variações reais para teste A/B"],"promessa":"a transformação prometida em 1 frase","curiosity_gap":"a lacuna aberta que só fecha no payoff","insight_compartilhavel":"a frase que a pessoa manda no grupo","conceitos_thumbnail":[{"conceito":"","texto_thumb":"máximo 4 palavras","emocao":""}]}`
+  },
+  {
+    id:'script', n:'03', nome:'Script Engine', ia:'brain', tag:'t-brain',
+    desc:'Constrói retenção bloco a bloco.',
+    prompt: c => `Contexto: ${J(c.r.intelligence)}
+Empacotamento: ${J(c.r.viral)}
+
+Escreva o roteiro do vídeo longo de ${c.dur} minutos (~${c.dur*150} palavras de narração). Tom: ${c.tom}.
+Estrutura obrigatória, proporcional à duração:
+HOOK (0-20s) · PROMESSA (20-45s) · CONTEXTO (45s-2min) · DESENVOLVIMENTO (2-5min) · PATTERN INTERRUPT (~5min) · DESCOBERTA (5-8min) · PAYOFF (8-10min) · CTA final.
+
+O texto de cada bloco é a narração literal, pronta para locução — sem rubricas dentro da fala.
+
+JSON exato:
+{"blocos":[{"bloco":"HOOK","inicio":"00:00","fim":"00:20","narracao":"","funcao_retencao":""}],"roteiro_corrido":"o texto integral da narração, na ordem, sem marcações","contagem_palavras":0,"duracao_estimada_min":0,"frases_de_impacto":["3 frases citáveis do roteiro"],"checagens":["afirmações que precisam de verificação factual antes de publicar"]}`
+  },
+  {
+    id:'storyboard', n:'04', nome:'Storyboard Engine', ia:'brain', tag:'t-brain',
+    desc:'Converte roteiro em cenas classificadas.',
+    prompt: c => `Roteiro: ${J(c.r.script)}
+
+Quebre em ${Math.round(c.dur*3.2)} cenas de 5 a 12 segundos, cobrindo o roteiro inteiro em ordem, sem buracos de tempo.
+O campo "tipo" é o que decide qual IA de vídeo gera a cena. Use EXATAMENTE um destes valores:
+- "dialogo" — alguém fala em cena, ou áudio/efeito sonoro precisa nascer sincronizado
+- "fisica" — realismo físico: água, fogo, multidão, queda, corpo em movimento complexo
+- "personagem" — personagem recorrente que precisa de continuidade entre cenas
+- "vfx" — efeito visual, transformação, composição controlada
+- "cinematografico" — plano narrativo amplo, recriação histórica, cena bíblica
+- "broll" — imagem de apoio, textura, detalhe
+- "transicao" — passagem entre blocos
+
+JSON exato:
+{"cenas":[{"id":1,"inicio":"00:00","fim":"00:07","narracao":"trecho exato da narração desta cena","visual":"descrição visual densa e específica","tipo":"cinematografico","camera":"movimento e lente","luz":"","duracao_s":7}]}`
+  },
+  {
+    id:'visual', n:'05', nome:'Visual Engine', ia:'flow', tag:'t-flow',
+    desc:'Bíblia visual: personagens, cenários, thumbnail.',
+    prompt: c => `Storyboard: ${J(c.r.storyboard, 6000)}
+Conceitos de thumbnail: ${J(c.r.viral && c.r.viral.conceitos_thumbnail)}
+
+Defina a identidade visual e escreva os prompts de imagem em inglês (modelos de imagem respondem melhor em inglês), com lente, luz, paleta e mood.
+
+JSON exato:
+{"estilo_visual":"a direção de arte em 2 frases","paleta":["#hex + nome"],"referencias":["3 referências de linguagem visual, sem citar obra protegida específica"],"personagens":[{"nome":"","descricao_pt":"","prompt_referencia_en":"prompt de retrato para gerar a imagem-âncora","notas_consistencia":"o que precisa se repetir em toda cena"}],"cenarios":[{"nome":"","prompt_en":""}],"thumbnail":{"texto":"máx 4 palavras","composicao":"","prompt_en":""}}`
+  },
+  {
+    id:'video', n:'06', nome:'Video Engine', ia:'router', tag:'t-runway',
+    desc:'Roteia cada cena para Flow/Veo, Runway ou Sora.',
+    prompt: c => `Storyboard: ${J(c.r.storyboard, 7000)}
+Bíblia visual: ${J(c.r.visual, 3000)}
+
+Para CADA cena, escreva o prompt de geração de vídeo em inglês, no formato do motor já atribuído. Respeite o estilo visual e a consistência de personagem.
+- flow_veo: prompt cinematográfico contínuo, com câmera, lente, luz, atmosfera e ação; 1 parágrafo.
+- runway: prompt curto e direcionado + campo "referencia" indicando qual imagem-âncora usar.
+- sora: prompt com ação, física e áudio/diálogo descritos explicitamente.
+
+Motores já definidos por cena (não altere): ${JSON.stringify(c.rota)}
+
+JSON exato, uma entrada por cena, mesma ordem e mesmos ids:
+{"takes":[{"id":1,"motor":"flow_veo","prompt_en":"","referencia":"","duracao_s":7,"negativos":"o que evitar","plano_b":"o que fazer se o take sair ruim"}]}`
+  },
+  {
+    id:'voice', n:'07', nome:'Voice Engine', ia:'11', tag:'t-11',
+    desc:'Narração profissional + direção de voz.',
+    prompt: c => `Roteiro corrido: ${(c.r.script && c.r.script.roteiro_corrido || '').slice(0,7000)}
+
+JSON exato:
+{"direcao_de_voz":"como narrar: ritmo, respiração, onde desacelerar, onde cortar o ar","ajustes_elevenlabs":{"stability":0.45,"similarity_boost":0.8,"style":0.35,"speed":1.0,"justificativa":""},"marcacoes":[{"trecho":"primeiras 6 palavras do trecho","direcao":"pausa longa / peso / aceleração"}],"texto_narracao":"o roteiro pronto para TTS, com pontuação ajustada para respiração natural — sem rubricas, sem colchetes"}`
+  },
+  {
+    id:'editing', n:'08', nome:'Editing Engine', ia:'you', tag:'t-you',
+    desc:'EDL, ritmo, trilha, legendas.',
+    prompt: c => `Storyboard: ${J(c.r.storyboard, 5000)}
+Blocos do roteiro: ${J(c.r.script && c.r.script.blocos, 3000)}
+
+JSON exato:
+{"edl":[{"cena":1,"entrada":"00:00","saida":"00:07","corte":"seco / L-cut / match cut","transicao":"","observacao":""}],"ritmo":{"cortes_por_minuto_hook":0,"cortes_por_minuto_corpo":0,"onde_respirar":["timecodes"]},"trilha":{"mood":"","bpm_alvo":0,"onde_entra":"","onde_some":"","referencia_de_busca":"termos para achar a trilha em banco livre de royalties"},"sfx":[{"timecode":"","efeito":""}],"legendas":{"estilo":"","tamanho":"","posicao":"","destaque":"regra para palavras enfatizadas"},"pattern_interrupts":[{"timecode":"","recurso":""}]}`
+  },
+  {
+    id:'packaging', n:'09', nome:'Packaging Engine', ia:'brain', tag:'t-brain',
+    desc:'Título final, thumbnail, descrição, capítulos.',
+    prompt: c => `Empacotamento inicial: ${J(c.r.viral)}
+Roteiro: ${J(c.r.script && c.r.script.blocos, 2500)}
+
+JSON exato:
+{"titulo_final":"","por_que_este":"","titulos_ab":["4 alternativas"],"thumbnail_final":{"texto":"","composicao":"","teste_3_segundos":"o que a pessoa entende em 3s no celular"},"descricao":"descrição completa do vídeo, 3 parágrafos + CTA","primeira_linha":"as 2 linhas que aparecem antes do 'mostrar mais'","tags":["15 tags"],"capitulos":[{"tempo":"00:00","titulo":""}],"comentario_fixado":"","disclosure_ia":"se e como declarar conteúdo alterado ou sintético neste vídeo específico"}`
+  },
+  {
+    id:'distribution', n:'10', nome:'Distribution Engine', ia:'brain', tag:'t-brain',
+    desc:'Uma pauta vira 10 a 15 ativos.',
+    prompt: c => `Roteiro: ${J(c.r.script, 5000)}
+Insight compartilhável: ${c.r.viral && c.r.viral.insight_compartilhavel}
+
+Gere a pirâmide de conteúdo a partir do vídeo longo. Cada Short precisa de hook próprio nos primeiros 2 segundos e um corte de saída que não entrega tudo.
+Gere exatamente ${c.nshorts} shorts, 2 reels, 2 tiktoks e 8 slides de carrossel.
+
+JSON exato:
+{"shorts":[{"n":1,"titulo":"","recorte_do_longo":"timecode aproximado de origem","hook_2s":"","roteiro":"texto completo de 30 a 50s","texto_na_tela":"","cta":""}],"reels":[{"titulo":"","adaptacao":"o que muda em relação ao Short"}],"tiktoks":[{"titulo":"","adaptacao":""}],"carrossel_instagram":[{"slide":1,"texto":""}],"post_texto":"post para X/LinkedIn, autônomo, sem depender do vídeo","proximo_video":"o gancho de sequência que fecha o loop com este"}`
+  },
+  {
+    id:'monetization', n:'11', nome:'Monetization Engine', ia:'brain', tag:'t-brain',
+    desc:'AdSense, afiliado, produto, lead, patrocínio.',
+    prompt: c => `Tema: ${c.r.intelligence && c.r.intelligence.tema_refinado}
+Público: ${J(c.r.intelligence && c.r.intelligence.publico)}
+Roteiro: ${J(c.r.script && c.r.script.blocos, 2000)}
+
+JSON exato:
+{"adsense":{"cpm_faixa":"","pontos_de_ad":["timecodes que não quebram retenção"],"cuidados":"o que neste tema pode limitar anunciante"},"afiliados":[{"produto":"","onde_encaixa":"","frase_de_transicao":""}],"produto_proprio":{"ideia":"","formato":"","preco_sugerido":"","por_que_esta_audiencia_compra":""},"lead_magnet":{"oferta":"","cta_no_video":"","timecode_ideal":""},"patrocinio":{"tipo_de_marca":"","pitch":"3 linhas para enviar a um patrocinador"},"ordem_de_prioridade":["o que ativar primeiro, segundo, terceiro e por quê"]}`
+  },
+  {
+    id:'redteam', n:'12', nome:'Analytics / Red Team', ia:'brain', tag:'t-brain',
+    desc:'Ataca o próprio pacote antes do público atacar.',
+    prompt: c => `Pacote: título "${c.r.packaging && c.r.packaging.titulo_final}", hook "${(c.r.script && c.r.script.blocos && c.r.script.blocos[0] && c.r.script.blocos[0].narracao || '').slice(0,400)}".
+Blocos: ${J(c.r.script && c.r.script.blocos, 2500)}
+
+Seja duro. Encontre o que vai falhar.
+
+JSON exato:
+{"pontos_de_queda":[{"timecode":"","risco":"","correcao":""}],"ataque_ao_hook":"por que alguém sairia nos primeiros 10 segundos","ataque_ao_titulo":"por que alguém não clicaria","promessa_cumprida":"o vídeo entrega o que o título promete? sim/não e onde falha","originalidade":{"veredito":"","o_que_torna_unico":"","o_que_ainda_parece_generico":"","como_reforcar_autoria":"contribuição criativa concreta a adicionar"},"conformidade":{"conteudo_sintetico":"o que precisa ser declarado","sensibilidade_do_tema":"","direitos":"riscos de música, imagem ou citação"},"kpis":[{"metrica":"","meta":""}],"experimentos_proximo_video":["3 testes concretos"],"nota_final":"0 a 10 com justificativa em 1 frase"}`
+  }
+];
+
+/* ── Roteador determinístico do Motor 06 ── */
+const ROTA = { dialogo:'sora', fisica:'sora', personagem:'runway', vfx:'runway', cinematografico:'flow_veo', broll:'flow_veo', transicao:'flow_veo' };
+const NOME_MOTOR = { sora:'Sora 2', runway:'Runway Gen-4.5', flow_veo:'Google Flow + Veo' };
+const TAG_MOTOR = { sora:'t-sora', runway:'t-runway', flow_veo:'t-flow' };
+function rotearCena(tipo){
+  const t = String(tipo || '').toLowerCase().trim();
+  if(ROTA[t]) return ROTA[t];
+  if(/dialog|fala|voz|audio|som|fisic/.test(t)) return 'sora';
+  if(/person|vfx|efeito|continu|refer/.test(t)) return 'runway';
+  return 'flow_veo';
+}
+
+/* ═══════════════════════════════════════════════════════
+   INFRA
+   ═══════════════════════════════════════════════════════ */
+let abortar = false, RES = {}, CTX = {};
+
+function log(m){
+  const el = document.getElementById('log');
+  el.textContent += (el.textContent ? '\n' : '') + m;
+  el.scrollTop = el.scrollHeight;
+}
+function J(o, lim){ const s = JSON.stringify(o || {}); return lim ? s.slice(0, lim) : s; }
+
+const ROTULO_IA = { brain:'Cérebro', flow:'Imagem', router:'Vídeo', '11':'Voz', you:'Edição' };
+
+function montarLista(){
+  document.getElementById('engines').innerHTML = MOTORES.map(m =>
+    '<div class="eng" id="eng-' + m.id + '" title="' + m.desc + '">' +
+      '<input type="checkbox" id="on-' + m.id + '" checked/>' +
+      '<span class="n">' + m.n + '</span>' +
+      '<span class="nm">' + m.nome + '</span>' +
+      '<span class="ia">' + ROTULO_IA[m.ia] + '</span>' +
+      '<span class="st" id="st-' + m.id + '">·</span>' +
+    '</div>').join('');
+}
+function marcar(id, estado, icone){
+  document.getElementById('eng-' + id).className = 'eng ' + estado;
+  document.getElementById('st-' + id).textContent = icone;
+}
+
+/* ── Chamada ao cérebro central ── */
+async function cerebro(userPrompt){
+  const prov = cfg('provider'), key = cfg('apikey'), modelo = cfg('model');
+  if(!key) throw new Error('Configure a API key do cérebro central.');
+  let url, headers, body;
+
+  if(prov === 'anthropic'){
+    url = (cfg('baseurl') || 'https://api.anthropic.com/v1') + '/messages';
+    headers = {
+      'content-type':'application/json',
+      'x-api-key':key,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access':'true'
+    };
+    body = { model:modelo, max_tokens:8000, system:SISTEMA, messages:[{role:'user',content:userPrompt}] };
+  } else {
+    url = (cfg('baseurl') || 'https://api.openai.com/v1') + '/chat/completions';
+    headers = { 'content-type':'application/json', 'authorization':'Bearer ' + key };
+    body = { model:modelo, messages:[{role:'system',content:SISTEMA},{role:'user',content:userPrompt}] };
+  }
+
+  const res = await fetch(url, { method:'POST', headers, body:JSON.stringify(body) });
+  if(!res.ok){
+    const t = await res.text();
+    throw new Error('API ' + res.status + ': ' + t.slice(0,300));
+  }
+  const d = await res.json();
+  if(prov === 'anthropic'){
+    return (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  }
+  return d.choices[0].message.content;
+}
+
+/* ── Parser tolerante: o modelo às vezes embrulha o JSON ── */
+function extrairJSON(txt){
+  let s = String(txt || '').trim();
+  s = s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').trim();
+  const i = s.indexOf('{'), f = s.lastIndexOf('}');
+  if(i === -1 || f === -1) throw new Error('Resposta sem JSON.');
+  return JSON.parse(s.slice(i, f + 1));
+}
+
+async function chamarMotor(motor, ctx){
+  let ultimoErro;
+  for(let tentativa = 1; tentativa <= 2; tentativa++){
+    if(abortar) throw new Error('Interrompido.');
+    try {
+      const extra = tentativa > 1 ? '\n\nATENÇÃO: sua resposta anterior não era JSON válido. Responda SOMENTE o objeto JSON.' : '';
+      return extrairJSON(await cerebro(motor.prompt(ctx) + extra));
+    } catch(e){
+      ultimoErro = e;
+      if(/API [45]\d\d|key|Interrompido/.test(e.message)) throw e;
+      log('  ↻ ' + motor.nome + ': ' + e.message.slice(0,90) + ' — repetindo');
+    }
+  }
+  throw ultimoErro;
+}
+
+/* ═══════════════════════════════════════════════════════
+   PIPELINE
+   ═══════════════════════════════════════════════════════ */
+async function rodar(){
+  const brief = cfg('brief');
+  if(!brief){ alert('Escreva o briefing.'); return; }
+  if(!cfg('apikey')){ alert('Configure a API key do cérebro central (coluna da esquerda).'); return; }
+
+  abortar = false; RES = {};
+  document.getElementById('run').disabled = true;
+  document.getElementById('stop').disabled = false;
+  document.getElementById('out').innerHTML = '';
+  document.getElementById('audio').innerHTML = '';
+  document.getElementById('entrega').style.display = 'none';
+  document.getElementById('bar').style.width = '0';
+  document.getElementById('log').textContent = 'Iniciando fábrica…';
+  salvarCfg();
+
+  CTX = {
+    brief, vertical:cfg('vertical'), dur:parseInt(cfg('dur')), tom:cfg('tom'),
+    canal:cfg('canal'), nshorts:parseInt(cfg('nshorts')), r:RES, rota:[],
+    inicio:new Date().toISOString()
+  };
+
+  const ativos = MOTORES.filter(m => document.getElementById('on-' + m.id).checked);
+  let feitos = 0;
+
+  for(const m of ativos){
+    if(abortar) break;
+    marcar(m.id, 'run', '◐');
+    log('▸ Motor ' + m.n + ' — ' + m.nome);
+    const t0 = Date.now();
+    try {
+      // O roteamento acontece ANTES do Motor 06: o código decide, o modelo escreve.
+      if(m.id === 'video'){
+        const cenas = (RES.storyboard && RES.storyboard.cenas) || [];
+        if(!cenas.length){ log('  ⚠ sem storyboard — Motor 06 pulado'); marcar(m.id, 'err', '!'); feitos++; continue; }
+        CTX.rota = cenas.map(c => ({ id:c.id, motor:rotearCena(c.tipo) }));
+        log('  → ' + resumoRota(CTX.rota));
+      }
+      RES[m.id] = await chamarMotor(m, CTX);
+      marcar(m.id, 'done', '✓');
+      log('  ✓ ' + ((Date.now() - t0) / 1000).toFixed(1) + 's');
+      render();
+    } catch(e){
+      marcar(m.id, 'err', '✕');
+      log('  ✕ ' + e.message.slice(0,200));
+      if(/API 401|API 403|API key/.test(e.message)){ log('Pipeline parado: problema de credencial.'); break; }
+    }
+    feitos++;
+    document.getElementById('bar').style.width = (feitos / ativos.length * 100) + '%';
+  }
+
+  if(!abortar && RES.voice && cfg('elkey')) await gerarAudio();
+
+  document.getElementById('run').disabled = false;
+  document.getElementById('stop').disabled = true;
+  if(Object.keys(RES).length){
+    document.getElementById('entrega').style.display = 'block';
+    render();
+    log('■ Fábrica concluída. ' + Object.keys(RES).length + ' motores entregues.');
+    if(cfg('webhook')) await enviarWebhook();
+  }
+}
+function pararTudo(){ abortar = true; log('Parando após a etapa atual…'); }
+
+function resumoRota(rota){
+  const c = {};
+  rota.forEach(r => c[r.motor] = (c[r.motor] || 0) + 1);
+  return Object.keys(c).map(k => c[k] + ' × ' + NOME_MOTOR[k]).join('  |  ');
+}
+
+/* ── ElevenLabs ── */
+async function gerarAudio(){
+  const texto = (RES.voice.texto_narracao || (RES.script && RES.script.roteiro_corrido) || '').trim();
+  if(!texto) return;
+  log('▸ Motor 07 — sintetizando narração no ElevenLabs…');
+  try{
+    const aj = RES.voice.ajustes_elevenlabs || {};
+    const res = await fetch('https://api.elevenlabs.io/v1/text-to-speech/' + (cfg('elvoice') || '21m00Tcm4TlvDq8ikWAM'), {
+      method:'POST',
+      headers:{ 'xi-api-key':cfg('elkey'), 'content-type':'application/json' },
+      body: JSON.stringify({
+        text: texto.slice(0, 9000),
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: aj.stability != null ? aj.stability : 0.45,
+          similarity_boost: aj.similarity_boost != null ? aj.similarity_boost : 0.8,
+          style: aj.style != null ? aj.style : 0.35
+        }
+      })
+    });
+    if(!res.ok) throw new Error('ElevenLabs ' + res.status + ': ' + (await res.text()).slice(0,200));
+    const url = URL.createObjectURL(await res.blob());
+    document.getElementById('audio').innerHTML =
+      '<p class="mini" style="margin-top:14px"><b>Narração gerada:</b></p>' +
+      '<audio controls src="' + url + '"></audio>' +
+      '<p style="margin-top:8px"><a class="btn btn-sm btn-ghost" href="' + url + '" download="narracao.mp3">Baixar narração (.mp3)</a></p>';
+    log('  ✓ narração pronta');
+  } catch(e){
+    log('  ✕ voz: ' + e.message.slice(0,180) + ' — o roteiro de narração segue disponível no Motor 07.');
+  }
+}
+
+/* ── Entrega via webhook ── */
+async function enviarWebhook(){
+  try{
+    await fetch(cfg('webhook'), {
+      method:'POST', headers:{ 'content-type':'application/json' },
+      body: JSON.stringify({ briefing:CTX.brief, vertical:CTX.vertical, gerado_em:CTX.inicio, dossie_md:montarMD(), resultado:RES })
+    });
+    log('✉ Dossiê enviado para o webhook.');
+  } catch(e){ log('✕ webhook: ' + e.message.slice(0,140)); }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════════ */
+function esc(s){ return String(s).replace(/[&<>]/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[c])); }
+
+function render(){
+  document.getElementById('out').innerHTML = MOTORES.filter(m => RES[m.id]).map((m, i) => {
+    let corpo = '';
+    if(m.id === 'video') corpo = tabelaTakes();
+    else if(m.id === 'storyboard') corpo = tabelaCenas();
+    corpo += '<pre>' + esc(JSON.stringify(RES[m.id], null, 2)) + '</pre>';
+    return '<details class="acc"' + (i === 0 ? ' open' : '') + '>' +
+      '<summary>Motor ' + m.n + ' — ' + m.nome +
+      '<span class="tag ' + m.tag + '" style="margin-left:auto">' + m.desc + '</span></summary>' +
+      '<div class="body">' + corpo + '</div></details>';
+  }).join('');
+}
+
+function tabelaCenas(){
+  const cenas = (RES.storyboard && RES.storyboard.cenas) || [];
+  return '<table><tr><th>#</th><th>Tempo</th><th>Visual</th><th>Tipo</th><th>Motor roteado</th></tr>' +
+    cenas.map(c => {
+      const mt = rotearCena(c.tipo);
+      return '<tr><td>' + c.id + '</td><td>' + esc(c.inicio || '') + '–' + esc(c.fim || '') + '</td>' +
+        '<td>' + esc((c.visual || '').slice(0,160)) + '</td><td>' + esc(c.tipo || '') + '</td>' +
+        '<td><span class="tag ' + TAG_MOTOR[mt] + '">' + NOME_MOTOR[mt] + '</span></td></tr>';
+    }).join('') + '</table>';
+}
+
+function motorDoTake(t){
+  const cena = ((RES.storyboard && RES.storyboard.cenas) || []).find(c => c.id === t.id);
+  return NOME_MOTOR[t.motor] ? t.motor : rotearCena(cena && cena.tipo);
+}
+
+function tabelaTakes(){
+  const takes = (RES.video && RES.video.takes) || [];
+  return '<table><tr><th>#</th><th>Motor</th><th>Prompt</th><th>Duração</th></tr>' +
+    takes.map(t => {
+      const mt = motorDoTake(t);
+      return '<tr><td>' + t.id + '</td><td><span class="tag ' + TAG_MOTOR[mt] + '">' + NOME_MOTOR[mt] + '</span></td>' +
+        '<td>' + esc((t.prompt_en || '').slice(0,220)) + '</td><td>' + (t.duracao_s || '') + 's</td></tr>';
+    }).join('') + '</table>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   EXPORTAÇÃO
+   ═══════════════════════════════════════════════════════ */
+function montarMD(){
+  const L = [];
+  L.push('# ' + ((RES.packaging && RES.packaging.titulo_final) || (RES.viral && RES.viral.titulo_principal) || CTX.brief));
+  L.push('');
+  L.push('- **Briefing:** ' + CTX.brief);
+  L.push('- **Vertical:** ' + CTX.vertical);
+  L.push('- **Duração alvo:** ' + CTX.dur + ' min');
+  L.push('- **Gerado em:** ' + new Date().toLocaleString('pt-BR'));
+  L.push('');
+
+  const bloco = (t, f) => { L.push('---'); L.push(''); L.push('## ' + t); L.push(''); f(); L.push(''); };
+
+  if(RES.intelligence) bloco('Motor 01 — Intelligence', () => {
+    const r = RES.intelligence;
+    L.push('**Tema refinado:** ' + r.tema_refinado); L.push('');
+    L.push('**Ângulo único:** ' + r.angulo_unico); L.push('');
+    (r.lacunas || []).forEach(x => L.push('- ' + x)); L.push('');
+    L.push('**Palavras-chave:** ' + (r.palavras_chave || []).join(', '));
+  });
+
+  if(RES.viral) bloco('Motor 02 — Viral Engine', () => {
+    const r = RES.viral;
+    L.push('**Título:** ' + r.titulo_principal); L.push('');
+    L.push('**Promessa:** ' + r.promessa); L.push('');
+    L.push('**Insight compartilhável:** ' + r.insight_compartilhavel); L.push('');
+    L.push('### Variações A/B');
+    (r.titulos_ab || []).forEach(x => L.push('- ' + x));
+  });
+
+  if(RES.script) bloco('Motor 03 — Roteiro', () => {
+    (RES.script.blocos || []).forEach(b => {
+      L.push('### ' + b.bloco + ' · ' + b.inicio + '–' + b.fim); L.push('');
+      L.push(b.narracao); L.push('');
+      L.push('> _' + (b.funcao_retencao || '') + '_'); L.push('');
+    });
+  });
+
+  if(RES.storyboard) bloco('Motor 04 + 06 — Storyboard e prompts de vídeo', () => {
+    const takes = {};
+    ((RES.video && RES.video.takes) || []).forEach(t => takes[t.id] = t);
+    (RES.storyboard.cenas || []).forEach(c => {
+      const mt = rotearCena(c.tipo), t = takes[c.id] || {};
+      L.push('**Cena ' + c.id + '** (' + c.inicio + '–' + c.fim + ') → `' + NOME_MOTOR[mt] + '`'); L.push('');
+      L.push('- Narração: ' + (c.narracao || ''));
+      L.push('- Visual: ' + (c.visual || ''));
+      L.push('- Câmera: ' + (c.camera || ''));
+      if(t.prompt_en) L.push('- Prompt: `' + t.prompt_en + '`');
+      if(t.referencia) L.push('- Referência: ' + t.referencia);
+      if(t.negativos) L.push('- Evitar: ' + t.negativos);
+      L.push('');
+    });
+  });
+
+  if(RES.visual) bloco('Motor 05 — Bíblia visual', () => {
+    const r = RES.visual;
+    L.push('**Estilo:** ' + r.estilo_visual); L.push('');
+    (r.personagens || []).forEach(p => {
+      L.push('### ' + p.nome); L.push('');
+      L.push('`' + p.prompt_referencia_en + '`'); L.push('');
+      L.push(p.notas_consistencia || ''); L.push('');
+    });
+    if(r.thumbnail){
+      L.push('### Thumbnail'); L.push('');
+      L.push('Texto: **' + r.thumbnail.texto + '**'); L.push('');
+      L.push('`' + (r.thumbnail.prompt_en || '') + '`');
+    }
+  });
+
+  if(RES.voice) bloco('Motor 07 — Narração', () => {
+    L.push('**Direção de voz:** ' + RES.voice.direcao_de_voz); L.push('');
+    L.push('```json'); L.push(JSON.stringify(RES.voice.ajustes_elevenlabs || {}, null, 2)); L.push('```'); L.push('');
+    L.push('### Texto para TTS'); L.push(''); L.push(RES.voice.texto_narracao || '');
+  });
+
+  if(RES.editing) bloco('Motor 08 — Edição', () => {
+    const r = RES.editing;
+    L.push('| Cena | Entrada | Saída | Corte | Transição |');
+    L.push('|---|---|---|---|---|');
+    (r.edl || []).forEach(e => L.push('| ' + e.cena + ' | ' + e.entrada + ' | ' + e.saida + ' | ' + (e.corte || '') + ' | ' + (e.transicao || '') + ' |'));
+    L.push('');
+    L.push('**Trilha:** ' + JSON.stringify(r.trilha || {}));
+  });
+
+  if(RES.packaging) bloco('Motor 09 — Empacotamento', () => {
+    const r = RES.packaging;
+    L.push('**Título final:** ' + r.titulo_final); L.push('');
+    L.push('### Descrição'); L.push(''); L.push(r.descricao || ''); L.push('');
+    L.push('### Capítulos');
+    (r.capitulos || []).forEach(c => L.push(c.tempo + ' ' + c.titulo));
+    L.push('');
+    L.push('**Tags:** ' + (r.tags || []).join(', ')); L.push('');
+    L.push('**Declaração de IA:** ' + (r.disclosure_ia || ''));
+  });
+
+  if(RES.distribution) bloco('Motor 10 — Distribuição', () => {
+    (RES.distribution.shorts || []).forEach(s => {
+      L.push('### Short ' + s.n + ' — ' + s.titulo); L.push('');
+      L.push('_Hook 2s:_ ' + s.hook_2s); L.push('');
+      L.push(s.roteiro || ''); L.push('');
+    });
+    L.push('### Carrossel');
+    (RES.distribution.carrossel_instagram || []).forEach(c => L.push(c.slide + '. ' + c.texto));
+    L.push('');
+    L.push('### Post'); L.push(''); L.push(RES.distribution.post_texto || '');
+  });
+
+  if(RES.monetization) bloco('Motor 11 — Monetização', () => {
+    L.push('```json'); L.push(JSON.stringify(RES.monetization, null, 2)); L.push('```');
+  });
+
+  if(RES.redteam) bloco('Motor 12 — Red Team', () => {
+    const r = RES.redteam;
+    L.push('**Nota final:** ' + r.nota_final); L.push('');
+    L.push('**Ataque ao hook:** ' + r.ataque_ao_hook); L.push('');
+    L.push('**Ataque ao título:** ' + r.ataque_ao_titulo); L.push('');
+    L.push('### Originalidade'); L.push('');
+    L.push('```json'); L.push(JSON.stringify(r.originalidade || {}, null, 2)); L.push('```'); L.push('');
+    L.push('### Pontos de queda');
+    (r.pontos_de_queda || []).forEach(p => L.push('- ' + p.timecode + ' — ' + p.risco + ' → ' + p.correcao));
+  });
+
+  return L.join('\n');
+}
+
+function montarPrompts(){
+  const takes = (RES.video && RES.video.takes) || [];
+  const por = { flow_veo:[], runway:[], sora:[] };
+  takes.forEach(t => {
+    const mt = motorDoTake(t);
+    por[mt].push('--- CENA ' + t.id + ' (' + (t.duracao_s || '?') + 's) ---\n' + (t.prompt_en || '') +
+      (t.referencia ? '\nREF: ' + t.referencia : '') +
+      (t.negativos ? '\nNEGATIVE: ' + t.negativos : ''));
+  });
+  let s = 'PROMPTS DE VÍDEO — ' + ((RES.packaging && RES.packaging.titulo_final) || CTX.brief) + '\n';
+  Object.keys(por).forEach(k => {
+    if(!por[k].length) return;
+    s += '\n\n══════════════════════════════════════\n' + NOME_MOTOR[k].toUpperCase() +
+         ' — ' + por[k].length + ' takes\n══════════════════════════════════════\n\n' + por[k].join('\n\n');
+  });
+  if(RES.visual){
+    s += '\n\n══════════════════════════════════════\nIMAGENS-ÂNCORA (Imagen / Flow / seu gerador)\n══════════════════════════════════════\n\n';
+    (RES.visual.personagens || []).forEach(p => s += '[' + p.nome + ']\n' + p.prompt_referencia_en + '\n\n');
+    (RES.visual.cenarios || []).forEach(p => s += '[' + p.nome + ']\n' + p.prompt_en + '\n\n');
+    if(RES.visual.thumbnail) s += '[THUMBNAIL]\n' + (RES.visual.thumbnail.prompt_en || '') + '\n';
+  }
+  return s;
+}
+
+function seg(tc){
+  const p = String(tc || '0:00').split(':').map(n => parseFloat(n) || 0);
+  return p.length === 3 ? p[0]*3600 + p[1]*60 + p[2] : p[0]*60 + (p[1] || 0);
+}
+function srtTime(s){
+  const pad = (n, l) => String(n).padStart(l, '0');
+  return pad(Math.floor(s/3600), 2) + ':' + pad(Math.floor(s%3600/60), 2) + ':' +
+         pad(Math.floor(s%60), 2) + ',' + pad(Math.round((s%1)*1000), 3);
+}
+function montarSRT(){
+  return ((RES.storyboard && RES.storyboard.cenas) || [])
+    .filter(c => c.narracao)
+    .map((c, i) => (i+1) + '\n' + srtTime(seg(c.inicio)) + ' --> ' + srtTime(seg(c.fim)) + '\n' + c.narracao + '\n')
+    .join('\n');
+}
+
+function baixar(tipo){
+  const nome = ((RES.packaging && RES.packaging.titulo_final) || CTX.brief || 'content-factory')
+    .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) || 'content-factory';
+  const mapa = {
+    md:      [montarMD(), nome + '.md', 'text/markdown'],
+    json:    [JSON.stringify({ contexto:{ brief:CTX.brief, vertical:CTX.vertical, dur:CTX.dur }, resultado:RES }, null, 2), nome + '.json', 'application/json'],
+    srt:     [montarSRT(), nome + '.srt', 'text/plain'],
+    prompts: [montarPrompts(), nome + '-prompts.txt', 'text/plain']
+  };
+  const item = mapa[tipo];
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([item[0]], { type:item[2] + ';charset=utf-8' }));
+  a.download = item[1];
+  a.click();
+}
+function copiarTudo(){
+  navigator.clipboard.writeText(montarMD()).then(() => log('⧉ Dossiê copiado para a área de transferência.'));
+}
+
+montarLista();
+carregarCfg();
+</script>
+</body>
+</html>
