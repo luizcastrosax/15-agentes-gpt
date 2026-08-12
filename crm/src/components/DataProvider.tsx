@@ -5,6 +5,11 @@ import { useRouter } from "next/navigation";
 import type { Action } from "@/lib/mutations";
 import type { CrmData, Role } from "@/lib/types";
 
+export interface Warnings {
+  defaultPassword: boolean;
+  defaultSecret: boolean;
+}
+
 export interface SessionUser {
   id: string;
   name: string;
@@ -16,6 +21,7 @@ interface Ctx {
   data: CrmData;
   user: SessionUser;
   storage: "postgres" | "memoria";
+  warnings: Warnings;
   loading: boolean;
   busy: boolean;
   mutate: (actions: Action | Action[]) => Promise<unknown[]>;
@@ -37,6 +43,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [data, setData] = useState<CrmData | null>(null);
   const [user, setUser] = useState<SessionUser | null>(null);
   const [storage, setStorage] = useState<"postgres" | "memoria">("memoria");
+  const [warnings, setWarnings] = useState<Warnings>({ defaultPassword: false, defaultSecret: false });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -55,6 +62,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setData(json.data);
     setUser(json.user);
     setStorage(json.storage);
+    setWarnings(json.warnings || { defaultPassword: false, defaultSecret: false });
     setLoading(false);
   }, [router]);
 
@@ -109,9 +117,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Ctx | null>(
     () =>
       data && user
-        ? { data, user, storage, loading, busy, mutate, reload: load, resetDemo, baseUrl }
+        ? { data, user, storage, warnings, loading, busy, mutate, reload: load, resetDemo, baseUrl }
         : null,
-    [data, user, storage, loading, busy, mutate, load, resetDemo, baseUrl],
+    [data, user, storage, warnings, loading, busy, mutate, load, resetDemo, baseUrl],
   );
 
   if (error) {

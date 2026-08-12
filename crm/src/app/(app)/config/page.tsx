@@ -18,7 +18,7 @@ import { slugify } from "@/lib/shared";
 import type { CustomField, Stage, Tag, Template, User } from "@/lib/types";
 
 export default function SettingsPage() {
-  const { data, user, storage, mutate, resetDemo, baseUrl } = useCrm();
+  const { data, user, storage, warnings, mutate, resetDemo, baseUrl } = useCrm();
   const toast = useToast();
   const [tab, setTab] = useState("organizacao");
 
@@ -402,6 +402,34 @@ export default function SettingsPage() {
 
       {tab === "dados" && (
         <div className="space-y-4">
+          {(warnings.defaultPassword || warnings.defaultSecret) && (
+            <div className="card-pad border-rose-200 bg-rose-50">
+              <h3 className="text-[15px] font-semibold text-rose-900">Credenciais padrao em uso</h3>
+              <p className="mt-1 text-[13px] leading-relaxed text-rose-800">
+                Qualquer pessoa que descubra o endereco pode entrar com a senha padrao. Corrija
+                assim:
+              </p>
+              <ol className="ml-4 mt-2 list-decimal space-y-1 text-[13px] text-rose-800">
+                <li>
+                  No painel da Vercel, abra <b>Settings &gt; Environment Variables</b>.
+                </li>
+                <li>
+                  Crie <code className="rounded bg-white px-1">ADMIN_PASSWORD</code> com a senha que
+                  voce quer usar.
+                </li>
+                <li>
+                  Crie <code className="rounded bg-white px-1">AUTH_SECRET</code> com uma string
+                  longa e aleatoria.
+                </li>
+                <li>Faca um novo deploy (Deployments &gt; ... &gt; Redeploy).</li>
+              </ol>
+              <p className="mt-2 text-[13px] text-rose-800">
+                Se a base ja tiver sido criada, a senha nova nao se aplica sozinha: troque em{" "}
+                <b>Configuracoes &gt; Usuarios &gt; Trocar senha</b>.
+              </p>
+            </div>
+          )}
+
           <div className="card-pad">
             <h3 className="text-[15px] font-semibold text-slate-900">Armazenamento</h3>
             <div className="mt-3 flex items-center gap-3">

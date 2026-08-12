@@ -6,6 +6,9 @@ import type { User } from "./types";
 const COOKIE = "crm_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 dias
 
+/** True quando o cookie de sessao esta sendo assinado com o segredo de fallback. */
+export const USING_DEFAULT_SECRET = !process.env.AUTH_SECRET && !process.env.ADMIN_PASSWORD;
+
 function secret(): string {
   return process.env.AUTH_SECRET || process.env.ADMIN_PASSWORD || "crm-curso-dev-secret";
 }

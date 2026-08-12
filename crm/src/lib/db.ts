@@ -25,6 +25,9 @@ export const DATABASE_URL =
 
 export const STORAGE_MODE: "postgres" | "memoria" = DATABASE_URL ? "postgres" : "memoria";
 
+/** True quando nenhuma ADMIN_PASSWORD foi definida (base criada com a senha padrao). */
+export const USING_DEFAULT_PASSWORD = !process.env.ADMIN_PASSWORD;
+
 function adminPassword(): string {
   return process.env.ADMIN_PASSWORD || "admin123";
 }

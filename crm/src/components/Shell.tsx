@@ -104,7 +104,7 @@ function Icon({ name, className = "h-[18px] w-[18px]" }: { name: string; classNa
 }
 
 export function Shell({ children }: { children: React.ReactNode }) {
-  const { data, user, storage } = useCrm();
+  const { data, user, storage, warnings } = useCrm();
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -258,6 +258,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </Link>
           </div>
         </header>
+
+        {(warnings.defaultPassword || warnings.defaultSecret) && (
+          <div className="no-print border-b border-rose-200 bg-rose-50 px-4 py-2.5">
+            <p className="text-[13px] leading-relaxed text-rose-800">
+              <b>Atencao: este CRM esta usando credenciais padrao.</b> Defina as variaveis{" "}
+              <code className="rounded bg-white px-1">ADMIN_PASSWORD</code> e{" "}
+              <code className="rounded bg-white px-1">AUTH_SECRET</code> no painel da Vercel e faca
+              um novo deploy antes de cadastrar dados reais de alunos.{" "}
+              <Link href="/config" className="font-semibold underline">
+                Como fazer
+              </Link>
+            </p>
+          </div>
+        )}
 
         <main className="min-w-0 flex-1 p-4 sm:p-6">{children}</main>
       </div>
