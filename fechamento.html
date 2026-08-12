@@ -8,12 +8,12 @@
 <meta name="description" content="Motor de fechamento (wheel) da Lotofácil com garantia matemática comprovada: gera o menor número de jogos que garante X pontos se Y das suas dezenas saírem."/>
 <style>
 :root{
-  --red:#E8344A;--red-light:#FF4D63;
-  --green:#1DB954;--green-dark:#169040;--green-light:#2EE066;
-  --gold:#F5A623;--blue:#3B82F6;
-  --bg:#09090B;--bg2:#111113;--bg3:#18181B;--bg4:#1F1F23;
-  --border:#2A2A30;
-  --text:#FAFAFA;--text2:#A1A1AA;--text3:#71717A;
+  --red:#D32F45;--red-light:#C42A3E;
+  --green:#12924A;--green-dark:#0C6E38;--green-light:#16A855;
+  --gold:#D98A00;--blue:#2563EB;
+  --bg:#EEEBF3;--bg2:#FAF7E8;--bg3:#FFFFFF;--bg4:#F1EEF6;
+  --border:#DAD4E6;
+  --text:#241C30;--text2:#565065;--text3:#857E95;
   --radius:12px;--radius-lg:20px;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -26,7 +26,7 @@ a{color:var(--green-light);}
 .nav a:hover{color:var(--green-light);}
 .nav a.active{color:var(--green);}
 .top{padding:48px 20px 34px;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(59,130,246,.12) 0%, transparent 70%);border-bottom:1px solid var(--border);}
-.top .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#7EB0FF;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border-radius:50px;margin-bottom:20px;}
+.top .eyebrow{display:inline-flex;align-items:center;gap:8px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#2563EB;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:6px 16px;border-radius:50px;margin-bottom:20px;}
 .top h1{font-size:clamp(26px,5vw,46px);font-weight:900;line-height:1.1;letter-spacing:-1.2px;margin-bottom:12px;}
 .top h1 em{font-style:normal;color:var(--blue);}
 .top p{font-size:clamp(14px,2.2vw,17px);color:var(--text2);max-width:640px;margin:0 auto;}
@@ -68,7 +68,7 @@ a{color:var(--green-light);}
 .adv{border-top:1px solid var(--border);margin-top:16px;padding-top:8px;}
 .adv summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--text2);padding:8px 0;}
 .guarantee-line{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5;}
-.guarantee-line b{color:#7EB0FF;}
+.guarantee-line b{color:#2563EB;}
 #out{min-height:120px;}
 .placeholder{color:var(--text3);font-size:14px;text-align:center;padding:36px 10px;}
 .result-hero{text-align:center;background:var(--bg4);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;}
@@ -85,7 +85,7 @@ a{color:var(--green-light);}
 .balls{display:flex;flex-wrap:wrap;gap:4px;}
 .ball{width:28px;height:28px;border-radius:50%;background:var(--green);color:#04220f;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;font-variant-numeric:tabular-nums;}
 .res-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#04220f;border-radius:50%;animation:spin .7s linear infinite;}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,0,0,.22);border-top-color:#04220f;border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .warn{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--text2);margin-top:10px;}
 .warn b{color:var(--gold);}
@@ -337,7 +337,7 @@ footer p{font-size:12px;color:var(--text3);}
   function comb(n,k){if(k<0||k>n)return 0;k=Math.min(k,n-k);var r=1;for(var i=0;i<k;i++)r=r*(n-i)/(i+1);return Math.round(r);}
   function shuffleArr(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
   var toastEl=null;
-  function flash(msg){if(toastEl)toastEl.remove();toastEl=document.createElement('div');toastEl.textContent=msg;toastEl.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);';document.body.appendChild(toastEl);setTimeout(function(){if(toastEl){toastEl.style.opacity='0';toastEl.style.transition='opacity .4s';}},2200);setTimeout(function(){if(toastEl){toastEl.remove();toastEl=null;}},2700);}
+  function flash(msg){if(toastEl)toastEl.remove();toastEl=document.createElement('div');toastEl.textContent=msg;toastEl.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--bg4);border:1px solid var(--border);color:var(--text);padding:12px 20px;border-radius:50px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.2);';document.body.appendChild(toastEl);setTimeout(function(){if(toastEl){toastEl.style.opacity='0';toastEl.style.transition='opacity .4s';}},2200);setTimeout(function(){if(toastEl){toastEl.remove();toastEl=null;}},2700);}
 
   buildPresets();render();
 })();
