@@ -1,0 +1,225 @@
+// @version=6
+// ============================================================================
+// DEGOLD | Direction Filter v1
+// Propósito : Marcar sentido institucional do mercado com score multi-camada.
+// Pipeline  : REGIME → VWAP → ESTRUTURA → FLUXO → ACEITAÇÃO → FILTROS
+// Output    : Barcolor + Score + Painel + Sinais confirmados (sem repaint)
+// Plataforma: TradingView (Pine Script v6)
+// ============================================================================
+indicator("DeGold | Direction Filter v1", overlay=true, max_bars_back=500, max_labels_count=300)
+
+// ─── GRUPOS ───────────────────────────────────────────────────────────────────
+G1 = "01 · Estrutura"
+G2 = "02 · Médias Móveis"
+G3 = "03 · Filtros de Mercado"
+G4 = "04 · Calibração de Score"
+G5 = "05 · Visual"
+
+// ─── INPUTS ───────────────────────────────────────────────────────────────────
+str_len   = input.int   (20,    "Lookback Estrutura (Swing)",   minval=5,   maxval=100, group=G1)
+fast_e    = input.int   (9,     "EMA Rápida",                   minval=1,   maxval=50,  group=G2)
+slow_e    = input.int   (21,    "EMA Lenta",                    minval=1,   maxval=100, group=G2)
+macro_e   = input.int   (200,   "EMA Macro (Filtro de Regime)", minval=50,  maxval=500, group=G2)
+vol_len   = input.int   (20,    "Volume MA Período",            minval=5,   maxval=100, group=G3)
+vol_mult  = input.float (1.2,   "Vol Impulso (x Média)",        minval=0.5, step=0.1,  group=G3)
+adx_len   = input.int   (14,    "ADX Período",                  minval=2,   maxval=50,  group=G3)
+adx_min   = input.float (18.0,  "ADX Mínimo p/ Tendência",      minval=0,   step=1.0,  group=G3)
+z_len     = input.int   (20,    "Z-Score Período",              minval=5,   maxval=50,  group=G3)
+z_max     = input.float (2.5,   "Z-Score Exaustão",             minval=1.5, step=0.1,  group=G3)
+min_sc    = input.float (55.0,  "Score Mínimo p/ Sinal",        minval=30,  maxval=95,  group=G4)
+min_sprd  = input.float (12.0,  "Spread Mínimo (BUY vs SELL)",  minval=3,   maxval=50,  group=G4)
+ultra_sc  = input.float (80.0,  "Score ULTRA (≥ acende verde)", minval=60,  maxval=100, group=G4)
+show_emas  = input.bool (true,  "EMAs",                         group=G5)
+show_vwap  = input.bool (true,  "VWAP",                         group=G5)
+show_str   = input.bool (true,  "Estrutura (Swing Levels)",     group=G5)
+show_sigs  = input.bool (true,  "Sinais de Direção",            group=G5)
+show_panel = input.bool (true,  "Painel de Estado",             group=G5)
+cooldown   = input.int  (3,     "Cooldown Entre Sinais (barras)", minval=0, maxval=20, group=G5)
+
+// ─── INDICADORES BASE ─────────────────────────────────────────────────────────
+vwap_val             = ta.vwap
+ema_f                = ta.ema(close, fast_e)
+ema_s                = ta.ema(close, slow_e)
+ema_m                = ta.ema(close, macro_e)
+atr_val              = ta.atr(14)
+vol_ma               = ta.sma(volume, vol_len)
+obv_val              = ta.obv
+[di_p, di_m, adx_v]  = ta.dmi(adx_len, adx_len)
+z_score              = ta.stdev(close, z_len) > 0 ? (close - ta.sma(close, z_len)) / ta.stdev(close, z_len) : 0.0
+
+// ─── ESTRUTURA: SWING HIGHS / LOWS ───────────────────────────────────────────
+// ta.pivothigh/low confirma com str_len barras de antecipação → sem repaint
+ph = ta.pivothigh(high, str_len, str_len)
+pl = ta.pivotlow (low,  str_len, str_len)
+
+var float last_ph = na
+var float last_pl = na
+if not na(ph)
+    last_ph := ph
+if not na(pl)
+    last_pl := pl
+
+// Break of Structure: fechamento além do pivot confirmado
+bos_up   = not na(last_ph) and close > last_ph
+bos_down = not na(last_pl) and close < last_pl
+
+// ─── ANATOMIA DO CANDLE ───────────────────────────────────────────────────────
+c_rng   = high - low
+body_r  = c_rng > 0 ? math.abs(close - open) / c_rng : 0.0
+bull_c  = close > open
+bear_c  = close < open
+uw_r    = c_rng > 0 ? (high - math.max(open, close)) / c_rng : 0.0
+lw_r    = c_rng > 0 ? (math.min(open, close) - low)  / c_rng : 0.0
+near_hi = c_rng > 0 and (high - close) / c_rng <= 0.25
+near_lo = c_rng > 0 and (close - low)  / c_rng <= 0.25
+hi_vol  = volume >= vol_ma * vol_mult
+
+// ─── FLAGS DIRECIONAIS ────────────────────────────────────────────────────────
+
+// Regime EMA
+ema_bul_stk = ema_f > ema_s and ema_s > ema_m          // stack completo bull
+ema_bea_stk = ema_f < ema_s and ema_s < ema_m          // stack completo bear
+ema_bul_slp = ema_f > ema_f[3] and ema_s > ema_s[5]   // inclinação bull
+ema_bea_slp = ema_f < ema_f[3] and ema_s < ema_s[5]   // inclinação bear
+
+// VWAP
+abv_vwap = close > vwap_val
+blw_vwap = close < vwap_val
+vwap_up  = vwap_val > vwap_val[4]
+vwap_dn  = vwap_val < vwap_val[4]
+
+// OBV: fluxo acumulado em 3 snapshots (tendência de 6 barras)
+obv_up = obv_val > obv_val[3] and obv_val[3] > obv_val[6]
+obv_dn = obv_val < obv_val[3] and obv_val[3] < obv_val[6]
+
+// ADX com direção de DI
+adx_ok  = adx_v >= adx_min
+adx_bul = adx_ok and ema_bul_slp and di_p > di_m
+adx_bea = adx_ok and ema_bea_slp and di_m > di_p
+
+// Aceitação: corpo forte fechando perto da extremidade
+acc_buy  = bull_c and body_r >= 0.52 and near_hi
+acc_sell = bear_c and body_r >= 0.52 and near_lo
+
+// Armadilha: pavio longo contra a direção sem BOS
+trap_buy  = bull_c and uw_r >= 0.42 and not bos_up
+trap_sell = bear_c and lw_r >= 0.42 and not bos_down
+
+// Exaustão: Z-Score alto indica preço esticado da média
+exhausted = math.abs(z_score) > z_max
+
+// ─── SCORE DIRECIONAL ─────────────────────────────────────────────────────────
+// Pesos:  EMA Stack 16 | EMA Slope 8 | VWAP Pos 12 | VWAP Slope 6
+//         BOS 14 | Aceitação 12 | Volume 7 | ADX+DI 13 | OBV 9
+//         Armadilha -8 | Exaustão -6 | Total máximo: ~97
+
+buy_sc = math.max(0.0, math.min(100.0,
+    (ema_bul_stk         ? 16 : 0) +
+    (ema_bul_slp         ?  8 : 0) +
+    (abv_vwap            ? 12 : 0) +
+    (vwap_up             ?  6 : 0) +
+    (bos_up              ? 14 : 0) +
+    (acc_buy             ? 12 : 0) +
+    (hi_vol and bull_c   ?  7 : 0) +
+    (adx_bul             ? 13 : 0) +
+    (obv_up              ?  9 : 0) -
+    (trap_buy            ?  8 : 0) -
+    (exhausted           ?  6 : 0)))
+
+sell_sc = math.max(0.0, math.min(100.0,
+    (ema_bea_stk         ? 16 : 0) +
+    (ema_bea_slp         ?  8 : 0) +
+    (blw_vwap            ? 12 : 0) +
+    (vwap_dn             ?  6 : 0) +
+    (bos_down            ? 14 : 0) +
+    (acc_sell            ? 12 : 0) +
+    (hi_vol and bear_c   ?  7 : 0) +
+    (adx_bea             ? 13 : 0) +
+    (obv_dn              ?  9 : 0) -
+    (trap_sell           ?  8 : 0) -
+    (exhausted           ?  6 : 0)))
+
+spread = math.abs(buy_sc - sell_sc)
+dom_sc = math.max(buy_sc, sell_sc)
+
+// ─── DIREÇÃO FINAL ────────────────────────────────────────────────────────────
+dir = buy_sc  >= min_sc and spread >= min_sprd and buy_sc  > sell_sc ?  1 :
+      sell_sc >= min_sc and spread >= min_sprd and sell_sc > buy_sc  ? -1 : 0
+
+// ─── CORES ───────────────────────────────────────────────────────────────────
+C_BUL_U = color.lime
+C_BUL_N = #00bfff
+C_BEA_U = color.red
+C_BEA_N = color.orange
+C_BAL   = #b8860b
+C_NEUT  = color.gray
+
+bar_col = dir ==  1 ? (dom_sc >= ultra_sc ? C_BUL_U : C_BUL_N) :
+          dir == -1 ? (dom_sc >= ultra_sc ? C_BEA_U : C_BEA_N) :
+          spread < 8 ? C_BAL : C_NEUT
+
+barcolor(bar_col)
+
+// ─── PLOTS ────────────────────────────────────────────────────────────────────
+plot(show_vwap ? vwap_val : na, "VWAP",        color=color.yellow,                 linewidth=2)
+plot(show_emas ? ema_f    : na, "EMA Rápida",  color=color.new(#00bfff, 20),       linewidth=1)
+plot(show_emas ? ema_s    : na, "EMA Lenta",   color=color.new(#4169e1, 0),        linewidth=1)
+plot(show_emas ? ema_m    : na, "EMA Macro",   color=color.new(color.white, 50),   linewidth=2)
+plot(show_str  ? last_ph  : na, "Resistência", color=color.new(color.red,   40),   style=plot.style_stepline, linewidth=1)
+plot(show_str  ? last_pl  : na, "Suporte",     color=color.new(color.lime,  40),   style=plot.style_stepline, linewidth=1)
+
+// ─── SINAIS (CONFIRMADOS — SEM REPAINT) ───────────────────────────────────────
+var int sig_bar = -9999
+sig_ok = bar_index - sig_bar >= cooldown
+
+if show_sigs and barstate.isconfirmed and sig_ok
+    if dir == 1
+        sc_s = str.tostring(math.round(buy_sc))
+        label.new(bar_index, low - atr_val * 0.4,
+                  dom_sc >= ultra_sc ? "◆ BULL  " + sc_s : "▲  " + sc_s,
+                  color=color.new(#00bfff, 10), textcolor=color.black,
+                  style=label.style_label_up, size=size.small)
+        sig_bar := bar_index
+    else if dir == -1
+        sc_s = str.tostring(math.round(sell_sc))
+        label.new(bar_index, high + atr_val * 0.4,
+                  dom_sc >= ultra_sc ? "◆ BEAR  " + sc_s : "▼  " + sc_s,
+                  color=color.new(#ff0055, 10), textcolor=color.white,
+                  style=label.style_label_down, size=size.small)
+        sig_bar := bar_index
+
+// ─── PAINEL ───────────────────────────────────────────────────────────────────
+var table dash = table.new(position.top_left, 2, 7,
+                            bgcolor=color.new(color.black, 65),
+                            border_width=1,
+                            border_color=color.new(color.gray, 50))
+
+if show_panel and barstate.islast
+    estado  = dir ==  1 ? (dom_sc >= ultra_sc ? "BULL ULTRA" : "BULL FORTE") :
+              dir == -1 ? (dom_sc >= ultra_sc ? "BEAR ULTRA" : "BEAR FORTE") :
+              spread < 8 ? "BALANCE / BRIGA" : "TRANSIÇÃO"
+    est_col = dir ==  1 ? color.new(color.lime, 30) :
+              dir == -1 ? color.new(color.red,  30) :
+              color.new(color.gray, 50)
+    bos_txt = bos_up ? "ROMPEU ALTA ▲" : bos_down ? "ROMPEU BAIXA ▼" : "AGUARDANDO"
+    bos_col = bos_up ? color.lime : bos_down ? color.red : color.gray
+    z_col   = exhausted ? color.orange : color.gray
+
+    table.cell(dash, 0, 0, "DEGOLD  DIRECTION",  text_color=#00bfff,    text_size=size.small, bgcolor=color.new(#000820, 30))
+    table.cell(dash, 1, 0, "Filter  v1",          text_color=color.gray, text_size=size.small, bgcolor=color.new(#000820, 30))
+    table.cell(dash, 0, 1, "ESTADO",  text_color=color.gray,   text_size=size.tiny)
+    table.cell(dash, 1, 1, estado,    text_color=color.white,  text_size=size.small, bgcolor=est_col)
+    table.cell(dash, 0, 2, "BUY / SELL", text_color=color.gray, text_size=size.tiny)
+    table.cell(dash, 1, 2, str.tostring(math.round(buy_sc)) + "  /  " + str.tostring(math.round(sell_sc)),
+               text_color=color.yellow, text_size=size.small)
+    table.cell(dash, 0, 3, "ADX",     text_color=color.gray,   text_size=size.tiny)
+    table.cell(dash, 1, 3, str.tostring(math.round(adx_v, 1)) + (adx_ok ? "  TREND ✓" : "  FLAT"),
+               text_color=adx_ok ? color.lime : color.orange, text_size=size.small)
+    table.cell(dash, 0, 4, "VWAP",    text_color=color.gray,   text_size=size.tiny)
+    table.cell(dash, 1, 4, abv_vwap ? "ACIMA ▲" : "ABAIXO ▼",
+               text_color=abv_vwap ? color.lime : color.red, text_size=size.small)
+    table.cell(dash, 0, 5, "BOS",     text_color=color.gray,   text_size=size.tiny)
+    table.cell(dash, 1, 5, bos_txt,   text_color=bos_col,      text_size=size.small)
+    table.cell(dash, 0, 6, "Z-SCORE", text_color=color.gray,   text_size=size.tiny)
+    table.cell(dash, 1, 6, str.tostring(math.round(z_score, 2)) + (exhausted ? "  EXAUSTÃO" : ""),
+               text_color=z_col, text_size=size.small)
