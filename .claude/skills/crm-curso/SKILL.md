@@ -70,31 +70,42 @@ trocar em Configuracoes > Usuarios.
 
 ## Publicar na Vercel
 
-Caminho que funciona — importar o repositorio pelo git:
+**O projeto ja existe e esta ligado ao git.** Nao crie outro.
 
-1. https://vercel.com/new → importar `luizcastrosax/15-agentes-gpt`
-2. **Root Directory: `crm`** ← sem isso a Vercel tenta buildar o site da Lotofacil
-3. Env vars: `ADMIN_PASSWORD` e `AUTH_SECRET`
-4. Deploy
-5. Depois: Storage → Neon Postgres → `DATABASE_URL` entra sozinha → Redeploy
+| | |
+| --- | --- |
+| Projeto | `crm-curso` |
+| Project id | `prj_iNwZl5VMxGge6r3kSnMSdR7WHFSD` |
+| Time | `luiz` / `luizcastrosax` (`team_1PEenru9KsTsjVnP5AKJLOGv`) |
+| Root Directory | `crm` |
+| Production branch | `main` |
 
-O CRM esta na `main`, entao nao e preciso mexer em Production Branch.
+Publicar = **dar push na `main`**. Nao existe passo manual.
 
-### Armadilha conhecida
+Ferramenta usada para criar: `create_git_project` (Vercel MCP). Ela e a certa para
+repositorio git; `deploy_to_vercel` so serve para arquivos soltos e tem limite de
+256 caracteres no `installCommand`.
 
-A ferramenta MCP `deploy_to_vercel` foi tentada dez vezes nesta sessao e retornou
-sempre `MCP error -32003: requires approval` — um gate de permissao do ambiente.
-Numa unica tentativa ela passou e a Vercel respondeu `installCommand should NOT be
-longer than 256 characters`, o que prova que o bloqueio nao e do codigo.
+### Variaveis de ambiente
 
-Se voce for tentar de novo e o gate continuar: **nao insista mais que duas vezes**.
-Diga ao usuario e ofereca (a) o import pelo git acima, ou (b) um token da Vercel
-para deploy pela CLI. Nunca invente uma URL de deploy.
+Nenhuma ferramenta MCP define env var — isso e manual no painel, em
+Settings > Environment Variables:
 
-A conta Vercel visivel pela integracao e o time `luiz` / `luizcastrosax`
-(`team_1PEenru9KsTsjVnP5AKJLOGv`). Projetos criados na conta pessoal do usuario
-nao aparecem em `list_projects` — se ele disser que implantou e a lista vier vazia,
-e provavelmente isso; peca a URL em vez de afirmar que falhou.
+- `ADMIN_PASSWORD` — senha do primeiro admin. **Sem ela o app sobe com `admin123`**
+  e a interface mostra faixa vermelha de alerta.
+- `AUTH_SECRET` — segredo do cookie de sessao.
+- `DATABASE_URL` — entra sozinha ao conectar Neon em Storage. Sem ela, modo memoria.
+
+### Se o gate de permissao voltar
+
+Chamadas de escrita na Vercel podem retornar `MCP error -32003: requires approval`.
+Aconteceu doze vezes nesta sessao antes de passar. **Nao insista mais que duas
+vezes** — avise o usuario e ofereca o import manual ou um token para a CLI.
+Nunca invente uma URL de deploy.
+
+Projetos criados na conta pessoal do usuario nao aparecem em `list_projects`, que so
+enxerga o time `luiz`. Se ele disser que implantou e a lista vier vazia, peca a URL
+em vez de afirmar que falhou.
 
 ## Convencoes
 
