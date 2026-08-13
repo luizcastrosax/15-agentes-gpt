@@ -213,6 +213,16 @@ footer p{font-size:12px;color:var(--text3);}
         <div id="latest-body"><p class="hint" style="margin:0">Carregando o último resultado sorteado…</p></div>
       </div>
 
+      <div class="panel" id="hist-panel" style="margin-bottom:22px;">
+        <h2>📜 Histórico completo <span id="hist-count-lbl" style="font-size:11px;color:var(--text3);font-weight:600">(todos os concursos)</span></h2>
+        <p class="hint" style="margin-top:0">Todos os resultados sorteados. Pesquise por número do concurso ou por uma dezena.</p>
+        <div class="seg" style="margin-bottom:10px">
+          <input id="hist-search" type="text" inputmode="numeric" placeholder="Ex.: 3246  ou  dezena 07" style="flex:1;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:var(--text);font-size:14px;font-family:inherit"/>
+        </div>
+        <div id="hist-list"><p class="hint" style="margin:0">Carregando o histórico…</p></div>
+        <div class="mini-actions" style="margin-top:10px"><button class="btn sec" id="hist-more">Carregar mais 50</button></div>
+      </div>
+
       <div class="panel">
         <h2>⚙️ Grupo-base de dezenas</h2>
         <p class="hint">Clique para escolher de 15 a 20 dezenas. Um 2º clique <b style="color:var(--gold)">fixa</b> a dezena (entra em todos os jogos). O ideal é 18 a 20 para fechamentos.</p>
@@ -632,7 +642,8 @@ footer p{font-size:12px;color:var(--text3);}
   }
   // ── Painel "Último concurso" ao vivo (com janela selecionável) ──
   var DATA_URL='https://raw.githubusercontent.com/guilhermeasn/loteria.json/master/data/lotofacil.json';
-  var HIST=null, latestNo=null;
+  var FALLBACK_URL='lotofacil-historico.json'; // snapshot local com TODO o histórico (mesma origem)
+  var HIST=null, HIST_KEYS=null, latestNo=null, histShown=50;
   function freqLastN(N){
     var slice=HIST.slice(Math.max(0,HIST.length-N)),f=new Array(26).fill(0);
     slice.forEach(function(g){g.forEach(function(n){f[n]++;});});
@@ -670,17 +681,63 @@ footer p{font-size:12px;color:var(--text3);}
       flash('Base de 18 montada a partir dos últimos '+(N===1?'1':N)+' concurso(s).');
     });
   }
+  function fetchJSON(url){return fetch(url).then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();});}
+  function ingest(d){
+    var keys=Object.keys(d).map(Number).filter(function(n){return !isNaN(n);}).sort(function(a,b){return a-b;});
+    HIST_KEYS=keys;
+    HIST=keys.map(function(k){return d[String(k)].map(Number);});
+    latestNo=keys[keys.length-1];
+    renderLatest(10);
+    renderHistory();
+  }
+  // ── Histórico completo (todos os resultados) ──
+  function histRow(idx){
+    var no=HIST_KEYS?HIST_KEYS[idx]:(idx+1);
+    var dz=HIST[idx].slice().sort(function(a,b){return a-b;});
+    return '<div class="conf-game" style="align-items:center;gap:8px">'+
+      '<span class="g-title" style="min-width:64px;color:var(--green)">#'+no+'</span>'+
+      '<div class="mini-balls" style="flex:1">'+dz.map(function(n){return '<div class="mb hit">'+fmt(n)+'</div>';}).join('')+'</div></div>';
+  }
+  function renderHistory(){
+    var wrap=document.getElementById('hist-list'); if(!wrap||!HIST) return;
+    var lbl=document.getElementById('hist-count-lbl'); if(lbl)lbl.textContent='('+HIST.length.toLocaleString('pt-BR')+' concursos)';
+    var moreBtn=document.getElementById('hist-more');
+    var q=(document.getElementById('hist-search').value||'').replace(/\D/g,'');
+    if(q){
+      var num=parseInt(q,10),html='',found=0;
+      if(num>=26 && num<=HIST.length){                       // busca concurso exato
+        var idx=HIST_KEYS?HIST_KEYS.indexOf(num):(num-1);
+        if(idx>=0){html+=histRow(idx);found++;}
+      }
+      if(num>=1 && num<=25){                                 // busca por dezena (mais recentes)
+        html+='<div style="font-size:12px;color:var(--text3);margin:2px 0 8px">Últimos sorteios que saíram com a dezena <b style="color:var(--text2)">'+fmt(num)+'</b>:</div>';
+        for(var i=HIST.length-1;i>=0 && found<80;i--){ if(HIST[i].indexOf(num)>=0){html+=histRow(i);found++;} }
+      }
+      wrap.innerHTML=found?html:'<p class="hint" style="margin:0">Nada encontrado para "'+q+'". Use um número de concurso (ex.: 3246) ou uma dezena de 1 a 25.</p>';
+      if(moreBtn)moreBtn.style.display='none';
+      return;
+    }
+    var n=Math.min(histShown,HIST.length),out='';
+    for(var j=HIST.length-1;j>=HIST.length-n;j--) out+=histRow(j);   // mais recentes primeiro
+    wrap.innerHTML=out;
+    if(moreBtn)moreBtn.style.display=(n<HIST.length)?'':'none';
+  }
   function loadLatest(){
     var body=document.getElementById('latest-body');
-    fetch(DATA_URL).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
-      var keys=Object.keys(d).map(Number).filter(function(n){return !isNaN(n);}).sort(function(a,b){return a-b;});
-      HIST=keys.map(function(k){return d[String(k)].map(Number);});
-      latestNo=keys[keys.length-1];
-      renderLatest(10);
+    // 1) tenta a fonte online (atualizada); 2) cai para o snapshot local com TODO o histórico
+    fetchJSON(DATA_URL).then(ingest).catch(function(){
+      return fetchJSON(FALLBACK_URL).then(ingest);
     }).catch(function(){
-      body.innerHTML='<p class="hint" style="margin:0;color:var(--gold)">Não foi possível carregar os resultados aqui (dados externos podem estar bloqueados neste modo). Abra pelo <b>site público</b> para ver ao vivo, ou cole o último resultado manualmente no campo "Repetição do concurso anterior".</p>';
+      body.innerHTML='<p class="hint" style="margin:0;color:var(--gold)">Não foi possível carregar os resultados aqui (dados externos bloqueados neste modo e sem o arquivo local). Abra pelo <b>site público</b>, ou cole o último resultado manualmente no campo "Repetição do concurso anterior".</p>';
     });
   }
+
+  (function(){
+    var s=document.getElementById('hist-search');
+    if(s)s.addEventListener('input',function(){histShown=50;renderHistory();});
+    var m=document.getElementById('hist-more');
+    if(m)m.addEventListener('click',function(){histShown+=50;renderHistory();});
+  })();
 
   renderVolante();
   loadLatest();
