@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ParkFlow · Estacionamento Autônomo</title>
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🅿️</text></svg>"/>
+<style>
+:root{--red:#E8344A;--green:#1DB954;--gold:#F5A623;--blue:#3B82F6;--bg:#09090B;--bg2:#18181B;--border:#2A2A30;--text:#FAFAFA;--text2:#A1A1AA;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+.wrap{max-width:760px;width:100%;text-align:center;}
+.logo{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,var(--red),var(--gold));display:flex;align-items:center;justify-content:center;font-size:42px;margin:0 auto 20px;box-shadow:0 12px 34px rgba(232,52,74,.4);}
+h1{font-size:40px;font-weight:900;letter-spacing:-1.5px;}
+p.sub{color:var(--text2);margin:10px 0 6px;font-size:17px;}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(29,185,84,.12);border:1px solid rgba(29,185,84,.3);color:#3DE875;font-size:12px;font-weight:800;padding:6px 14px;border-radius:50px;margin:18px 0 30px;letter-spacing:.5px;text-transform:uppercase;}
+.badge .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{50%{opacity:.4;}}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:600px){.cards{grid-template-columns:1fr;}h1{font-size:32px;}}
+a.card{display:block;background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:30px 26px;text-decoration:none;color:var(--text);transition:.2s;text-align:left;position:relative;}
+a.card:hover{transform:translateY(-5px);border-color:var(--red);box-shadow:0 16px 40px rgba(0,0,0,.5);}
+a.card.soon{opacity:.72;}
+a.card.soon:hover{transform:none;border-color:var(--border);box-shadow:none;}
+a.card .ic{font-size:40px;margin-bottom:14px;}
+a.card b{font-size:21px;display:block;margin-bottom:4px;}
+a.card span{color:var(--text2);font-size:14px;line-height:1.5;}
+a.card .go{display:inline-block;margin-top:14px;color:var(--red);font-weight:800;font-size:14px;}
+a.card .tag{position:absolute;top:16px;right:16px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;background:var(--bg);border:1px solid var(--border);color:var(--text2);padding:4px 10px;border-radius:20px;}
+.feat{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:32px;}
+.feat span{background:var(--bg2);border:1px solid var(--border);border-radius:30px;padding:7px 15px;font-size:12.5px;color:var(--text2);font-weight:600;}
+.foot{margin-top:34px;color:#71717A;font-size:12.5px;line-height:1.8;}
+</style></head>
+<body><div class="wrap">
+  <div class="logo">🅿️</div>
+  <div class="badge"><span class="dot"></span> Demonstração online</div>
+  <h1>ParkFlow</h1>
+  <p class="sub">Estacionamento autônomo · pagamento por PIX · sem funcionário na cancela</p>
+  <div class="cards" style="margin-top:30px">
+    <a class="card" href="cliente/"><span class="tag" style="background:rgba(29,185,84,.14);border-color:rgba(29,185,84,.3);color:#3DE875">ao vivo</span><div class="ic">📱</div><b>App do Cliente</b><span>Consulte o ticket pela placa, veja o valor e pague por PIX direto do celular — a cancela abre sozinha.</span><span class="go">Abrir app →</span></a>
+    <a class="card" href="operador/" id="opCard"><span class="tag">painel</span><div class="ic">🖥️</div><b>Painel do Operador</b><span>Totem, pátio ao vivo, mensalistas, convênios, tarifas, caixa e relatórios com BI.</span><span class="go">Abrir painel →</span></a>
+  </div>
+  <div class="feat">
+    <span>🎫 Ticket + QR</span><span>📷 Leitura de placa (LPR)</span><span>👤 Mensalistas</span>
+    <span>🤝 Convênios</span><span>💰 Caixa &amp; turno</span><span>📊 Relatórios</span><span>₽ PIX automático</span>
+  </div>
+  <p class="foot">Versão de demonstração — dados no navegador, pagamento PIX simulado.<br>Backend real (Node.js + SQLite + webhook PIX) incluído no repositório para produção.</p>
+</div></body></html>

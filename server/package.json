@@ -1,0 +1,15 @@
+{
+  "name": "parkflow-server",
+  "version": "1.0.0",
+  "description": "Backend do ParkFlow — API REST + fluxo PIX, Node.js com SQLite nativo (node:sqlite), sem dependências externas.",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite --no-warnings server.js",
+    "dev": "node --experimental-sqlite --no-warnings --watch server.js",
+    "reset": "rm -f parkflow.db parkflow.db-shm parkflow.db-wal && echo 'Banco resetado.'"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  }
+}

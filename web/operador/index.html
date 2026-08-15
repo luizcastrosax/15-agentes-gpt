@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ParkFlow · Sistema de Gestão de Estacionamento</title>
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27><text y=%27.9em%27 font-size=%2790%27>🅿️</text></svg>"/>
+<style>body{background:#09090B;color:#FAFAFA;font-family:'Segoe UI',system-ui,sans-serif;}#boot{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:50;background:#09090B;}#boot .l{width:52px;height:52px;border-radius:13px;background:linear-gradient(135deg,#E8344A,#F5A623);display:flex;align-items:center;justify-content:center;font-size:26px;}#boot .sp{width:24px;height:24px;border:3px solid #2A2A30;border-top-color:#E8344A;border-radius:50%;animation:spin .8s linear infinite;}#boot p{color:#A1A1AA;font-size:13px;text-align:center;max-width:260px;}@keyframes spin{to{transform:rotate(360deg);}}</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ SIDEBAR ══════════ -->
+  <aside id="sidebar">
+    <div class="brand">
+      <span class="logo">🅿️</span>
+      <span class="txt"><b>ParkFlow</b><small>Gestão Inteligente</small></span>
+    </div>
+    <nav id="nav">
+      <div class="nav-sec">Operação</div>
+      <button class="nav-item active" data-view="operacao"><span class="ic">🖥️</span> Operação / Totem</button>
+      <button class="nav-item" data-view="patio"><span class="ic">🚗</span> Pátio ao vivo <span class="badge-n" id="nvPatio">0</span></button>
+      <button class="nav-item" data-view="caixa"><span class="ic">💰</span> Caixa &amp; Turno</button>
+      <div class="nav-sec">Cadastros</div>
+      <button class="nav-item" data-view="mensalistas"><span class="ic">👤</span> Mensalistas <span class="badge-n" id="nvMens">0</span></button>
+      <button class="nav-item" data-view="convenios"><span class="ic">🤝</span> Convênios</button>
+      <button class="nav-item" data-view="tarifas"><span class="ic">🏷️</span> Tarifas</button>
+      <button class="nav-item" data-view="funcionarios"><span class="ic">👥</span> Funcionários</button>
+      <div class="nav-sec">Gestão</div>
+      <button class="nav-item" data-view="relatorios"><span class="ic">📊</span> Relatórios &amp; BI</button>
+      <button class="nav-item" data-view="config"><span class="ic">⚙️</span> Configurações</button>
+    </nav>
+    <div class="side-foot">Sistema <b>online</b> · v2.0<br>Protótipo · dados locais</div>
+  </aside>
+  <div id="backdrop"></div>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <div class="main">
+    <header id="topbar">
+      <button id="menuBtn">☰</button>
+      <div class="page-title"><span class="emoji" id="ptEmoji">🖥️</span> <span id="ptTitle">Operação</span></div>
+      <span class="pill occ hide-sm"><span>Ocupação</span> <b id="tbOcc">0/0</b></span>
+      <span class="pill cash-closed" id="tbCash"><span class="dot"></span> <span id="tbCashTxt">Caixa fechado</span></span>
+      <span class="pill live"><span class="dot"></span> Online</span>
+      <span class="pill clock hide-sm"><b id="clock" class="mono">--:--:--</b></span>
+    </header>
+
+    <div class="content">
+
+      <!-- ═══ OPERAÇÃO ═══ -->
+      <section class="view active" id="view-operacao">
+        <div class="op-grid">
+          <div class="screen">
+            <div class="screen-head">
+              <span class="lane">🛣️ Pista 01 · Entrada/Saída</span>
+              <span class="tag green">● Terminal ativo</span>
+            </div>
+            <div class="stage-body" id="stage"></div>
+          </div>
+          <div class="side">
+            <div class="panel">
+              <h4>🚧 Cancela</h4>
+              <div class="gate-view" id="gate">
+                <span class="gate-status closed" id="gateStatus">Fechada</span>
+                <div class="car">🚗</div><div class="gate-arm"></div><div class="gate-post"></div><div class="road"></div>
+              </div>
+            </div>
+            <div class="panel" id="camPanel" style="display:none;">
+              <h4>📷 Câmera LPR (OCR de placa)</h4>
+              <div class="cam" id="cam"><span class="cam-off">câmera aguardando…</span></div>
+            </div>
+            <div class="panel">
+              <h4>📟 Log do Sistema <button class="icon-btn" id="clearLog" title="Limpar">🧹</button></h4>
+              <div class="log" id="log"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ═══ PÁTIO ═══ -->
+      <section class="view" id="view-patio">
+        <div class="kpis" id="patioKpis"></div>
+        <h3 class="section-title">📍 Ocupação por setor</h3>
+        <div class="occ-grid" id="occGrid"></div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <h3>Veículos no pátio</h3>
+            <div class="table-tools">
+              <input class="search" id="patioSearch" placeholder="Buscar placa/ticket…"/>
+            </div>
+          </div>
+          <div class="scroll-x"><table>
+            <thead><tr><th>Ticket</th><th>Placa</th><th>Tipo</th><th>Setor</th><th>Entrada</th><th>Permanência</th><th>A pagar</th><th></th></tr></thead>
+            <tbody id="patioRows"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ═══ CAIXA ═══ -->
+      <section class="view" id="view-caixa">
+        <div id="caixaBody"></div>
+      </section>
+
+      <!-- ═══ MENSALISTAS ═══ -->
+      <section class="view" id="view-mensalistas">
+        <div class="kpis" id="mensKpis"></div>
+        <div class="table-wrap">
+          <div class="table-head">
+            <h3>Mensalistas &amp; Assinantes</h3>
+            <div class="table-tools">
+              <input class="search" id="mensSearch" placeholder="Buscar nome/placa…"/>
+              <button class="btn btn-sm" id="addMens">+ Novo mensalista</button>
+            </div>
+          </div>
+          <div class="scroll-x"><table>
+            <thead><tr><th>Cliente</th><th>Placa</th><th>Plano</th><th>Vaga</th><th>Mensalidade</th><th>Vencimento</th><th>Status</th><th></th></tr></thead>
+            <tbody id="mensRows"></tbody>
+          </table></div>
+        </div>
+      </section>
+
+      <!-- ═══ CONVÊNIOS ═══ -->
+      <section class="view" id="view-convenios">
+        <div class="table-wrap">
+          <div class="table-head">
+            <h3>Convênios &amp; Validação de estacionamento</h3>
+            <button class="btn btn-sm" id="addConv">+ Novo convênio</button>
+          </div>
+          <div class="scroll-x"><table>
+            <thead><tr><th>Parceiro</th><th>Tipo de benefício</th><th>Regra</th><th>Validações hoje</th><th>Status</th><th></th></tr></thead>
+            <tbody id="convRows"></tbody>
+          </table></div>
+        </div>
+        <p class="foot-note">Convênios permitem que lojas parceiras validem o ticket do cliente, aplicando desconto ou isenção no valor a pagar — igual aos shoppings.</p>
+      </section>
+
+      <!-- ═══ TARIFAS ═══ -->
+      <section class="view" id="view-tarifas">
+        <div id="tarifasBody"></div>
+      </section>
+
+      <!-- ═══ FUNCIONÁRIOS ═══ -->
+      <section class="view" id="view-funcionarios">
+        <div id="funcBody"></div>
+      </section>
+
+      <!-- ═══ RELATÓRIOS ═══ -->
+      <section class="view" id="view-relatorios">
+        <div id="relBody"></div>
+      </section>
+
+      <!-- ═══ CONFIG ═══ -->
+      <section class="view" id="view-config">
+        <div id="configBody"></div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL + TOASTS -->
+<div id="modalOverlay"><div class="modal" id="modal"></div></div>
+<div id="toasts"></div>
+
+<div id="boot"><div class="l">🅿️</div><div class="sp"></div><p>Carregando…</p></div>
+<script>
+(function(){
+  var SHA="e149f883c04eaad024083f995f4a31ca7a588452";
+  var cdn=["https://cdn.jsdelivr.net/gh/luizcastrosax/15-agentes-gpt@"+SHA+"/","https://cdn.statically.io/gh/luizcastrosax/15-agentes-gpt/"+SHA+"/"];
+  function fail(){var p=document.querySelector("#boot p");if(p)p.textContent="Falha ao carregar. Recarregue a página.";var l=document.querySelector("#boot .l");if(l)l.textContent="⚠️";}
+  function css(i){var l=document.createElement("link");l.rel="stylesheet";l.href=cdn[i]+"estacionamento/styles.css";l.onerror=function(){if(cdn[i+1])css(i+1);};document.head.appendChild(l);}
+  var files=["estacionamento/app.js"];
+  function js(fi,ci){var s=document.createElement("script");s.src=cdn[ci]+files[fi];s.onload=function(){if(fi+1<files.length)js(fi+1,ci);else{var b=document.getElementById("boot");if(b)b.remove();}};s.onerror=function(){if(cdn[ci+1])js(fi,ci+1);else fail();};document.body.appendChild(s);}
+  css(0); js(0,0);
+})();
+</script>
+</body>
+</html>
