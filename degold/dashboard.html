@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeGold Direction Filter v1 — Guia Operacional</title>
+<style>
+:root {
+  --bg:       #090E1A;
+  --sf:       #0F1624;
+  --sf2:      #162032;
+  --br:       #1E2D45;
+  --br2:      #263752;
+  --bull:     #00D4A4;
+  --bear:     #FF5252;
+  --ubull:    #39FF14;
+  --ubear:    #FF1744;
+  --neu:      #F5A623;
+  --t1:       #DDE4F0;
+  --t2:       #6B7E99;
+  --t3:       #2E4060;
+  --mono: 'Cascadia Code','Consolas','SF Mono','Monaco',monospace;
+  --sans: -apple-system,'Segoe UI',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.5;min-height:100vh}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+section{padding:36px 0;border-bottom:1px solid var(--br)}
+section:last-of-type{border-bottom:none}
+header{border-bottom:1px solid var(--br);padding:20px 0}
+.hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.brand-eye{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--bull);margin-bottom:4px}
+.brand-name{font-size:20px;font-weight:700;letter-spacing:-.02em;color:var(--t1)}
+.brand-sub{font-family:var(--mono);font-size:10px;color:var(--t2);margin-top:2px}
+.pill{display:flex;align-items:center;gap:8px;background:var(--sf);border:1px solid var(--br);padding:5px 12px;border-radius:3px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--bull);animation:blink 2.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.pill-txt{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.sec-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:18px}
+.pipe{display:flex;overflow-x:auto;padding-bottom:2px}
+.pipe-stage{flex:1;min-width:130px;position:relative}
+.pipe-stage:not(:last-child)::after{content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);z-index:2;border-top:7px solid transparent;border-bottom:7px solid transparent;border-left:7px solid var(--br)}
+.stage-box{border:1px solid var(--br);background:var(--sf);padding:13px 11px;margin-right:1px;transition:border-color .15s,background .15s}
+.pipe-stage:not(:last-child) .stage-box{border-right:none}
+.stage-box:hover{background:var(--sf2);border-color:var(--bull)}
+.s-num{font-family:var(--mono);font-size:9px;color:var(--t3);margin-bottom:5px}
+.s-name{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--t1);margin-bottom:9px}
+.s-flags{display:flex;flex-direction:column;gap:4px}
+.s-flag{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.s-flag-n{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.s-flag-p{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--bull);white-space:nowrap}
+.s-flag-p.neg{color:var(--bear)}
+.s-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--br);display:flex;justify-content:space-between}
+.s-tot-lbl{font-family:var(--mono);font-size:9px;color:var(--t3)}
+.s-tot-val{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--t1)}
+.s-tot-val.neg{color:var(--bear)}
+.sim-wrap{display:grid;grid-template-columns:1fr 220px 1fr;gap:16px;align-items:start}
+.sim-col{background:var(--sf);border:1px solid var(--br);padding:18px}
+.sim-col-hdr{display:flex;align-items:center;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--br)}
+.sim-col-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.sim-col-sq.b{background:var(--bull)}
+.sim-col-sq.s{background:var(--bear)}
+.sim-col-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.sim-col-title.b{color:var(--bull)}
+.sim-col-title.s{color:var(--bear)}
+.sim-flag{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--br);cursor:pointer;user-select:none}
+.sim-flag:last-child{border-bottom:none}
+input[type=checkbox]{appearance:none;width:13px;height:13px;border:1px solid var(--br2);border-radius:2px;background:var(--bg);cursor:pointer;flex-shrink:0;position:relative;transition:background .1s,border-color .1s}
+input[type=checkbox]:focus-visible{outline:2px solid var(--bull);outline-offset:2px}
+.b-flag input[type=checkbox]:checked{background:var(--bull);border-color:var(--bull)}
+.s-flag-cb input[type=checkbox]:checked{background:var(--bear);border-color:var(--bear)}
+.p-flag input[type=checkbox]:checked{background:var(--neu);border-color:var(--neu)}
+input[type=checkbox]:checked::after{content:'';position:absolute;left:3px;top:1px;width:4px;height:7px;border:1.5px solid #000;border-top:none;border-left:none;transform:rotate(40deg)}
+.f-lbl{flex:1;font-size:11px;color:var(--t1)}
+.f-lbl.pen{color:var(--neu)}
+.f-pts{font-family:var(--mono);font-size:11px;font-weight:700}
+.f-pts.add-b{color:var(--bull)}
+.f-pts.add-s{color:var(--bear)}
+.f-pts.sub{color:var(--neu)}
+.gauge{background:var(--sf);border:1px solid var(--br);padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.g-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.g-big{display:flex;flex-direction:column;align-items:center;gap:2px}
+.g-num{font-family:var(--mono);font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;transition:color .18s}
+.g-sub{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+.g-meters{width:100%;display:flex;flex-direction:column;gap:5px}
+.g-meter-row{display:flex;align-items:center;gap:6px}
+.g-meter-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);width:22px;text-align:right;flex-shrink:0}
+.segs{display:flex;gap:2px;flex:1}
+.seg{height:9px;flex:1;background:var(--sf2);border-radius:1px;transition:background .1s}
+.g-spread{display:flex;align-items:center;gap:8px}
+.g-spread-lbl{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.1em;text-transform:uppercase}
+.g-spread-val{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--t2);font-variant-numeric:tabular-nums;transition:color .18s}
+.decision{width:100%;padding:10px 14px;border:1px solid var(--br);border-radius:2px;text-align:center;transition:background .2s,border-color .2s}
+.dec-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--t3);margin-bottom:3px}
+.dec-val{font-size:12px;font-weight:700;letter-spacing:.06em;transition:color .2s}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+thead th{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);padding:9px 14px;text-align:left;border-bottom:1px solid var(--br);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--br);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--sf2)}
+td{padding:10px 14px;font-size:12px;color:var(--t1)}
+.td-m{font-family:var(--mono);font-size:10px;color:var(--t2)}
+.sc-num{font-family:var(--mono);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.sc-b{color:var(--bull)}
+.sc-s{color:var(--bear)}
+.sc-lo{color:var(--t3)}
+.sc-neu{color:var(--neu)}
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:2px;font-family:var(--mono);font-size:10px;font-weight:700;white-space:nowrap}
+.bUU{background:rgba(57,255,20,.1);color:var(--ubull)}
+.bBF{background:rgba(0,212,164,.1);color:var(--bull)}
+.bBA{background:rgba(255,23,68,.1);color:var(--ubear)}
+.bBE{background:rgba(255,82,82,.1);color:var(--bear)}
+.bWT{background:rgba(245,166,35,.1);color:var(--neu)}
+.bNE{background:rgba(107,126,153,.1);color:var(--t2)}
+.params-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pg{background:var(--sf);border:1px solid var(--br)}
+.pg-hdr{padding:9px 14px;border-bottom:1px solid var(--br);font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t3)}
+.pr{display:grid;grid-template-columns:1fr auto;gap:10px;padding:8px 14px;border-bottom:1px solid var(--br);align-items:baseline}
+.pr:last-child{border-bottom:none}
+.pr-name{font-family:var(--mono);font-size:12px;color:var(--t1)}
+.pr-val{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--bull);text-align:right;white-space:nowrap}
+.pr-desc{grid-column:1/-1;font-size:11px;color:var(--t2);line-height:1.45;margin-top:-2px;padding-bottom:2px}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}
+footer{padding:18px 0;text-align:center}
+.ft{font-family:var(--mono);font-size:9px;color:var(--t3);letter-spacing:.08em}
+.mass-status{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:10px 16px;background:var(--sf);border:1px solid var(--br);margin-bottom:16px}
+.mass-status-left{display:flex;align-items:center;gap:10px}
+.mass-dot{width:8px;height:8px;border-radius:50%;background:var(--t3);flex-shrink:0}
+.mass-dot.online{background:var(--bull);animation:blink 2.2s ease-in-out infinite}
+.mass-dot.offline{background:#3a1515}
+.mass-conn-lbl{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.mass-conn-lbl.offline{color:var(--t3)}
+.mass-url{font-family:var(--mono);font-size:9px;color:var(--t3)}
+.mass-last{font-family:var(--mono);font-size:9px;color:var(--t3)}
+.mass-badge-pend{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 9px;border:1px solid var(--t3);color:var(--t3);text-transform:uppercase}
+.mass-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mass-card{background:var(--sf);border:1px solid var(--br);padding:14px 14px 12px}
+.mass-card.pend{border-color:var(--br);opacity:.65}
+.mc-eye{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--t3);margin-bottom:6px}
+.mc-val{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:1;margin-bottom:4px;color:var(--t3)}
+.mc-val.bull{color:var(--bull)}
+.mc-val.bear{color:var(--bear)}
+.mc-val.warn{color:var(--neu)}
+.mc-sub{font-size:11px;color:var(--t2);line-height:1.35}
+.mc-impact{margin-top:8px;padding-top:8px;border-top:1px solid var(--br);font-family:var(--mono);font-size:9px;color:var(--t3);display:flex;align-items:center;gap:5px}
+.mc-impact-val{font-weight:700}
+.mc-impact-val.add{color:var(--bull)}
+.mc-impact-val.sub{color:var(--bear)}
+.mc-impact-val.blk{color:var(--neu)}
+.mc-impact-val.na{color:var(--t3)}
+.mass-note{margin-top:12px;padding:10px 14px;background:rgba(245,166,35,.05);border:1px solid rgba(245,166,35,.2);font-size:11px;color:var(--t2);line-height:1.5}
+.mass-note strong{color:var(--neu)}
+@media(max-width:780px){.sim-wrap{grid-template-columns:1fr}.params-grid{grid-template-columns:1fr}.mass-grid{grid-template-columns:1fr 1fr}.pipe{flex-direction:column}.pipe-stage:not(:last-child)::after{display:none}.pipe-stage:not(:last-child) .stage-box{border-right:1px solid var(--br);border-bottom:none;margin-right:0;margin-bottom:1px}}
+@media(max-width:480px){.mass-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.dot{animation:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="hdr">
+    <div>
+      <div class="brand-eye">Pine Script v6 · TradingView</div>
+      <div class="brand-name">DeGold Direction Filter</div>
+      <div class="brand-sub">v1 · Guia Operacional Completo</div>
+    </div>
+    <div class="pill">
+      <div class="dot"></div>
+      <span class="pill-txt">Score máximo: 97 pts → clamped 100 · Sem repaint</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="sec-lbl">Pipeline de Score — 6 Camadas</div>
+  <div class="pipe">
+    <div class="pipe-stage"><div class="stage-box"><div class="s-num">01</div><div class="s-name">Regime EMA</div><div class="s-flags"><div class="s-flag"><span class="s-flag-n">Stack bull/bear</span><span class="s-flag-p">+16</span></div><div class="s-flag"><span class="s-flag-n">Inclinação</span><span class="s-flag-p">+8</span></div></div><div class="s-total"><span class="s-tot-lbl">MAX</span><span class="s-tot-val">24 pts</span></div></div></div>
+    <div class="pipe-stage"><div class="stage-box"><div class="s-num">02</div><div class="s-name">VWAP</div><div class="s-flags"><div class="s-flag"><span class="s-flag-n">Posição</span><span class="s-flag-p">+12</span></div><div class="s-flag"><span class="s-flag-n">Slope</span><span class="s-flag-p">+6</span></div></div><div class="s-total"><span class="s-tot-lbl">MAX</span><span class="s-tot-val">18 pts</span></div></div></div>
+    <div class="pipe-stage"><div class="stage-box"><div class="s-num">03</div><div class="s-name">Estrutura</div><div class="s-flags"><div class="s-flag"><span class="s-flag-n">BOS confirmado</span><span class="s-flag-p">+14</span></div></div><div class="s-total"><span class="s-tot-lbl">MAX</span><span class="s-tot-val">14 pts</span></div></div></div>
+    <div class="pipe-stage"><div class="stage-box"><div class="s-num">04</div><div class="s-name">Aceitação</div><div class="s-flags"><div class="s-flag"><span class="s-flag-n">Corpo ≥ 52%</span><span class="s-flag-p">+12</span></div><div class="s-flag"><span class="s-flag-n">Volume impulso</span><span class="s-flag-p">+7</span></div></div><div class="s-total"><span class="s-tot-lbl">MAX</span><span class="s-tot-val">19 pts</span></div></div></div>
+    <div class="pipe-stage"><div class="stage-box"><div class="s-num">05</div><div class="s-name">Fluxo</div><div class="s-flags"><div class="s-flag"><span class="s-flag-n">ADX + DI dir.</span><span class="s-flag-p">+13</span></div><div class="s-flag"><span class="s-flag-n">OBV tendência</span><span class="s-flag-p">+9</span></div></div><div class="s-total"><span class="s-tot-lbl">MAX</span><span class="s-tot-val">22 pts</span></div></div></div>
+    <div class="pipe-stage"><div class="stage-box"><div class="s-num">06</div><div class="s-name">Filtros</div><div class="s-flags"><div class="s-flag"><span class="s-flag-n">Armadilha</span><span class="s-flag-p neg">−8</span></div><div class="s-flag"><span class="s-flag-n">Z-Score exaust.</span><span class="s-flag-p neg">−6</span></div></div><div class="s-total"><span class="s-tot-lbl">PEN</span><span class="s-tot-val neg">−14 pts</span></div></div></div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-lbl">Massive Trade Data — Contexto Institucional</div>
+  <div class="mass-status">
+    <div class="mass-status-left">
+      <div class="mass-dot offline"></div>
+      <span class="mass-conn-lbl offline">OFFLINE</span>
+      <span class="mass-url">api.massive.com · /futures/v1/market-status</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <span class="mass-last">Última atualização: —</span>
+      <span class="mass-badge-pend">INTEGRAÇÃO PENDENTE</span>
+    </div>
+  </div>
+  <div class="mass-grid">
+    <div class="mass-card pend"><div class="mc-eye">Dealer Bias</div><div class="mc-val">—</div><div class="mc-sub">Posicionamento estimado do dealer institucional no MNQ</div><div class="mc-impact">Impacto no score: <span class="mc-impact-val na">aguardando</span></div></div>
+    <div class="mass-card pend"><div class="mc-eye">Gamma Regime</div><div class="mc-val">—</div><div class="mc-sub">Exposição líquida a gamma de market makers (positivo / negativo)</div><div class="mc-impact">Impacto no score: <span class="mc-impact-val na">aguardando</span></div></div>
+    <div class="mass-card pend"><div class="mc-eye">VIX Block</div><div class="mc-val">—</div><div class="mc-sub">Volatilidade institucional — bloqueia sinais se ativo</div><div class="mc-impact">Gate: <span class="mc-impact-val na">aguardando</span></div></div>
+    <div class="mass-card pend"><div class="mc-eye">Dealer Signal Score</div><div class="mc-val">—</div><div class="mc-sub">Score numérico do sinal dealer (0–100), ponderado pela API 8010</div><div class="mc-impact">Boost no score: <span class="mc-impact-val na">aguardando</span></div></div>
+    <div class="mass-card pend"><div class="mc-eye">Bridge Authority</div><div class="mc-val">—</div><div class="mc-sub">Confiança geral do contexto Python (0–100) — pondera todos os campos</div><div class="mc-impact">Peso multiplicador: <span class="mc-impact-val na">aguardando</span></div></div>
+    <div class="mass-card pend"><div class="mc-eye">Visual Confirm Side</div><div class="mc-val">—</div><div class="mc-sub">Confirmação visual do lado dominante retornada pelo contexto Massive</div><div class="mc-impact">Boost condicional: <span class="mc-impact-val na">aguardando</span></div></div>
+  </div>
+  <div class="mass-note"><strong>Quando conectada</strong>, a Massive adiciona uma 7ª camada ao pipeline: os campos acima são consumidos pelo indicador 8010 (NinjaTrader) via <code>FetchPythonContextAsync → DeGold OS API :8040</code>. O <strong>Dealer Bias BULL</strong> adiciona boost ao buy_score; <strong>VIX Block ativo</strong> zera a direção independente do score; <strong>Bridge Authority</strong> pondera o peso de todos os campos Python proporcionalmente. Pré-requisito: API publicada em HTTPS e chave Massive rotacionada.</div>
+</section>
+
+<section>
+  <div class="sec-lbl">Simulador Interativo de Score</div>
+  <div class="sim-wrap">
+    <div class="sim-col">
+      <div class="sim-col-hdr"><div class="sim-col-sq b"></div><span class="sim-col-title b">BUY Score</span></div>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="16" onchange="calc()"><span class="f-lbl">EMA Stack Bull (9 &gt; 21 &gt; 200)</span><span class="f-pts add-b">+16</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="8" onchange="calc()"><span class="f-lbl">EMA Inclinação Alta</span><span class="f-pts add-b">+8</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="12" onchange="calc()"><span class="f-lbl">Acima do VWAP</span><span class="f-pts add-b">+12</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="6" onchange="calc()"><span class="f-lbl">VWAP Slope Positivo</span><span class="f-pts add-b">+6</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="14" onchange="calc()"><span class="f-lbl">BOS para Alta</span><span class="f-pts add-b">+14</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="12" onchange="calc()"><span class="f-lbl">Corpo forte + fechou no topo</span><span class="f-pts add-b">+12</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="7" onchange="calc()"><span class="f-lbl">Volume ≥ 1.2× MA (bull)</span><span class="f-pts add-b">+7</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="13" onchange="calc()"><span class="f-lbl">ADX ≥ 18 + DI+ &gt; DI−</span><span class="f-pts add-b">+13</span></label>
+      <label class="sim-flag b-flag"><input type="checkbox" data-side="b" data-pts="9" onchange="calc()"><span class="f-lbl">OBV tendência de alta</span><span class="f-pts add-b">+9</span></label>
+      <label class="sim-flag p-flag"><input type="checkbox" data-side="b" data-pts="-8" onchange="calc()"><span class="f-lbl pen">Armadilha: pavio topo ≥ 42%</span><span class="f-pts sub">−8</span></label>
+      <label class="sim-flag p-flag"><input type="checkbox" data-side="b" data-pts="-6" onchange="calc()"><span class="f-lbl pen">Z-Score exaustão &gt; 2.5σ</span><span class="f-pts sub">−6</span></label>
+    </div>
+    <div class="gauge">
+      <span class="g-lbl">Score BUY</span>
+      <div class="g-big"><div class="g-num" id="num-b" style="color:var(--bull)">0</div><div class="g-sub">de 97</div></div>
+      <div class="g-meters">
+        <div class="g-meter-row"><span class="g-meter-lbl">BUY</span><div class="segs" id="segs-b"></div></div>
+        <div class="g-meter-row"><span class="g-meter-lbl">SELL</span><div class="segs" id="segs-s"></div></div>
+      </div>
+      <div class="g-big"><div class="g-num" id="num-s" style="color:var(--bear)">0</div><div class="g-sub">de 97</div></div>
+      <div class="g-spread"><span class="g-spread-lbl">SPREAD</span><span class="g-spread-val" id="spread-v">0</span></div>
+      <div class="decision" id="dec-box"><div class="dec-lbl">Decisão</div><div class="dec-val" id="dec-val" style="color:var(--t2)">AGUARDAR</div></div>
+    </div>
+    <div class="sim-col">
+      <div class="sim-col-hdr"><div class="sim-col-sq s"></div><span class="sim-col-title s">SELL Score</span></div>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="16" onchange="calc()"><span class="f-lbl">EMA Stack Bear (9 &lt; 21 &lt; 200)</span><span class="f-pts add-s">+16</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="8" onchange="calc()"><span class="f-lbl">EMA Inclinação Baixa</span><span class="f-pts add-s">+8</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="12" onchange="calc()"><span class="f-lbl">Abaixo do VWAP</span><span class="f-pts add-s">+12</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="6" onchange="calc()"><span class="f-lbl">VWAP Slope Negativo</span><span class="f-pts add-s">+6</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="14" onchange="calc()"><span class="f-lbl">BOS para Baixa</span><span class="f-pts add-s">+14</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="12" onchange="calc()"><span class="f-lbl">Corpo forte + fechou no fundo</span><span class="f-pts add-s">+12</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="7" onchange="calc()"><span class="f-lbl">Volume ≥ 1.2× MA (bear)</span><span class="f-pts add-s">+7</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="13" onchange="calc()"><span class="f-lbl">ADX ≥ 18 + DI− &gt; DI+</span><span class="f-pts add-s">+13</span></label>
+      <label class="sim-flag s-flag-cb"><input type="checkbox" data-side="s" data-pts="9" onchange="calc()"><span class="f-lbl">OBV tendência de baixa</span><span class="f-pts add-s">+9</span></label>
+      <label class="sim-flag p-flag"><input type="checkbox" data-side="s" data-pts="-8" onchange="calc()"><span class="f-lbl pen">Armadilha: pavio fundo ≥ 42%</span><span class="f-pts sub">−8</span></label>
+      <label class="sim-flag p-flag"><input type="checkbox" data-side="s" data-pts="-6" onchange="calc()"><span class="f-lbl pen">Z-Score exaustão &gt; 2.5σ</span><span class="f-pts sub">−6</span></label>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-lbl">Cenários de Referência Operacional</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Cenário</th><th>Condições Ativas</th><th>BUY</th><th>SELL</th><th>Spread</th><th>Decisão</th></tr></thead>
+      <tbody>
+        <tr><td>Tendência institucional perfeita</td><td class="td-m">Stack + Slope + VWAP↑ + BOS + Corpo + Vol + ADX + OBV</td><td class="sc-num sc-b">87</td><td class="sc-num sc-lo">5</td><td class="sc-num" style="color:var(--t1)">82</td><td><span class="badge bUU">BULL ULTRA</span></td></tr>
+        <tr><td>Tendência clara, sem BOS ainda</td><td class="td-m">Stack + Slope + VWAP↑ + Aceitação + ADX</td><td class="sc-num sc-b">63</td><td class="sc-num sc-lo">8</td><td class="sc-num" style="color:var(--t1)">55</td><td><span class="badge bBF">BULL FORTE</span></td></tr>
+        <tr><td>Pullback ao VWAP em tendência bull</td><td class="td-m">Stack + VWAP no toque, slope neutro, ADX abaixo de 18</td><td class="sc-num" style="color:var(--t2)">34</td><td class="sc-num sc-lo">12</td><td class="sc-num" style="color:var(--t1)">22</td><td><span class="badge bWT">AGUARDAR</span></td></tr>
+        <tr><td>Mercado em equilíbrio (range)</td><td class="td-m">Sem stack, EMAs cruzadas, VWAP flat, ADX &lt; 18</td><td class="sc-num sc-lo">14</td><td class="sc-num sc-lo">14</td><td class="sc-num sc-lo">0</td><td><span class="badge bNE">BALANCE</span></td></tr>
+        <tr><td>Tendência bear institucional</td><td class="td-m">Stack bear + VWAP↓ + BOS ↓ + Aceitação baixa + OBV dn</td><td class="sc-num sc-lo">4</td><td class="sc-num sc-s">85</td><td class="sc-num" style="color:var(--t1)">81</td><td><span class="badge bBA">BEAR ULTRA</span></td></tr>
+        <tr><td>Bear sem BOS, slope iniciando</td><td class="td-m">Stack bear + VWAP↓ + Slope + Corpo bear + ADX</td><td class="sc-num sc-lo">6</td><td class="sc-num sc-s">60</td><td class="sc-num" style="color:var(--t1)">54</td><td><span class="badge bBE">BEAR FORTE</span></td></tr>
+        <tr><td>Pavio de exaustão no topo</td><td class="td-m">Stack bull + VWAP↑ + pavio ≥ 42% + Z-Score &gt; 2.5σ</td><td class="sc-num sc-neu">36</td><td class="sc-num sc-lo">8</td><td class="sc-num" style="color:var(--t1)">28</td><td><span class="badge bWT">AGUARDAR</span></td></tr>
+        <tr><td>Transição: EMAs convergindo</td><td class="td-m">Sem stack completo, slope perdendo força, VWAP↑ ainda</td><td class="sc-num" style="color:var(--t2)">26</td><td class="sc-num" style="color:var(--t2)">19</td><td class="sc-num" style="color:var(--t1)">7</td><td><span class="badge bNE">TRANSIÇÃO</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="sec-lbl">Referência de Parâmetros</div>
+  <div class="params-grid">
+    <div class="pg"><div class="pg-hdr">01 · Estrutura</div><div class="pr"><span class="pr-name">str_len</span><span class="pr-val">20</span></div><div class="pr"><span class="pr-desc">Barras para identificar swing highs/lows via pivothigh/pivotlow. Maior = estrutura de prazo mais longo, menos sinais de BOS.</span></div></div>
+    <div class="pg"><div class="pg-hdr">02 · Médias Móveis</div><div class="pr"><span class="pr-name">fast_e</span><span class="pr-val">9</span></div><div class="pr"><span class="pr-name">slow_e</span><span class="pr-val">21</span></div><div class="pr"><span class="pr-name">macro_e</span><span class="pr-val">200</span></div><div class="pr"><span class="pr-desc">Stack: 9 &gt; 21 &gt; 200 = bull (+16). A macro é o filtro de regime — preço acima/abaixo define o campo de força da sessão.</span></div></div>
+    <div class="pg"><div class="pg-hdr">03 · Filtros de Mercado</div><div class="pr"><span class="pr-name">vol_mult</span><span class="pr-val">1.2×</span></div><div class="pr"><span class="pr-name">adx_min</span><span class="pr-val">18.0</span></div><div class="pr"><span class="pr-name">z_max</span><span class="pr-val">2.5 σ</span></div><div class="pr"><span class="pr-desc">ADX abaixo do mínimo = sem tendência (pontos ADX não somam). Z &gt; 2.5 aplica −6 por exaustão. Volume abaixo de 1.2× = +7 não soma.</span></div></div>
+    <div class="pg"><div class="pg-hdr">04 · Calibração de Score</div><div class="pr"><span class="pr-name">min_sc</span><span class="pr-val">55 pts</span></div><div class="pr"><span class="pr-name">min_sprd</span><span class="pr-val">12 pts</span></div><div class="pr"><span class="pr-name">ultra_sc</span><span class="pr-val">80 pts</span></div><div class="pr"><span class="pr-desc">Sinal emite quando score ≥ 55 E spread ≥ 12. Spread baixo = mercado dividido = aguardar. ULTRA (limão) quando score ≥ 80.</span></div></div>
+    <div class="pg"><div class="pg-hdr">05 · Visual</div><div class="pr"><span class="pr-name">cooldown</span><span class="pr-val">3 barras</span></div><div class="pr"><span class="pr-name">show_vwap</span><span class="pr-val">true</span></div><div class="pr"><span class="pr-name">show_str</span><span class="pr-val">true</span></div><div class="pr"><span class="pr-desc">Cooldown evita spam de labels em tendências fortes. VWAP e estrutura (swing levels) como linhas de referência no gráfico.</span></div></div>
+    <div class="pg"><div class="pg-hdr">Legenda de Barcolor</div><div class="pr"><span class="pr-name"><span class="swatch" style="background:#39FF14"></span>Limão neon</span><span class="pr-val" style="color:#39FF14">BULL ULTRA</span></div><div class="pr"><span class="pr-name"><span class="swatch" style="background:#00D4A4"></span>Teal</span><span class="pr-val">BULL FORTE</span></div><div class="pr"><span class="pr-name"><span class="swatch" style="background:#FF1744"></span>Vermelho vivo</span><span class="pr-val" style="color:var(--ubear)">BEAR ULTRA</span></div><div class="pr"><span class="pr-name"><span class="swatch" style="background:#FF5252"></span>Coral</span><span class="pr-val" style="color:var(--bear)">BEAR FORTE</span></div><div class="pr"><span class="pr-name"><span class="swatch" style="background:#F5A623"></span>Âmbar</span><span class="pr-val" style="color:var(--neu)">BALANCE</span></div><div class="pr"><span class="pr-name"><span class="swatch" style="background:#2E4060"></span>Cinza azul</span><span class="pr-val" style="color:var(--t2)">TRANSIÇÃO</span></div></div>
+  </div>
+</section>
+
+<footer><p class="ft">DEGOLD Direction Filter v1 · Pine Script v6 · Indicador de leitura — não executa ordens</p></footer>
+</div>
+
+<script>
+function buildSegs(id,n){n=n||20;var el=document.getElementById(id);for(var i=0;i<n;i++){var d=document.createElement('div');d.className='seg';d.dataset.i=i;el.appendChild(d);}}
+buildSegs('segs-b');buildSegs('segs-s');
+var N=20;
+function updateSegs(id,score,isSell){var segs=document.getElementById(id).children;var filled=Math.round((score/100)*N);for(var i=0;i<N;i++){var c='var(--sf2)';if(i<filled){if(i<Math.round(0.3*N))c=isSell?'#3a1515':'#0d2b22';else if(i<Math.round(0.55*N))c=isSell?'#7a2828':'#1d4a36';else if(i<Math.round(0.80*N))c=isSell?'var(--bear)':'var(--bull)';else c=isSell?'var(--ubear)':'var(--ubull)';}segs[i].style.background=c;}}
+function calc(){var b=0,s=0;document.querySelectorAll('[data-side="b"]:checked').forEach(function(el){b+=Number(el.dataset.pts);});document.querySelectorAll('[data-side="s"]:checked').forEach(function(el){s+=Number(el.dataset.pts);});b=Math.max(0,Math.min(100,b));s=Math.max(0,Math.min(100,s));var spd=Math.abs(b-s),dom=Math.max(b,s);var nb=document.getElementById('num-b'),ns=document.getElementById('num-s');var sv=document.getElementById('spread-v');var db=document.getElementById('dec-box'),dv=document.getElementById('dec-val');nb.textContent=b;ns.textContent=s;sv.textContent=spd;updateSegs('segs-b',b,false);updateSegs('segs-s',s,true);var bWin=b>=55&&spd>=12&&b>s,sWin=s>=55&&spd>=12&&s>b,ultra=dom>=80;if(bWin){var c=ultra?'var(--ubull)':'var(--bull)';nb.style.color=c;ns.style.color='var(--t3)';sv.style.color=c;db.style.borderColor=c;db.style.background=ultra?'rgba(57,255,20,.07)':'rgba(0,212,164,.07)';dv.style.color=c;dv.textContent=ultra?'BULL ULTRA':'BULL FORTE';}else if(sWin){var c2=ultra?'var(--ubear)':'var(--bear)';ns.style.color=c2;nb.style.color='var(--t3)';sv.style.color=c2;db.style.borderColor=c2;db.style.background=ultra?'rgba(255,23,68,.07)':'rgba(255,82,82,.07)';dv.style.color=c2;dv.textContent=ultra?'BEAR ULTRA':'BEAR FORTE';}else{var bal=spd<8;nb.style.color='var(--bull)';ns.style.color='var(--bear)';sv.style.color='var(--t2)';db.style.borderColor='var(--br)';db.style.background='transparent';dv.style.color=bal?'var(--neu)':'var(--t2)';dv.textContent=bal?'BALANCE / BRIGA':'AGUARDAR';}}
+calc();
+</script>
+</body>
+</html>
