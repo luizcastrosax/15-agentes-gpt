@@ -1,0 +1,23 @@
+{
+  "name": "lottery-quant-ultra",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "LOTTERY QUANT ULTRA — núcleo matemático verificável para Lotofácil e Mega-Sena. Sem previsão de sorteios.",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.base.json --noEmit",
+    "test": "node --import tsx --test packages/*/test/*.test.ts",
+    "test:slow": "LQU_RUN_SLOW=1 node --import tsx --test packages/*/test/*.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "tsx": "4.19.2",
+    "typescript": "5.7.2"
+  }
+}
