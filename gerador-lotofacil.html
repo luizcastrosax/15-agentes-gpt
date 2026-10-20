@@ -246,6 +246,13 @@ footer p{font-size:12px;color:var(--text3);}
         <div id="prob-body"><p class="hint" style="margin:0">Marque pelo menos 15 dezenas para ver as probabilidades exatas.</p></div>
       </div>
 
+      <div class="panel" id="closure-panel" style="margin-top:22px;">
+        <h2>🔒 Fechamento verificado <span style="font-size:11px;color:var(--text3);font-weight:600">(garantia condicional)</span></h2>
+        <p class="hint" style="margin-top:0">Marque <b>17 dezenas</b> na base e gere 8 jogos que <b>garantem 14 pontos SE</b> as 15 sorteadas estiverem entre as suas 17. Garantia <b>provada</b> por verificação exaustiva — não é previsão.</p>
+        <button class="btn sec" id="closure-btn" style="width:100%">🔒 Gerar fechamento de 14 pontos (17 → 8 jogos)</button>
+        <div id="closure-out" style="margin-top:14px;"></div>
+      </div>
+
       <div class="panel" style="margin-top:22px;">
         <h2>🎯 Filtros de equilíbrio</h2>
         <p class="hint">Cada jogo precisa passar por todos os filtros ativos.</p>
@@ -448,6 +455,29 @@ footer p{font-size:12px;color:var(--text3);}
     body.innerHTML=rows+'<p class="hint" style="margin:8px 0 0;color:var(--gold)">⚠️ Marcar mais dezenas aumenta a <b>cobertura</b> (e o custo), não a sorte. A chance de 15/15 melhora porque você cobre mais combinações — é organização, não previsão.</p>';
   }
   function global_LQU(){ return typeof window!=='undefined' && window.LQU; }
+
+  // ── Fechamento verificado (garantia condicional §10) ──
+  var closureBtn=document.getElementById('closure-btn');
+  if(closureBtn)closureBtn.addEventListener('click',function(){
+    if(!global_LQU())return flash('Núcleo matemático não carregado.');
+    var S=Array.from(selected).sort(function(a,b){return a-b;});
+    if(S.length!==17)return flash('Marque exatamente 17 dezenas para o fechamento de 14 pontos (você tem '+S.length+').');
+    var pairs=[],bets=[];
+    for(var i=0;i<8;i++)pairs.push([S[2*i],S[2*i+1]]);
+    pairs.forEach(function(p){bets.push(S.filter(function(v){return v!==p[0]&&v!==p[1];}));});
+    var v=window.LQU.verifyClosureConditional(S,bets,15,14);
+    var M=Number(window.LQU.binomial(25n,15n));
+    var oneIn=Math.round(M/v.scenarios);
+    var ok=v.counterexamples===0;
+    var rows=bets.map(function(g,i){return '<div class="conf-game"><span class="g-title" style="min-width:56px">Jogo '+fmt(i+1)+'</span><div class="mini-balls" style="flex:1">'+g.map(function(n){return '<div class="mb hit">'+fmt(n)+'</div>';}).join('')+'</div></div>';}).join('');
+    var html='<div class="summary" style="border-color:rgba(18,146,74,.35);background:rgba(18,146,74,.06)">'+
+      '<b>🔒 Certificado de fechamento — '+(ok?'<span style="color:var(--green)">VERIFICADO</span>':'<span style="color:var(--red)">FALHOU</span>')+'</b><br>'+
+      '8 jogos de 15 dezenas. Verifiquei <b>'+v.scenarios+'</b> cenários (todos os sorteios possíveis dentro das suas 17 dezenas): <b>'+(v.distribution[14]||0)+'</b> dão exatamente 14 acertos e <b>'+(v.distribution[15]||0)+'</b> dão 15. Contraexemplos: <b>'+v.counterexamples+'</b> → garantia de <b>14 pontos</b> sob a condição.'+
+      '<br><span style="font-size:12px;color:var(--gold)">⚠️ A garantia vale SÓ se as 15 sorteadas estiverem entre as suas 17 — isso ocorre em '+v.scenarios+' de '+M.toLocaleString('pt-BR')+' sorteios (≈ 1 em '+oneIn.toLocaleString('pt-BR')+'). Escolher as 17 não aumenta essa chance.</span></div>'+rows;
+    document.getElementById('closure-out').innerHTML=html;
+    lastGames=bets; // permite conferir/testar estes 8 jogos nos painéis abaixo
+    flash('Fechamento gerado e verificado: 8 jogos, garantia condicional de 14 pontos.');
+  });
 
   document.getElementById('clear-btn').addEventListener('click',function(){selected.clear();fixed.clear();lastGames=[];renderVolante();});
   document.getElementById('auto-btn').addEventListener('click',function(){
