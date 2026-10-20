@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+.DS_Store
+# NÃO ignorar o pacote packages/coverage; relatórios de cobertura de teste ficam em /coverage-report
+/coverage-report/
+.next/
+.vercel/

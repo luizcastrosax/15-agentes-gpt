@@ -198,7 +198,7 @@ footer p{font-size:12px;color:var(--text3);}
 </nav>
 
 <header class="top">
-  <div class="eyebrow">🧪 Motor combinatório auditável · v2</div>
+  <div class="eyebrow">🧪 Motor combinatório auditável · v2 <span id="lqu-seal" style="margin-left:6px"></span></div>
   <h1>Lotofácil <em>LAB</em><br>Gerador Auditável</h1>
   <p>Organize um portfólio de apostas com filtros combinatórios transparentes, diversificação e diagnóstico de rejeições. Sem promessa de previsão.</p>
 </header>
@@ -238,6 +238,12 @@ footer p{font-size:12px;color:var(--text3);}
           <button class="btn sec" id="last-btn">♻️ Sugerir do último</button>
           <button class="btn ghost" id="clear-btn">Limpar</button>
         </div>
+      </div>
+
+      <div class="panel" id="prob-panel" style="margin-top:22px;">
+        <h2>📐 Probabilidades exatas <span style="font-size:11px;color:var(--text3);font-weight:600">(verificadas)</span></h2>
+        <p class="hint" style="margin-top:0">Chance de o sorteio ter <b>r</b> das 15 dezenas dentro das suas <b id="prob-base">—</b> marcadas. Fração exata (hipergeométrica), não aproximação.</p>
+        <div id="prob-body"><p class="hint" style="margin:0">Marque pelo menos 15 dezenas para ver as probabilidades exatas.</p></div>
       </div>
 
       <div class="panel" style="margin-top:22px;">
@@ -373,6 +379,7 @@ footer p{font-size:12px;color:var(--text3);}
   <p>Ferramenta educativa de estatística aplicada à Lotofácil · Não afiliada à Caixa Econômica Federal · Jogue com responsabilidade · +18</p>
 </footer>
 
+<script src="lqu-core.js"></script>
 <script>
 (function(){
   "use strict";
@@ -419,14 +426,41 @@ footer p{font-size:12px;color:var(--text3);}
     });
     document.getElementById('sel-count').textContent=selected.size;
     document.getElementById('fix-count').textContent=fixed.size;
+    updateProbs();
   }
+
+  // ── Probabilidades exatas (núcleo LQU) ──
+  function updateProbs(){
+    var body=document.getElementById('prob-body'); if(!body)return;
+    var base=selected.size;
+    document.getElementById('prob-base').textContent=base;
+    if(!global_LQU()||base<15){ body.innerHTML='<p class="hint" style="margin:0">Marque pelo menos 15 dezenas para ver as probabilidades exatas.</p>'; return; }
+    var tiers=[15,14,13,12,11],rows='';
+    tiers.forEach(function(r){
+      var f=window.LQU.hyperExact(25,base,15,r);          // P(sorteio tem r dezenas dentro da base)
+      if(f.isZero())return;
+      var oneIn=f.oneInN();
+      var txt = oneIn>=1 ? '1 em '+Math.round(oneIn).toLocaleString('pt-BR') : f.toNumber().toLocaleString('pt-BR');
+      rows+='<div class="conf-game" style="align-items:center"><span class="g-title" style="min-width:150px">'+r+' das 15 na base</span>'+
+        '<span style="flex:1;font-size:12px;color:var(--text2)">'+txt+'</span>'+
+        '<span class="conf-badge" style="background:rgba(59,130,246,.16);color:#2563EB">'+f.toString()+'</span></div>';
+    });
+    body.innerHTML=rows+'<p class="hint" style="margin:8px 0 0;color:var(--gold)">⚠️ Marcar mais dezenas aumenta a <b>cobertura</b> (e o custo), não a sorte. A chance de 15/15 melhora porque você cobre mais combinações — é organização, não previsão.</p>';
+  }
+  function global_LQU(){ return typeof window!=='undefined' && window.LQU; }
 
   document.getElementById('clear-btn').addEventListener('click',function(){selected.clear();fixed.clear();lastGames=[];renderVolante();});
   document.getElementById('auto-btn').addEventListener('click',function(){
     selected.clear();fixed.clear();
-    var per=[4,4,4,3,3];shuffle(per);
-    for(var r=0;r<5;r++){var p=[];for(var n=r*5+1;n<=r*5+5;n++)p.push(n);shuffle(p);p.slice(0,per[r]).forEach(function(x){selected.add(x);});}
-    renderVolante();flash('Grupo diversificado de 18 dezenas criado.');
+    if(global_LQU()){
+      // geração UNIFORME de verdade: subconjunto de 18 escolhido entre os C(25,18) possíveis
+      window.LQU.sampleUniformSubset(25,18).forEach(function(x){selected.add(x);});
+      renderVolante();flash('Grupo de 18 dezenas sorteado de forma uniforme (núcleo verificado).');
+    }else{
+      var per=[4,4,4,3,3];shuffle(per);
+      for(var r=0;r<5;r++){var p=[];for(var n=r*5+1;n<=r*5+5;n++)p.push(n);shuffle(p);p.slice(0,per[r]).forEach(function(x){selected.add(x);});}
+      renderVolante();flash('Grupo diversificado de 18 dezenas criado.');
+    }
   });
   document.getElementById('last-btn').addEventListener('click',function(){
     var prev=parseInput('prev-result',15);
@@ -737,6 +771,19 @@ footer p{font-size:12px;color:var(--text3);}
     if(s)s.addEventListener('input',function(){histShown=50;renderHistory();});
     var m=document.getElementById('hist-more');
     if(m)m.addEventListener('click',function(){histShown+=50;renderHistory();});
+  })();
+
+  // Selo de verificação do núcleo matemático (autoteste das fixtures §21.1)
+  (function(){
+    var seal=document.getElementById('lqu-seal'); if(!seal)return;
+    try{
+      var t=window.LQU&&window.LQU.selfTest();
+      if(t&&t.passed){
+        seal.innerHTML='<span title="Núcleo matemático verificado em tempo real" style="background:rgba(18,146,74,.14);color:var(--green);border:1px solid rgba(18,146,74,.35);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800">✓ cálculos verificados ('+t.total+'/'+t.total+')</span>';
+      }else{
+        seal.innerHTML='<span style="background:rgba(211,47,69,.12);color:var(--red);border-radius:999px;padding:2px 8px;font-size:10px;font-weight:800">núcleo indisponível</span>';
+      }
+    }catch(e){/* silencioso */}
   })();
 
   renderVolante();
