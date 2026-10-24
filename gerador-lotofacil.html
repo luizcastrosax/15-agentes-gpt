@@ -192,7 +192,8 @@ footer p{font-size:12px;color:var(--text3);}
 <body>
 
 <nav class="nav">
-  <a href="gerador-lotofacil.html" class="active">🎟️ Gerador</a>
+  <a href="gerador-lotofacil.html" class="active">🎟️ Lotofácil</a>
+  <a href="mega-sena.html">🍀 Mega-Sena</a>
   <a href="fechamento.html">🔗 Fechamento</a>
   <a href="backtest.html">📊 Backtest &amp; Histórico</a>
 </nav>
@@ -356,7 +357,15 @@ footer p{font-size:12px;color:var(--text3);}
         <input type="text" id="conf-result" placeholder="Ex: 01 02 03 05 06 08 10 11 14 16 18 20 22 24 25"
           style="width:100%;padding:12px 14px;background:var(--bg4);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-variant-numeric:tabular-nums;margin-bottom:12px;"/>
         <button class="btn" id="conf-btn">CONFERIR MEUS JOGOS</button>
-        <button class="btn sec" id="hist-btn" style="width:100%;margin-top:10px;">🧪 Testar contra TODO o histórico</button>
+        <label style="display:block;font-size:13px;font-weight:700;color:var(--text2);margin:16px 0 8px">🧪 Testar contra os últimos concursos</label>
+        <div class="seg" id="seg-histn" style="margin-bottom:10px">
+          <button data-v="5">5</button>
+          <button data-v="10" class="on">10</button>
+          <button data-v="20">20</button>
+          <button data-v="50">50</button>
+          <button data-v="0">Todos</button>
+        </div>
+        <button class="btn sec" id="hist-btn" style="width:100%;">🧪 Testar meus jogos nesta janela</button>
         <div id="conf-out" style="margin-top:16px;"></div>
       </div>
     </div>
@@ -662,16 +671,22 @@ footer p{font-size:12px;color:var(--text3);}
   });
 
   // ── Testar os jogos gerados contra TODO o histórico (estilo "montar e testar") ──
+  var histWindow=10; // janela selecionada (0 = todos)
+  document.querySelectorAll('#seg-histn button').forEach(function(btn){btn.addEventListener('click',function(){
+    document.querySelectorAll('#seg-histn button').forEach(function(x){x.classList.remove('on');});btn.classList.add('on');histWindow=+btn.dataset.v;
+  });});
   document.getElementById('hist-btn').addEventListener('click',function(){
     if(!lastGames.length)return flash('Gere seus jogos antes de testar.');
     if(!HIST||!HIST.length)return flash('Preciso do histórico — abra pelo site público (ou aguarde o painel "Último concurso" carregar).');
+    var sub=histWindow>0?HIST.slice(Math.max(0,HIST.length-histWindow)):HIST; // últimos N concursos
+    var janelaTxt=histWindow>0?('os <b>'+sub.length+'</b> últimos concursos'):('<b>TODOS</b> os '+sub.length.toLocaleString('pt-BR')+' concursos');
     var PZ={11:7,12:14,13:35}; // tabela FIXA da Lotofácil (14 e 15 = rateio variável)
     var PRECO=3.50;            // custo de 1 aposta simples de 15 dezenas
     var agg={11:0,12:0,13:0,14:0,15:0},rows='';
     lastGames.forEach(function(g,i){
       var d={11:0,12:0,13:0,14:0,15:0};
-      for(var c=0;c<HIST.length;c++){
-        var set={};for(var z=0;z<HIST[c].length;z++)set[HIST[c][z]]=1;
+      for(var c=0;c<sub.length;c++){
+        var set={};for(var z=0;z<sub[c].length;z++)set[sub[c][z]]=1;
         var h=0;for(var k=0;k<g.length;k++)if(set[g[k]])h++;
         if(h>=11)d[h>15?15:h]++;
       }
@@ -682,20 +697,20 @@ footer p{font-size:12px;color:var(--text3);}
         '<span class="conf-badge" style="background:rgba(59,130,246,.16);color:#2563EB">R$ '+moneyG.toLocaleString('pt-BR')+'</span></div>';
     });
     var totalAll=agg[11]+agg[12]+agg[13]+agg[14]+agg[15];
-    var pairs=lastGames.length*HIST.length;
-    var rate=(100*totalAll/pairs).toFixed(1);
+    var pares=lastGames.length*sub.length;
+    var rate=(100*totalAll/pares).toFixed(1);
     var ganho=agg[11]*PZ[11]+agg[12]*PZ[12]+agg[13]*PZ[13];   // só faixas fixas
-    var gasto=lastGames.length*HIST.length*PRECO;
+    var gasto=lastGames.length*sub.length*PRECO;
     var saldo=ganho-gasto;
     var brl=function(v){return 'R$ '+v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});};
     var html='<div class="conf-summary">';[15,14,13,12,11].forEach(function(k){html+='<div class="cs'+(agg[k]?' hit-any':'')+'"><div class="n">'+agg[k]+'</div><div class="l">total '+k+'</div></div>';});
     html+='</div>';
     html+='<div class="summary" style="border-color:rgba(211,47,69,.35);background:rgba(211,47,69,.05)">'+
-      '<b style="color:var(--text)">💰 Balanço se você jogasse estes '+lastGames.length+' jogos em TODOS os '+HIST.length.toLocaleString('pt-BR')+' concursos:</b><br>'+
+      '<b style="color:var(--text)">💰 Balanço se você jogasse estes '+lastGames.length+' jogos contra '+janelaTxt+':</b><br>'+
       'Prêmios (faixas fixas 11-13): <b style="color:var(--green)">'+brl(ganho)+'</b> · Gasto em apostas: <b>'+brl(gasto)+'</b><br>'+
       'Saldo: <b style="color:'+(saldo>=0?'var(--green)':'var(--red)')+'">'+brl(saldo)+'</b> '+(saldo<0?'(prejuízo)':'')+
       '<br><span style="font-size:11px;color:var(--text3)">11 pts = R$7 · 12 = R$14 · 13 = R$35 (tabela fixa da Caixa). 14 e 15 são rateio (variável) — não somados aqui.</span></div>';
-    html+='<div class="summary">Cada um dos <b>'+lastGames.length+'</b> jogos foi conferido contra os <b>'+HIST.length.toLocaleString('pt-BR')+'</b> concursos da história. No total, um jogo teria feito 11+ pontos <b>'+totalAll.toLocaleString('pt-BR')+'</b> vezes — <b>'+rate+'%</b> dos casos, a taxa normal de qualquer jogo. O número grande é só a soma de milhares de sorteios; o balanço acima mostra por que somar prêmios pequenos não vira lucro.</div>'+rows;
+    html+='<div class="summary">Cada um dos <b>'+lastGames.length+'</b> jogos foi conferido contra '+janelaTxt+'. No total, um jogo teria feito 11+ pontos <b>'+totalAll.toLocaleString('pt-BR')+'</b> vezes — <b>'+rate+'%</b> dos casos, a taxa normal de qualquer jogo. Mudar a janela (5/10/20/50/todos) só muda o tamanho da amostra, não a sua chance no próximo sorteio.</div>'+rows;
     document.getElementById('conf-out').innerHTML=html;
   });
 
